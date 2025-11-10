@@ -1,7 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import type { DataSchema } from '@/types'
 
 interface DataPreviewProps {
@@ -32,39 +31,37 @@ export function DataPreview({ schema, filename }: DataPreviewProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[600px] w-full rounded-md border">
-          <div className="min-w-full">
-            <Table>
-              <TableHeader>
-                <TableRow>
+        <div className="overflow-auto max-h-[600px] w-full rounded-md border">
+          <Table>
+            <TableHeader className="sticky top-0 bg-background z-10">
+              <TableRow>
+                {schema.columns.map((col) => (
+                  <TableHead key={col.name} className="min-w-[150px] whitespace-nowrap">
+                    <div className="flex flex-col gap-1">
+                      <span className="font-semibold">{col.name}</span>
+                      <Badge variant={getTypeBadgeVariant(col.type)} className="w-fit">
+                        {col.type}
+                      </Badge>
+                    </div>
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {schema.preview.map((row, idx) => (
+                <TableRow key={idx}>
                   {schema.columns.map((col) => (
-                    <TableHead key={col.name} className="min-w-[150px]">
-                      <div className="flex flex-col gap-1">
-                        <span className="font-semibold whitespace-nowrap">{col.name}</span>
-                        <Badge variant={getTypeBadgeVariant(col.type)} className="w-fit">
-                          {col.type}
-                        </Badge>
-                      </div>
-                    </TableHead>
+                    <TableCell key={`${idx}-${col.name}`} className="min-w-[150px] whitespace-nowrap">
+                      {row[col.name] != null ? String(row[col.name]) : (
+                        <span className="text-muted-foreground italic">null</span>
+                      )}
+                    </TableCell>
                   ))}
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {schema.preview.map((row, idx) => (
-                  <TableRow key={idx}>
-                    {schema.columns.map((col) => (
-                      <TableCell key={`${idx}-${col.name}`} className="min-w-[150px]">
-                        {row[col.name] != null ? String(row[col.name]) : (
-                          <span className="text-muted-foreground italic">null</span>
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </ScrollArea>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   )

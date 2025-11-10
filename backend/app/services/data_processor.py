@@ -6,9 +6,34 @@ from app.models.schemas import DataSchema, ColumnInfo
 class DataProcessor:
     @staticmethod
     def parse_file(file_path: str, file_extension: str) -> pd.DataFrame:
-        """Parse CSV or Excel file into DataFrame"""
+        """Parse CSV or Excel file into DataFrame, supporting both US and European formats"""
         if file_extension == 'csv':
-            return pd.read_csv(file_path, encoding='utf-8')
+            # Try US format first (comma delimiter, period decimal)
+            try:
+                df = pd.read_csv(file_path, encoding='utf-8')
+
+                # Check if parsing was successful (more than 1 column detected)
+                if len(df.columns) > 1:
+                    return df
+
+                # If only 1 column, likely European format with semicolons
+                raise ValueError("Single column detected, trying European format")
+
+            except (ValueError, pd.errors.ParserError):
+                # Try European format (semicolon delimiter, comma decimal)
+                try:
+                    df = pd.read_csv(
+                        file_path,
+                        encoding='utf-8',
+                        sep=';',
+                        decimal=',',
+                        thousands=None  # Disable thousands separator
+                    )
+                    return df
+                except Exception as e:
+                    # If both fail, raise the original error
+                    raise ValueError(f"Failed to parse CSV file. Tried both US (comma) and European (semicolon) formats. Error: {str(e)}")
+
         elif file_extension in ['xlsx', 'xls']:
             return pd.read_excel(file_path)
         else:
@@ -42,6 +67,15 @@ class DataProcessor:
         if pd.api.types.is_datetime64_any_dtype(series):
             return "datetime"
 
+        # Check for time-related column names (even if numeric)
+        # This catches month_id (202505), week_id (202518), etc.
+        if series.name:
+            col_name_lower = str(series.name).lower()
+            time_keywords = ['month', 'week', 'year', 'quarter', 'day', 'date', 'period']
+            if any(keyword in col_name_lower for keyword in time_keywords):
+                # Likely a time dimension (even if stored as integer)
+                return "datetime"
+
         # Try to convert to datetime
         if series.dtype == 'object':
             try:
@@ -58,6 +92,20 @@ class DataProcessor:
         return "categorical"
 
     @staticmethod
+    def _sanitize_value(value):
+        """Convert NaN/Inf values to None for JSON serialization"""
+        # Check for NaN first (works on all types)
+        if pd.isna(value):
+            return None
+
+        # Only check for infinity on numeric types
+        if isinstance(value, (int, float, np.integer, np.floating)):
+            if np.isinf(value):
+                return None
+
+        return value
+
+    @staticmethod
     def analyze_schema(df: pd.DataFrame) -> DataSchema:
         """Analyze dataframe and generate schema"""
         columns_info = []
@@ -66,25 +114,31 @@ class DataProcessor:
             series = df[col]
             col_type = DataProcessor.detect_column_type(series)
 
+            # Sanitize sample values (remove NaN)
+            sample_values = [
+                DataProcessor._sanitize_value(v)
+                for v in series.dropna().head(5).tolist()
+            ]
+
             col_info = ColumnInfo(
                 name=col,
                 type=col_type,
                 null_count=int(series.isnull().sum()),
                 unique_values=int(series.nunique()) if col_type == "categorical" else None,
-                sample_values=series.dropna().head(5).tolist()
+                sample_values=sample_values
             )
 
-            # Add numeric stats
+            # Add numeric stats (with NaN handling)
             if col_type == "numeric":
-                col_info.min = float(series.min())
-                col_info.max = float(series.max())
-                col_info.mean = float(series.mean())
-                col_info.median = float(series.median())
+                col_info.min = DataProcessor._sanitize_value(float(series.min()))
+                col_info.max = DataProcessor._sanitize_value(float(series.max()))
+                col_info.mean = DataProcessor._sanitize_value(float(series.mean()))
+                col_info.median = DataProcessor._sanitize_value(float(series.median()))
 
             columns_info.append(col_info)
 
-        # Get preview (first 10 rows)
-        preview = df.head(10).replace({np.nan: None}).to_dict('records')
+        # Get preview (first 10 rows) - replace NaN/Inf with None
+        preview = df.head(10).replace([np.nan, np.inf, -np.inf], None).to_dict('records')
 
         return DataSchema(
             columns=columns_info,

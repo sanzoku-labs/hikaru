@@ -70,3 +70,20 @@ export interface QueryResponse {
   timestamp: string;
   chart?: ChartData;  // Phase 4B: Generated chart if requested
 }
+
+// Phase 5: PDF Export Types
+export interface ExportRequest {
+  upload_id: string;
+  format: 'pdf';  // Only PDF for MVP
+  include_charts: boolean;
+  include_insights: boolean;
+}
+
+export interface ExportResponse {
+  export_id: string;
+  status: 'processing' | 'completed' | 'failed';
+  download_url?: string;
+  filename?: string;
+  created_at: string;
+  error_message?: string;
+}

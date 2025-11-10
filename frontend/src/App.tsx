@@ -1,40 +1,51 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { FileUploader } from '@/components/FileUploader'
 import { DataPreview } from '@/components/DataPreview'
 import { ChartGrid } from '@/components/ChartGrid'
 import { GlobalSummary } from '@/components/GlobalSummary'
 import { ChatInterface } from '@/components/ChatInterface'
+import { ExportModal } from '@/components/ExportModal'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { api } from '@/services/api'
 import type { UploadResponse, AnalyzeResponse } from '@/types'
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw, Download, Sparkles, ArrowRight } from 'lucide-react'
 
 function App() {
   const [uploadData, setUploadData] = useState<UploadResponse | null>(null)
   const [analyzeData, setAnalyzeData] = useState<AnalyzeResponse | null>(null)
   const [chartsLoading, setChartsLoading] = useState(false)
+  const [exportModalOpen, setExportModalOpen] = useState(false)
+  const [showIntentStep, setShowIntentStep] = useState(false)
+  const [userIntent, setUserIntent] = useState('')
 
-  // Auto-analyze after upload
-  useEffect(() => {
-    if (uploadData && !analyzeData) {
-      const fetchCharts = async () => {
-        setChartsLoading(true)
-        try {
-          const response = await api.analyzeData(uploadData.upload_id)
-          setAnalyzeData(response)
-        } catch (error) {
-          console.error('Failed to analyze data:', error)
-        } finally {
-          setChartsLoading(false)
-        }
-      }
-      fetchCharts()
+  const handleAnalyze = async (intent?: string) => {
+    if (!uploadData) return
+
+    setChartsLoading(true)
+    setShowIntentStep(false)
+
+    try {
+      const response = await api.analyzeData(uploadData.upload_id, intent)
+      setAnalyzeData(response)
+    } catch (error) {
+      console.error('Failed to analyze data:', error)
+    } finally {
+      setChartsLoading(false)
     }
-  }, [uploadData, analyzeData])
+  }
+
+  const handleUploadSuccess = (data: UploadResponse) => {
+    setUploadData(data)
+    setShowIntentStep(true)
+  }
 
   const handleReset = () => {
     setUploadData(null)
     setAnalyzeData(null)
+    setShowIntentStep(false)
+    setUserIntent('')
   }
 
   return (
@@ -45,11 +56,20 @@ function App() {
             <h1 className="text-2xl font-bold">Hikaru</h1>
             <p className="text-sm text-muted-foreground">AI Data Insight Board</p>
           </div>
-          {uploadData && (
-            <Button variant="outline" onClick={handleReset}>
-              <RotateCcw className="h-4 w-4 mr-2" />
-              New Upload
-            </Button>
+          {uploadData && analyzeData && (
+            <div className="flex gap-2">
+              <Button
+                variant="default"
+                onClick={() => setExportModalOpen(true)}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export PDF
+              </Button>
+              <Button variant="outline" onClick={handleReset}>
+                <RotateCcw className="h-4 w-4 mr-2" />
+                New Upload
+              </Button>
+            </div>
           )}
         </div>
       </header>
@@ -63,7 +83,52 @@ function App() {
                 Transform your CSV or Excel data into actionable insights
               </p>
             </div>
-            <FileUploader onUploadSuccess={setUploadData} />
+            <FileUploader onUploadSuccess={handleUploadSuccess} />
+          </div>
+        ) : showIntentStep ? (
+          <div className="flex flex-col items-center justify-center min-h-[60vh]">
+            <Card className="w-full max-w-2xl">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  What would you like to analyze?
+                </CardTitle>
+                <CardDescription>
+                  Describe what insights you're looking for, or skip to let AI automatically suggest meaningful visualizations
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Input
+                    type="text"
+                    placeholder="e.g., I want to see sales trends by product over time..."
+                    value={userIntent}
+                    onChange={(e) => setUserIntent(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && userIntent.trim()) {
+                        handleAnalyze(userIntent.trim())
+                      }
+                    }}
+                    className="text-base"
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => handleAnalyze()}
+                  >
+                    Skip - Auto Generate
+                  </Button>
+                  <Button
+                    onClick={() => handleAnalyze(userIntent.trim() || undefined)}
+                    disabled={!userIntent.trim()}
+                  >
+                    Analyze with Intent
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         ) : (
           <div className="space-y-8">
@@ -93,6 +158,15 @@ function App() {
           </div>
         )}
       </main>
+
+      {uploadData && analyzeData && (
+        <ExportModal
+          open={exportModalOpen}
+          onOpenChange={setExportModalOpen}
+          uploadId={uploadData.upload_id}
+          filename={uploadData.filename}
+        />
+      )}
 
       <footer className="border-t mt-12">
         <div className="container mx-auto px-4 py-4 text-sm text-muted-foreground text-center">

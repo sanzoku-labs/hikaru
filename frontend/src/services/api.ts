@@ -1,4 +1,4 @@
-import type { UploadResponse, AnalyzeResponse, QueryRequest, QueryResponse } from '@/types'
+import type { UploadResponse, AnalyzeResponse, QueryRequest, QueryResponse, ExportRequest, ExportResponse } from '@/types'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
@@ -35,8 +35,13 @@ export const api = {
     return response.json()
   },
 
-  async analyzeData(uploadId: string): Promise<AnalyzeResponse> {
-    const response = await fetch(`${API_BASE_URL}/api/analyze/${uploadId}`, {
+  async analyzeData(uploadId: string, userIntent?: string): Promise<AnalyzeResponse> {
+    const url = new URL(`${API_BASE_URL}/api/analyze/${uploadId}`)
+    if (userIntent) {
+      url.searchParams.append('user_intent', userIntent)
+    }
+
+    const response = await fetch(url.toString(), {
       method: 'GET',
     })
 
@@ -71,5 +76,43 @@ export const api = {
     }
 
     return response.json()
+  },
+
+  async exportDashboard(request: ExportRequest): Promise<ExportResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/export`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new ApiError(
+        error.error || 'Export failed',
+        response.status,
+        error.detail
+      )
+    }
+
+    return response.json()
+  },
+
+  async downloadPDF(exportId: string): Promise<Blob> {
+    const response = await fetch(`${API_BASE_URL}/api/download/${exportId}`, {
+      method: 'GET',
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new ApiError(
+        error.error || 'Download failed',
+        response.status,
+        error.detail
+      )
+    }
+
+    return response.blob()
   },
 }

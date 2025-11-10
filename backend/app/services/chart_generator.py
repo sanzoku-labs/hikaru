@@ -50,14 +50,59 @@ class ChartGenerator:
     """
 
     @staticmethod
+    def _should_skip_column(col_name: str, col_info: ColumnInfo, total_rows: int) -> bool:
+        """
+        Determine if a column should be skipped for visualization.
+
+        Skips:
+        - ID columns (except time dimensions like month_id, week_id)
+        - Columns with only 1 unique value (no variation)
+        - Columns with >90% null values
+        """
+        # Check if it's an ID column (but keep time dimensions)
+        col_name_lower = col_name.lower()
+        time_keywords = ['month', 'week', 'year', 'quarter', 'day', 'date', 'period']
+        is_time_column = any(kw in col_name_lower for kw in time_keywords)
+
+        if not is_time_column:
+            # Skip ID-like columns
+            if col_name.endswith(('_id', '_code', '_cip', '_cd')):
+                return True
+            if any(word in col_name_lower for word in ['id', 'code']):
+                # Be conservative: only skip if it's clearly an ID
+                if col_name_lower.endswith('id') or col_name_lower.endswith('code'):
+                    return True
+
+        # Skip columns with only 1 unique value
+        if col_info.unique_values == 1:
+            return True
+
+        # Skip columns with >90% nulls
+        if col_info.null_count > 0.9 * total_rows:
+            return True
+
+        return False
+
+    @staticmethod
     def generate_charts(df: pd.DataFrame, schema: DataSchema, max_charts: int = 4) -> List[Dict[str, Any]]:
         """Generate up to max_charts based on data schema"""
         potential_charts = []
 
-        # Get column types
-        datetime_cols = [col.name for col in schema.columns if col.type == "datetime"]
-        numeric_cols = [col.name for col in schema.columns if col.type == "numeric"]
-        categorical_cols = [col.name for col in schema.columns if col.type == "categorical"]
+        # Get column types with filtering
+        datetime_cols = []
+        numeric_cols = []
+        categorical_cols = []
+
+        for col_info in schema.columns:
+            if ChartGenerator._should_skip_column(col_info.name, col_info, schema.row_count):
+                continue
+
+            if col_info.type == "datetime":
+                datetime_cols.append(col_info.name)
+            elif col_info.type == "numeric":
+                numeric_cols.append(col_info.name)
+            elif col_info.type == "categorical":
+                categorical_cols.append(col_info.name)
 
         # Priority 1: Datetime + Numeric → Line Chart
         for dt_col in datetime_cols:
@@ -66,10 +111,11 @@ class ChartGenerator:
                 if chart:
                     potential_charts.append(chart)
 
-        # Priority 2: Categorical (≤8 unique) + Numeric → Pie Chart
+        # Priority 2: Categorical (2-8 unique) + Numeric → Pie Chart
         for cat_col in categorical_cols:
             col_info = next((c for c in schema.columns if c.name == cat_col), None)
-            if col_info and col_info.unique_values and col_info.unique_values <= 8:
+            # Require at least 2 unique values to avoid useless single-category pie charts
+            if col_info and col_info.unique_values and 2 <= col_info.unique_values <= 8:
                 for num_col in numeric_cols:
                     chart = ChartGenerator._create_pie_chart(df, cat_col, num_col, priority=2)
                     if chart:
@@ -209,3 +255,94 @@ class ChartGenerator:
         except Exception as e:
             print(f"Error creating scatter chart: {e}")
             return None
+
+    def generate_charts_from_suggestions(self, df: pd.DataFrame, schema: DataSchema,
+                                        suggestions: List[Dict]) -> List[Dict]:
+        """
+        Generate charts based on AI suggestions.
+
+        Args:
+            df: DataFrame with data
+            schema: DataSchema
+            suggestions: List of chart suggestions from AI service
+
+        Returns:
+            List of chart data dictionaries
+        """
+        print(f"[ChartGenerator] Generating charts from {len(suggestions)} AI suggestions")
+        charts = []
+
+        for idx, suggestion in enumerate(suggestions):
+            print(f"[ChartGenerator] Processing suggestion {idx + 1}/{len(suggestions)}: {suggestion.get('chart_type', 'unknown')} - {suggestion.get('title', 'untitled')}")
+            try:
+                chart_type = suggestion.get("chart_type")
+                title = suggestion.get("title", "Chart")
+
+                # Create chart based on type
+                if chart_type == "line":
+                    chart = self._create_line_chart_from_suggestion(df, suggestion)
+                elif chart_type == "bar":
+                    chart = self._create_bar_chart_from_suggestion(df, suggestion)
+                elif chart_type == "pie":
+                    chart = self._create_pie_chart_from_suggestion(df, suggestion)
+                elif chart_type == "scatter":
+                    chart = self._create_scatter_chart_from_suggestion(df, suggestion)
+                else:
+                    print(f"Unknown chart type from AI: {chart_type}")
+                    continue
+
+                if chart:
+                    charts.append(chart.to_dict())
+
+            except Exception as e:
+                print(f"Error generating chart from suggestion {suggestion}: {e}")
+                import traceback
+                traceback.print_exc()
+                continue
+
+        print(f"[ChartGenerator] Successfully generated {len(charts)} charts from AI suggestions")
+        return charts
+
+    def _create_line_chart_from_suggestion(self, df: pd.DataFrame, suggestion: Dict) -> Optional[ChartConfig]:
+        """Create line chart from AI suggestion"""
+        x_col = suggestion.get("x_column")
+        y_col = suggestion.get("y_column")
+
+        if not x_col or not y_col or x_col not in df.columns or y_col not in df.columns:
+            return None
+
+        # Use existing method
+        return self._create_line_chart(df, x_col, y_col, priority=1)
+
+    def _create_bar_chart_from_suggestion(self, df: pd.DataFrame, suggestion: Dict) -> Optional[ChartConfig]:
+        """Create bar chart from AI suggestion"""
+        x_col = suggestion.get("x_column")
+        y_col = suggestion.get("y_column")
+
+        if not x_col or not y_col or x_col not in df.columns or y_col not in df.columns:
+            return None
+
+        # Use existing method
+        return self._create_bar_chart(df, x_col, y_col, priority=2)
+
+    def _create_pie_chart_from_suggestion(self, df: pd.DataFrame, suggestion: Dict) -> Optional[ChartConfig]:
+        """Create pie chart from AI suggestion"""
+        category_col = suggestion.get("category_column")
+        value_col = suggestion.get("value_column")
+
+        if not category_col or not value_col or category_col not in df.columns or value_col not in df.columns:
+            return None
+
+        # Use existing method
+        return self._create_pie_chart(df, category_col, value_col, priority=3)
+
+    def _create_scatter_chart_from_suggestion(self, df: pd.DataFrame, suggestion: Dict) -> Optional[ChartConfig]:
+        """Create scatter chart from AI suggestion"""
+        x_col = suggestion.get("x_column")
+        y_col = suggestion.get("y_column")
+
+        if not x_col or not y_col or x_col not in df.columns or y_col not in df.columns:
+            return None
+
+        # Use existing method
+        return self._create_scatter_chart(df, x_col, y_col, priority=4)

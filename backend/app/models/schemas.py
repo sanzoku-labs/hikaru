@@ -65,3 +65,4 @@ class QueryResponse(BaseModel):
     answer: str
     conversation_id: str
     timestamp: datetime
+    chart: Optional[ChartData] = None  # Phase 4B: Generated chart if requested

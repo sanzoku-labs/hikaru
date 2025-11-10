@@ -68,4 +68,5 @@ export interface QueryResponse {
   answer: string;
   conversation_id: string;
   timestamp: string;
+  chart?: ChartData;  // Phase 4B: Generated chart if requested
 }

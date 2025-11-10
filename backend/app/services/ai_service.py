@@ -238,14 +238,15 @@ Be concise and actionable."""
         question: str,
         schema: DataSchema,
         conversation_id: Optional[str] = None
-    ) -> tuple[str, str]:
+    ) -> tuple[str, str, Optional[Dict]]:
         """
         Generate response to user's natural language question about the data.
 
-        Returns: (answer, conversation_id)
+        Returns: (answer, conversation_id, chart_config)
+        chart_config is a dict with chart generation instructions if user requested visualization
         """
         if not self.enabled:
-            return "AI service is not available. Please configure ANTHROPIC_API_KEY.", ""
+            return "AI service is not available. Please configure ANTHROPIC_API_KEY.", "", None
 
         # Get or create conversation
         if conversation_id:
@@ -260,7 +261,7 @@ Be concise and actionable."""
         try:
             message = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
-                max_tokens=500,
+                max_tokens=600,
                 messages=[
                     {"role": "user", "content": prompt}
                 ]
@@ -268,14 +269,18 @@ Be concise and actionable."""
 
             answer = message.content[0].text.strip()
 
-            # Store conversation
-            self._store_conversation(upload_id, conversation_id, question, answer)
+            # Parse response for chart generation request
+            chart_config = self._parse_chart_request(answer)
 
-            return answer, conversation_id
+            # Store conversation (store the answer without JSON formatting)
+            clean_answer = self._extract_clean_answer(answer)
+            self._store_conversation(upload_id, conversation_id, question, clean_answer)
+
+            return clean_answer, conversation_id, chart_config
 
         except Exception as e:
             print(f"Error generating query response: {e}")
-            return "Sorry, I encountered an error processing your question.", conversation_id
+            return "Sorry, I encountered an error processing your question.", conversation_id, None
 
     def _build_query_prompt(
         self,
@@ -318,7 +323,19 @@ Sample data (first 3 rows):
 
 User's question: {question}
 
-Provide a clear, concise answer based on the data. If you need specific data values that aren't in the sample, make reasonable inferences based on the schema and sample. Be helpful and specific."""
+IMPORTANT: If the question requests a visualization (keywords: "show", "visualize", "chart", "graph", "plot", "display"), respond with:
+1. A natural language answer
+2. CHART_CONFIG JSON at the end in this exact format:
+
+CHART_CONFIG: {{"chart_type": "line|bar|pie|scatter", "x_column": "column_name", "y_column": "column_name", "title": "Chart Title"}}
+
+For example:
+- "Show me revenue over time" → Use "line" chart with datetime x_column and numeric y_column
+- "Visualize sales by region" → Use "bar" chart with categorical x_column (category_column) and numeric y_column (value_column)
+- "Pie chart of expenses by category" → Use "pie" chart with category_column and value_column
+- "Plot price vs quantity" → Use "scatter" chart with two numeric columns
+
+Only include CHART_CONFIG if a visualization is explicitly requested. For regular questions, just provide a text answer."""
 
         return prompt
 
@@ -374,6 +391,52 @@ Provide a clear, concise answer based on the data. If you need specific data val
                 timestamp=now
             )
         )
+
+    def _parse_chart_request(self, answer: str) -> Optional[Dict]:
+        """
+        Parse AI response for CHART_CONFIG JSON.
+        Returns chart config dict if found, None otherwise.
+        """
+        if "CHART_CONFIG:" not in answer:
+            return None
+
+        try:
+            # Extract JSON after CHART_CONFIG:
+            config_start = answer.find("CHART_CONFIG:")
+            config_json = answer[config_start + len("CHART_CONFIG:"):].strip()
+
+            # Find the JSON object
+            if config_json.startswith("{"):
+                # Find matching closing brace
+                brace_count = 0
+                end_idx = 0
+                for i, char in enumerate(config_json):
+                    if char == "{":
+                        brace_count += 1
+                    elif char == "}":
+                        brace_count -= 1
+                        if brace_count == 0:
+                            end_idx = i + 1
+                            break
+
+                config_json = config_json[:end_idx]
+                config = json.loads(config_json)
+
+                # Validate required fields
+                if "chart_type" in config and "title" in config:
+                    return config
+
+        except (json.JSONDecodeError, ValueError) as e:
+            print(f"Failed to parse CHART_CONFIG: {e}")
+
+        return None
+
+    def _extract_clean_answer(self, answer: str) -> str:
+        """Remove CHART_CONFIG JSON from answer to get clean text"""
+        if "CHART_CONFIG:" in answer:
+            config_start = answer.find("CHART_CONFIG:")
+            return answer[:config_start].strip()
+        return answer
 
     @staticmethod
     def clear_cache():

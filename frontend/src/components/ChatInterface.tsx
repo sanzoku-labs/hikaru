@@ -5,21 +5,26 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Send, Trash2, MessageCircle } from 'lucide-react'
 import { api, ApiError } from '@/services/api'
-import type { ConversationMessage } from '@/types'
+import { ChartCard } from '@/components/ChartCard'
+import type { ConversationMessage, ChartData } from '@/types'
 
 interface ChatInterfaceProps {
   uploadId: string
 }
 
+interface ExtendedMessage extends ConversationMessage {
+  chart?: ChartData
+}
+
 const SUGGESTED_QUESTIONS = [
   'What are the main trends in this data?',
   'Which category has the highest values?',
-  'Are there any notable outliers?',
-  'What insights can you provide about this dataset?',
+  'Show me a chart of revenue over time',
+  'Visualize the data by category',
 ]
 
 export function ChatInterface({ uploadId }: ChatInterfaceProps) {
-  const [messages, setMessages] = useState<ConversationMessage[]>([])
+  const [messages, setMessages] = useState<ExtendedMessage[]>([])
   const [question, setQuestion] = useState('')
   const [conversationId, setConversationId] = useState<string | undefined>()
   const [loading, setLoading] = useState(false)
@@ -32,7 +37,7 @@ export function ChatInterface({ uploadId }: ChatInterfaceProps) {
     setLoading(true)
 
     // Add user message immediately
-    const userMessage: ConversationMessage = {
+    const userMessage: ExtendedMessage = {
       role: 'user',
       content: questionText,
       timestamp: new Date().toISOString(),
@@ -47,11 +52,12 @@ export function ChatInterface({ uploadId }: ChatInterfaceProps) {
         conversation_id: conversationId,
       })
 
-      // Add assistant response
-      const assistantMessage: ConversationMessage = {
+      // Add assistant response with optional chart
+      const assistantMessage: ExtendedMessage = {
         role: 'assistant',
         content: response.answer,
         timestamp: response.timestamp,
+        chart: response.chart,
       }
       setMessages((prev) => [...prev, assistantMessage])
       setConversationId(response.conversation_id)
@@ -126,21 +132,27 @@ export function ChatInterface({ uploadId }: ChatInterfaceProps) {
         {messages.length > 0 && (
           <div className="space-y-4 max-h-96 overflow-y-auto">
             {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`flex ${
-                  msg.role === 'user' ? 'justify-end' : 'justify-start'
-                }`}
-              >
+              <div key={index} className="space-y-2">
                 <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    msg.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted'
+                  className={`flex ${
+                    msg.role === 'user' ? 'justify-end' : 'justify-start'
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                  <div
+                    className={`max-w-[80%] rounded-lg p-3 ${
+                      msg.role === 'user'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted'
+                    }`}
+                  >
+                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                  </div>
                 </div>
+                {msg.role === 'assistant' && msg.chart && (
+                  <div className="w-full">
+                    <ChartCard chart={msg.chart} />
+                  </div>
+                )}
               </div>
             ))}
             {loading && (

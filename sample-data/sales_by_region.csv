@@ -1,0 +1,9 @@
+region,revenue,units_sold,quarter
+North,125000,450,Q1
+South,98000,380,Q1
+East,145000,520,Q1
+West,112000,430,Q1
+North,135000,480,Q2
+South,105000,395,Q2
+East,155000,545,Q2
+West,118000,445,Q2

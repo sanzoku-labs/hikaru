@@ -88,24 +88,62 @@
 
 ---
 
+### Phase 4A: Q&A Interface (Completed)
+**Commits**: `d3876b4` - "feat: Phase 4A - Text-Only Q&A"
+
+**Backend**:
+- Created shared storage module (`app/storage.py`) for upload data management
+- Implemented `POST /api/query` endpoint with conversation context
+- Added conversation storage (5-message history per upload)
+- Context-aware prompt building with dataset schema + sample data
+- Graceful degradation without API key
+
+**Frontend**:
+- ChatInterface component with message bubbles + input
+- 4 suggested questions for quick start
+- Real-time conversation display with optimistic UI
+- Clear conversation button
+- Error handling with user-friendly messages
+
+**Key Files Created**:
+- `backend/app/storage.py` - Shared in-memory storage
+- `backend/app/api/routes/query.py` - Q&A endpoint
+- `frontend/src/components/ChatInterface.tsx` - Chat UI
+- Enhanced: `app/services/ai_service.py` - Conversation management
+
+**Architecture Improvements**:
+- Refactored all routes to use shared storage (eliminates redundant file parsing)
+- Single source of truth for upload metadata
+- Performance boost from in-memory dataframe caching
+
+---
+
+### Phase 4B: Dynamic Chart Generation (Partial - Deferred)
+**Commits**: `82c5b95`, `837191d` - "feat: Phase 4B - Dynamic Chart Generation"
+
+**Status**: Architecture complete, awaiting better structured output approach
+
+**What Works**:
+- ✅ Query endpoint enhanced to generate charts from AI config
+- ✅ Frontend renders charts inline in chat messages
+- ✅ _generate_chart_from_config() helper using existing ChartGenerator
+- ✅ All 4 chart types supported (line, bar, pie, scatter)
+- ✅ TypeScript types updated with optional chart field
+
+**Known Limitation**:
+Claude Sonnet 4 doesn't consistently return structured CHART_CONFIG JSON through prompting alone. Multiple prompt engineering approaches attempted (keyword detection, explicit formatting, few-shot examples) with limited success. LLM tends to provide conversational responses rather than strict JSON.
+
+**Deferred Solutions** (to revisit later):
+1. **Anthropic Tool Use API**: Define chart generation as structured tool (most robust)
+2. **Explicit UI**: Add "Generate Chart" button after detecting visualization keywords
+3. **Separate Endpoint**: `/api/generate-chart` with explicit parameters
+4. **Regex Fallback**: Parse natural language responses for column names
+
+**Decision**: Move forward with text-only Q&A (fully functional). Revisit dynamic charts post-MVP.
+
+---
+
 ## 🚧 Remaining Phases
-
-### Phase 4: Q&A Interface (TODO)
-**Estimated**: 1-2 days
-
-**Backend Tasks**:
-- Create `POST /api/query` endpoint
-- Implement conversation context management (store last 5 Q&A)
-- Build dynamic prompts with data context
-- Return text answers + optional chart updates
-
-**Frontend Tasks**:
-- Create ChatInterface component (message bubbles + input)
-- Add suggested questions
-- Display Q&A history
-- Add "Clear conversation" button
-
-**New Dependencies**: None (uses existing Anthropic SDK)
 
 ---
 

@@ -91,30 +91,17 @@ class AIService:
 
     def _build_chart_prompt(self, chart: ChartData, schema: DataSchema) -> str:
         """Build prompt for chart-specific insight"""
-        chart_info = {
-            "type": chart.chart_type,
-            "title": chart.title,
-            "data_points": len(chart.data),
-        }
 
-        if chart.chart_type == "line":
-            chart_info["x_axis"] = chart.x_column
-            chart_info["y_axis"] = chart.y_column
-        elif chart.chart_type == "bar":
-            chart_info["categories"] = chart.category_column
-            chart_info["values"] = chart.value_column
-        elif chart.chart_type == "pie":
-            chart_info["categories"] = chart.category_column
-            chart_info["values"] = chart.value_column
-        elif chart.chart_type == "scatter":
-            chart_info["x_axis"] = chart.x_column
-            chart_info["y_axis"] = chart.y_column
+        # Format actual data based on chart type
+        data_section = self._format_chart_data(chart)
 
         prompt = f"""Analyze this {chart.chart_type} chart and provide a brief, insightful observation (2-3 sentences maximum).
 
 Chart: {chart.title}
 Type: {chart.chart_type}
 Data points: {len(chart.data)}
+
+{data_section}
 
 Focus on:
 - Key patterns or trends
@@ -124,6 +111,91 @@ Focus on:
 Be concise and specific. Avoid generic statements."""
 
         return prompt
+
+    def _format_chart_data(self, chart: ChartData) -> str:
+        """Format chart data for inclusion in prompt"""
+        if chart.chart_type == "pie":
+            return self._format_pie_data(chart)
+        elif chart.chart_type == "bar":
+            return self._format_bar_data(chart)
+        elif chart.chart_type == "line":
+            return self._format_line_data(chart)
+        elif chart.chart_type == "scatter":
+            return self._format_scatter_data(chart)
+        return ""
+
+    def _format_pie_data(self, chart: ChartData) -> str:
+        """Format pie chart data with percentages"""
+        data = chart.data
+        total = sum(item["value"] for item in data)
+
+        lines = ["Actual Data:"]
+        for item in data:
+            value = item["value"]
+            percentage = (value / total * 100) if total > 0 else 0
+            lines.append(f"- {item['name']}: {value:,.2f} ({percentage:.1f}%)")
+        lines.append(f"Total: {total:,.2f}")
+
+        return "\n".join(lines)
+
+    def _format_bar_data(self, chart: ChartData) -> str:
+        """Format bar chart data"""
+        data = chart.data
+        values = [item["value"] for item in data]
+        total = sum(values)
+        avg = total / len(values) if values else 0
+
+        lines = ["Actual Data:"]
+        for item in data:
+            lines.append(f"- {item['category']}: {item['value']:,.2f}")
+        lines.append(f"\nStatistics: Total={total:,.2f}, Average={avg:,.2f}, Min={min(values):,.2f}, Max={max(values):,.2f}")
+
+        return "\n".join(lines)
+
+    def _format_line_data(self, chart: ChartData) -> str:
+        """Format line chart data (time series)"""
+        data = chart.data
+
+        # Include all points if reasonable (<=20), otherwise sample
+        if len(data) <= 20:
+            lines = ["Actual Data:"]
+            for item in data:
+                lines.append(f"- {item['x']}: {item['y']:,.2f}")
+        else:
+            # Show first 5, last 5, and statistics
+            lines = ["Actual Data (sample):"]
+            lines.append("First 5 points:")
+            for item in data[:5]:
+                lines.append(f"- {item['x']}: {item['y']:,.2f}")
+            lines.append("\nLast 5 points:")
+            for item in data[-5:]:
+                lines.append(f"- {item['x']}: {item['y']:,.2f}")
+
+        # Add statistics
+        values = [item["y"] for item in data]
+        total = sum(values)
+        avg = total / len(values) if values else 0
+        lines.append(f"\nStatistics: Total={total:,.2f}, Average={avg:,.2f}, Min={min(values):,.2f}, Max={max(values):,.2f}")
+
+        return "\n".join(lines)
+
+    def _format_scatter_data(self, chart: ChartData) -> str:
+        """Format scatter plot data (limit to sample + statistics)"""
+        data = chart.data
+
+        # Show sample of 10 points + statistics
+        lines = ["Actual Data (sample of first 10 points):"]
+        for item in data[:10]:
+            lines.append(f"- ({item['x']:.2f}, {item['y']:.2f})")
+
+        # Add statistics
+        x_values = [item["x"] for item in data]
+        y_values = [item["y"] for item in data]
+        lines.append(f"\nX-axis: Min={min(x_values):.2f}, Max={max(x_values):.2f}, Average={sum(x_values)/len(x_values):.2f}")
+        lines.append(f"Y-axis: Min={min(y_values):.2f}, Max={max(y_values):.2f}, Average={sum(y_values)/len(y_values):.2f}")
+        lines.append(f"Total points: {len(data)}")
+
+        return "\n".join(lines)
 
     def _build_summary_prompt(self, charts: List[ChartData], schema: DataSchema) -> str:
         """Build prompt for global data summary"""

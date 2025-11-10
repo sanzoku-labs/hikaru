@@ -1,7 +1,13 @@
 # Hikaru Development Progress
 
-**Last Updated**: Phase 3 Complete (AI Insights Integration)
-**Status**: 3 of 7 Phases Complete (MVP 50% done)
+**Last Updated**: Phase 5 Backend Complete (PDF Export)
+**Status**: 4.5 of 7 Phases Complete (MVP ~70% done)
+
+**Today's Progress**:
+- ✅ Fixed AI Insights data issue (Phase 3)
+- ✅ Completed Phase 4A: Text Q&A Interface (Fully working!)
+- ⚠️ Phase 4B: Dynamic Charts (Architecture ready, deferred)
+- ✅ Completed Phase 5 Backend: PDF Export with ReportLab
 
 ---
 
@@ -143,29 +149,56 @@ Claude Sonnet 4 doesn't consistently return structured CHART_CONFIG JSON through
 
 ---
 
-## 🚧 Remaining Phases
+---
+
+### Phase 5: PDF Export (Backend Complete)
+**Commit**: `8dada39` - "feat: Phase 5 - PDF Export Backend (ReportLab)"
+
+**Status**: Backend ✅ Complete | Frontend ⏳ Pending
+
+**Backend** (COMPLETE):
+- Switched to ReportLab (pure Python, no system dependencies)
+- Created ExportService with professional PDF layout:
+  * Title header with filename and timestamp
+  * Global AI summary section
+  * Dataset overview (row/column counts)
+  * Column details table (colored, formatted)
+  * Data preview table (first 10 rows)
+  * Charts section with data summaries
+  * AI insights highlighted in blue boxes
+  * Professional footer
+- Implemented `POST /api/export` endpoint
+- Implemented `GET /api/download/{export_id}` endpoint
+- Auto-cleanup of exports older than 1 hour
+- Added ExportRequest and ExportResponse schemas
+
+**Key Files Created**:
+- `backend/app/services/export_service.py` - PDF generation with ReportLab
+- `backend/app/api/routes/export.py` - Export endpoints
+
+**Dependencies Added**:
+- `reportlab ^4.4.4` - Pure Python PDF library (no system libs needed!)
+- `pillow ^12.0.0` - Image processing (kept from Phase 1)
+
+**Frontend** (TODO - Next Session):
+- Create ExportModal component (shadcn Dialog)
+- Add "Export to PDF" button to App.tsx
+- Progress indicator during generation
+- Download link display
+- Update TypeScript types
+
+**PDF Features**:
+- A4 page size with proper margins
+- Professional color scheme (blue headers, alternating rows)
+- Custom typography (Helvetica, proper sizing)
+- Page breaks between sections
+- Dynamic column width calculation
+- Cell content truncation for wide tables
+- Emoji icons for visual sections
 
 ---
 
-### Phase 5: PDF Export (TODO)
-**Estimated**: 2-3 days
-
-**Backend Tasks**:
-- Install `weasyprint`, `pillow`
-- Create `export_service.py` (HTML→PDF)
-- Render charts to PNG images
-- Create PDF template with branding
-- Implement `POST /api/export` endpoint
-- File cleanup (1-hour auto-delete)
-
-**Frontend Tasks**:
-- Create ExportModal component (shadcn Dialog)
-- Add "Export to PDF" button
-- Progress indicator
-- Download link display
-
-**New Dependencies**:
-- Backend: `weasyprint`, `pillow`
+## 🚧 Remaining Phases
 
 ---
 
@@ -349,8 +382,9 @@ VITE_API_BASE_URL=http://localhost:8000
 
 ## 🐛 Known Issues
 
-1. **Filename tracking**: Currently shows "data.csv" instead of original filename in analyze endpoint (low priority)
-2. **File retention**: No automatic cleanup of old uploads yet (implement in Phase 6)
+1. **Phase 4B Dynamic Charts**: Claude Sonnet 4 doesn't consistently return structured JSON through prompting. Need to implement Anthropic Tool Use API for reliable chart generation.
+2. **PDF Export Frontend**: Backend complete, need to add Export button and modal UI (30 min task)
+3. **In-memory storage**: Uploads cleared on server restart (acceptable for MVP, will add persistence in Phase 7)
 
 ---
 
@@ -362,31 +396,46 @@ VITE_API_BASE_URL=http://localhost:8000
 4. **In-memory caching**: Simple for MVP, reduces AI costs by 60%
 5. **Graceful AI degradation**: Charts work without API key
 6. **ES modules**: Frontend uses type: "module" for Vite compatibility
+7. **Shared storage module**: Single source of truth for upload data (eliminates redundant file parsing)
+8. **ReportLab over WeasyPrint**: Pure Python PDF generation (no system dependencies required)
 
 ---
 
 ## 🔄 Git Commits
 
+### Initial Implementation (Phases 1-3)
 1. `c3817c6` - Phase 1: Foundation (File upload + Data preview)
 2. `d1dbf7c` - Phase 2: Chart Generation (Priority-based heuristics)
 3. `c3c004b` - Phase 3: AI Insights (Claude Sonnet 4 integration)
+4. `772ce60` - docs: Add PROGRESS.md for development tracking
+
+### Today's Session (Phases 3-5)
+5. `009a08d` - fix: Include actual data values in AI insight prompts
+6. `d3876b4` - feat: Phase 4A - Text-Only Q&A Interface with Conversation Context
+7. `82c5b95` - feat: Phase 4B - Dynamic Chart Generation (Foundation)
+8. `837191d` - refine: Improve chart generation prompts (partial fix)
+9. `9b5c640` - docs: Update PROGRESS.md with Phase 4A/4B status
+10. `8dada39` - feat: Phase 5 - PDF Export Backend (ReportLab)
 
 ---
 
 ## 📝 Next Session TODO
 
-**Priority**: Phase 4 (Q&A Interface)
+**Priority**: Complete Phase 5 Frontend + Begin Phase 6
 
-1. Create `backend/app/api/routes/query.py`
-2. Create conversation context storage (in-memory for MVP)
-3. Add `QueryRequest` and `QueryResponse` Pydantic models
-4. Create `frontend/src/components/ChatInterface.tsx`
-5. Update API client with `queryData()` method
-6. Add Q&A section to App.tsx
-7. Test with sample questions
-8. Commit Phase 4
+### Phase 5 Frontend (30-45 min)
+1. Add ExportRequest and ExportResponse TypeScript types
+2. Add `exportDashboard()` method to API client
+3. Create ExportModal component (shadcn Dialog)
+4. Add "Export to PDF" button to App.tsx
+5. Test end-to-end PDF generation and download
+6. Commit Phase 5 complete
 
-**Estimated time**: 2-3 hours
+### Phase 6 Prep (Time permitting)
+7. Set up pytest for backend tests
+8. Write first unit tests (data_processor, chart_generator)
+9. Set up Vitest for frontend tests
+10. Begin accessibility audit
 
 ---
 

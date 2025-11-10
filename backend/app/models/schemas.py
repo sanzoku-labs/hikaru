@@ -66,3 +66,13 @@ class QueryResponse(BaseModel):
     conversation_id: str
     timestamp: datetime
     chart: Optional[ChartData] = None  # Phase 4B: Generated chart if requested
+
+# Phase 5: PDF Export Schemas
+class ExportRequest(BaseModel):
+    upload_id: str
+
+class ExportResponse(BaseModel):
+    export_id: str
+    download_url: str
+    filename: str
+    generated_at: datetime

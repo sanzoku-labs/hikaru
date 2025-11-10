@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { FileUploader } from '@/components/FileUploader'
 import { DataPreview } from '@/components/DataPreview'
 import { ChartGrid } from '@/components/ChartGrid'
+import { GlobalSummary } from '@/components/GlobalSummary'
 import { Button } from '@/components/ui/button'
 import { api } from '@/services/api'
 import type { UploadResponse, AnalyzeResponse } from '@/types'
@@ -69,6 +70,10 @@ function App() {
               schema={uploadData.schema}
               filename={uploadData.filename}
             />
+
+            {analyzeData?.global_summary && (
+              <GlobalSummary summary={analyzeData.global_summary} />
+            )}
 
             <div>
               <h2 className="text-2xl font-bold mb-4">Generated Charts</h2>

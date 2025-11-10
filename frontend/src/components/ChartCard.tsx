@@ -135,12 +135,21 @@ export function ChartCard({ chart }: ChartCardProps) {
       <CardHeader>
         <CardTitle className="text-lg">{chart.title}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         <ReactECharts
           option={getChartOption()}
           style={{ height: '400px', width: '100%' }}
           opts={{ renderer: 'canvas' }}
         />
+
+        {chart.insight && (
+          <div className="pt-4 border-t">
+            <p className="text-sm text-muted-foreground italic">
+              <span className="font-semibold text-foreground">AI Insight: </span>
+              {chart.insight}
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

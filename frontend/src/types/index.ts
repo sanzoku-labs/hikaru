@@ -39,6 +39,7 @@ export interface ChartData {
   value_column?: string;
   data: Array<Record<string, any>>;
   priority: number;
+  insight?: string;  // Phase 3: AI-generated insight
 }
 
 export interface AnalyzeResponse {
@@ -47,4 +48,5 @@ export interface AnalyzeResponse {
   schema: DataSchema;
   charts: ChartData[];
   upload_timestamp: string;
+  global_summary?: string;  // Phase 3: Overall AI summary
 }

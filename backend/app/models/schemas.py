@@ -40,6 +40,7 @@ class ChartData(BaseModel):
     value_column: Optional[str] = None
     data: List[Dict[str, Any]]
     priority: int
+    insight: Optional[str] = None  # Phase 3: AI-generated insight
 
 class AnalyzeResponse(BaseModel):
     upload_id: str
@@ -47,3 +48,4 @@ class AnalyzeResponse(BaseModel):
     schema: DataSchema
     charts: List[ChartData]
     upload_timestamp: datetime
+    global_summary: Optional[str] = None  # Phase 3: Overall AI summary

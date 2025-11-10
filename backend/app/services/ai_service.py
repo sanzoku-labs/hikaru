@@ -1,12 +1,16 @@
 from anthropic import Anthropic
 from app.config import settings
-from app.models.schemas import DataSchema, ChartData
+from app.models.schemas import DataSchema, ChartData, ConversationMessage
 from typing import List, Dict, Optional
 import json
+import uuid
 from datetime import datetime, timedelta
 
 # Simple in-memory cache for MVP (24-hour TTL)
 _insight_cache: Dict[str, tuple[str, datetime]] = {}
+
+# Conversation storage (upload_id -> {conversation_id -> messages})
+_conversations: Dict[str, Dict[str, List[ConversationMessage]]] = {}
 
 
 class AIService:
@@ -228,8 +232,157 @@ Be concise and actionable."""
 
         return prompt
 
+    def generate_query_response(
+        self,
+        upload_id: str,
+        question: str,
+        schema: DataSchema,
+        conversation_id: Optional[str] = None
+    ) -> tuple[str, str]:
+        """
+        Generate response to user's natural language question about the data.
+
+        Returns: (answer, conversation_id)
+        """
+        if not self.enabled:
+            return "AI service is not available. Please configure ANTHROPIC_API_KEY.", ""
+
+        # Get or create conversation
+        if conversation_id:
+            conversation = self._get_conversation(upload_id, conversation_id)
+        else:
+            conversation_id = str(uuid.uuid4())
+            conversation = []
+
+        # Build prompt with data context and conversation history
+        prompt = self._build_query_prompt(question, schema, conversation)
+
+        try:
+            message = self.client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=500,
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
+            )
+
+            answer = message.content[0].text.strip()
+
+            # Store conversation
+            self._store_conversation(upload_id, conversation_id, question, answer)
+
+            return answer, conversation_id
+
+        except Exception as e:
+            print(f"Error generating query response: {e}")
+            return "Sorry, I encountered an error processing your question.", conversation_id
+
+    def _build_query_prompt(
+        self,
+        question: str,
+        schema: DataSchema,
+        conversation: List[ConversationMessage]
+    ) -> str:
+        """Build prompt for Q&A with data context"""
+
+        # Format data schema
+        column_info = []
+        for col in schema.columns:
+            info = f"- {col.name} ({col.type})"
+            if col.type == "numeric" and col.min is not None:
+                info += f": range {col.min:.2f} to {col.max:.2f}, avg {col.mean:.2f}"
+            elif col.type == "categorical" and col.unique_values:
+                info += f": {col.unique_values} unique values"
+                if col.sample_values:
+                    samples = ", ".join(str(v) for v in col.sample_values[:5])
+                    info += f" (e.g., {samples})"
+            column_info.append(info)
+
+        # Format conversation history
+        history = ""
+        if conversation:
+            history = "\n\nPrevious conversation:\n"
+            for msg in conversation[-5:]:  # Last 5 messages
+                history += f"{msg.role.capitalize()}: {msg.content}\n"
+
+        prompt = f"""You are a data analyst helping a user understand their dataset.
+
+Dataset Information:
+- Total rows: {schema.row_count}
+- Columns:
+{chr(10).join(column_info)}
+
+Sample data (first 3 rows):
+{self._format_sample_data(schema.preview[:3])}
+{history}
+
+User's question: {question}
+
+Provide a clear, concise answer based on the data. If you need specific data values that aren't in the sample, make reasonable inferences based on the schema and sample. Be helpful and specific."""
+
+        return prompt
+
+    def _format_sample_data(self, preview: List[Dict]) -> str:
+        """Format sample data rows for prompt"""
+        if not preview:
+            return "(no sample data)"
+
+        lines = []
+        for i, row in enumerate(preview, 1):
+            row_str = ", ".join(f"{k}: {v}" for k, v in row.items())
+            lines.append(f"  Row {i}: {row_str}")
+
+        return "\n".join(lines)
+
+    def _get_conversation(self, upload_id: str, conversation_id: str) -> List[ConversationMessage]:
+        """Retrieve conversation history"""
+        if upload_id not in _conversations:
+            return []
+        if conversation_id not in _conversations[upload_id]:
+            return []
+        return _conversations[upload_id][conversation_id]
+
+    def _store_conversation(
+        self,
+        upload_id: str,
+        conversation_id: str,
+        question: str,
+        answer: str
+    ):
+        """Store question and answer in conversation history"""
+        if upload_id not in _conversations:
+            _conversations[upload_id] = {}
+        if conversation_id not in _conversations[upload_id]:
+            _conversations[upload_id][conversation_id] = []
+
+        now = datetime.now()
+
+        # Add user question
+        _conversations[upload_id][conversation_id].append(
+            ConversationMessage(
+                role="user",
+                content=question,
+                timestamp=now
+            )
+        )
+
+        # Add assistant answer
+        _conversations[upload_id][conversation_id].append(
+            ConversationMessage(
+                role="assistant",
+                content=answer,
+                timestamp=now
+            )
+        )
+
     @staticmethod
     def clear_cache():
         """Clear the insight cache (useful for testing)"""
         global _insight_cache
         _insight_cache.clear()
+
+    @staticmethod
+    def clear_conversations():
+        """Clear all conversations (useful for testing)"""
+        global _conversations
+        _conversations.clear()

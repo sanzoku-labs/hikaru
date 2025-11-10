@@ -50,3 +50,22 @@ export interface AnalyzeResponse {
   upload_timestamp: string;
   global_summary?: string;  // Phase 3: Overall AI summary
 }
+
+// Phase 4: Q&A Interface Types
+export interface QueryRequest {
+  upload_id: string;
+  question: string;
+  conversation_id?: string;
+}
+
+export interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+}
+
+export interface QueryResponse {
+  answer: string;
+  conversation_id: string;
+  timestamp: string;
+}

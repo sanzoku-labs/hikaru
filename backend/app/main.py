@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.api.routes import upload, analyze
+from app.api.routes import upload, analyze, query
 
 app = FastAPI(
     title="Hikaru API",
@@ -21,6 +21,7 @@ app.add_middleware(
 # Include routers
 app.include_router(upload.router)
 app.include_router(analyze.router)
+app.include_router(query.router)
 
 @app.get("/health")
 async def health_check():

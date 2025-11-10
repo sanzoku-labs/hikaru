@@ -3,6 +3,7 @@ import { FileUploader } from '@/components/FileUploader'
 import { DataPreview } from '@/components/DataPreview'
 import { ChartGrid } from '@/components/ChartGrid'
 import { GlobalSummary } from '@/components/GlobalSummary'
+import { ChatInterface } from '@/components/ChatInterface'
 import { Button } from '@/components/ui/button'
 import { api } from '@/services/api'
 import type { UploadResponse, AnalyzeResponse } from '@/types'
@@ -82,6 +83,13 @@ function App() {
                 loading={chartsLoading}
               />
             </div>
+
+            {analyzeData && (
+              <div>
+                <h2 className="text-2xl font-bold mb-4">Ask Questions</h2>
+                <ChatInterface uploadId={uploadData.upload_id} />
+              </div>
+            )}
           </div>
         )}
       </main>

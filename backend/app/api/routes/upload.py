@@ -2,6 +2,7 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from app.models.schemas import UploadResponse, ErrorResponse
 from app.services.data_processor import DataProcessor
 from app.config import settings
+from app.storage import store_upload
 import uuid
 from datetime import datetime
 import os
@@ -58,6 +59,14 @@ async def upload_file(file: UploadFile = File(...)):
 
         # Generate schema
         schema = processor.analyze_schema(df)
+
+        # Store in shared storage
+        store_upload(
+            upload_id=upload_id,
+            filename=file.filename,
+            schema=schema,
+            df=df
+        )
 
         return UploadResponse(
             upload_id=upload_id,

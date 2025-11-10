@@ -3,13 +3,12 @@ from app.models.schemas import AnalyzeResponse, ChartData
 from app.services.data_processor import DataProcessor
 from app.services.chart_generator import ChartGenerator
 from app.services.ai_service import AIService
+from app.storage import get_upload
 from datetime import datetime
 import os
 import pandas as pd
 
 router = APIRouter(prefix="/api", tags=["analyze"])
-
-UPLOAD_DIR = "uploads"
 
 @router.get("/analyze/{upload_id}", response_model=AnalyzeResponse)
 async def analyze_data(upload_id: str):
@@ -22,32 +21,19 @@ async def analyze_data(upload_id: str):
     3. Generates global summary (if API key configured)
     """
 
-    # Find the file
-    csv_path = os.path.join(UPLOAD_DIR, f"{upload_id}.csv")
-    xlsx_path = os.path.join(UPLOAD_DIR, f"{upload_id}.xlsx")
-
-    file_path = None
-    file_extension = None
-
-    if os.path.exists(csv_path):
-        file_path = csv_path
-        file_extension = "csv"
-    elif os.path.exists(xlsx_path):
-        file_path = xlsx_path
-        file_extension = "xlsx"
-    else:
+    # Get upload data from storage
+    upload_data = get_upload(upload_id)
+    if not upload_data:
         raise HTTPException(
             status_code=404,
-            detail=f"File not found for upload_id: {upload_id}"
+            detail=f"Upload ID {upload_id} not found"
         )
 
     try:
-        # Parse file
-        processor = DataProcessor()
-        df = processor.parse_file(file_path, file_extension)
-
-        # Generate schema
-        schema = processor.analyze_schema(df)
+        # Get data from storage (already parsed)
+        df = upload_data["dataframe"]
+        schema = upload_data["schema"]
+        filename = upload_data["filename"]
 
         # Generate charts
         chart_generator = ChartGenerator()
@@ -74,16 +60,12 @@ async def analyze_data(upload_id: str):
                 print(f"Warning: AI insights generation failed: {e}")
                 # Continue without insights (graceful degradation)
 
-        # Get original filename from upload_id (we'll need to store this mapping)
-        # For now, use the file extension
-        filename = f"data.{file_extension}"
-
         return AnalyzeResponse(
             upload_id=upload_id,
             filename=filename,
             schema=schema,
             charts=charts,
-            upload_timestamp=datetime.now(),
+            upload_timestamp=upload_data["timestamp"],
             global_summary=global_summary
         )
 

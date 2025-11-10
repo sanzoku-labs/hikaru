@@ -1,4 +1,4 @@
-import type { UploadResponse, AnalyzeResponse } from '@/types'
+import type { UploadResponse, AnalyzeResponse, QueryRequest, QueryResponse } from '@/types'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
@@ -44,6 +44,27 @@ export const api = {
       const error = await response.json()
       throw new ApiError(
         error.error || 'Analysis failed',
+        response.status,
+        error.detail
+      )
+    }
+
+    return response.json()
+  },
+
+  async queryData(request: QueryRequest): Promise<QueryResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/query`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new ApiError(
+        error.error || 'Query failed',
         response.status,
         error.detail
       )

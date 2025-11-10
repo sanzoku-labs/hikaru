@@ -49,3 +49,19 @@ class AnalyzeResponse(BaseModel):
     charts: List[ChartData]
     upload_timestamp: datetime
     global_summary: Optional[str] = None  # Phase 3: Overall AI summary
+
+# Phase 4: Q&A Interface Schemas
+class QueryRequest(BaseModel):
+    upload_id: str
+    question: str
+    conversation_id: Optional[str] = None  # For tracking conversation context
+
+class ConversationMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+    timestamp: datetime
+
+class QueryResponse(BaseModel):
+    answer: str
+    conversation_id: str
+    timestamp: datetime

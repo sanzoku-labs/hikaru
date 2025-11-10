@@ -28,3 +28,23 @@ export interface ErrorResponse {
   detail: string;
   code?: string;
 }
+
+// Phase 2: Chart Types
+export interface ChartData {
+  chart_type: 'line' | 'bar' | 'pie' | 'scatter';
+  title: string;
+  x_column?: string;
+  y_column?: string;
+  category_column?: string;
+  value_column?: string;
+  data: Array<Record<string, any>>;
+  priority: number;
+}
+
+export interface AnalyzeResponse {
+  upload_id: string;
+  filename: string;
+  schema: DataSchema;
+  charts: ChartData[];
+  upload_timestamp: string;
+}

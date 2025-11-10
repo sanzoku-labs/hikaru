@@ -29,3 +29,21 @@ class ErrorResponse(BaseModel):
     error: str
     detail: str
     code: Optional[str] = None
+
+# Phase 2: Chart Generation Schemas
+class ChartData(BaseModel):
+    chart_type: Literal["line", "bar", "pie", "scatter"]
+    title: str
+    x_column: Optional[str] = None
+    y_column: Optional[str] = None
+    category_column: Optional[str] = None
+    value_column: Optional[str] = None
+    data: List[Dict[str, Any]]
+    priority: int
+
+class AnalyzeResponse(BaseModel):
+    upload_id: str
+    filename: str
+    schema: DataSchema
+    charts: List[ChartData]
+    upload_timestamp: datetime

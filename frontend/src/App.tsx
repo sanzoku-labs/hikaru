@@ -1,17 +1,54 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FileUploader } from '@/components/FileUploader'
 import { DataPreview } from '@/components/DataPreview'
-import type { UploadResponse } from '@/types'
+import { ChartGrid } from '@/components/ChartGrid'
+import { Button } from '@/components/ui/button'
+import { api } from '@/services/api'
+import type { UploadResponse, AnalyzeResponse } from '@/types'
+import { RotateCcw } from 'lucide-react'
 
 function App() {
   const [uploadData, setUploadData] = useState<UploadResponse | null>(null)
+  const [analyzeData, setAnalyzeData] = useState<AnalyzeResponse | null>(null)
+  const [chartsLoading, setChartsLoading] = useState(false)
+
+  // Auto-analyze after upload
+  useEffect(() => {
+    if (uploadData && !analyzeData) {
+      const fetchCharts = async () => {
+        setChartsLoading(true)
+        try {
+          const response = await api.analyzeData(uploadData.upload_id)
+          setAnalyzeData(response)
+        } catch (error) {
+          console.error('Failed to analyze data:', error)
+        } finally {
+          setChartsLoading(false)
+        }
+      }
+      fetchCharts()
+    }
+  }, [uploadData, analyzeData])
+
+  const handleReset = () => {
+    setUploadData(null)
+    setAnalyzeData(null)
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold">Hikaru</h1>
-          <p className="text-sm text-muted-foreground">AI Data Insight Board</p>
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold">Hikaru</h1>
+            <p className="text-sm text-muted-foreground">AI Data Insight Board</p>
+          </div>
+          {uploadData && (
+            <Button variant="outline" onClick={handleReset}>
+              <RotateCcw className="h-4 w-4 mr-2" />
+              New Upload
+            </Button>
+          )}
         </div>
       </header>
 
@@ -32,6 +69,14 @@ function App() {
               schema={uploadData.schema}
               filename={uploadData.filename}
             />
+
+            <div>
+              <h2 className="text-2xl font-bold mb-4">Generated Charts</h2>
+              <ChartGrid
+                charts={analyzeData?.charts || []}
+                loading={chartsLoading}
+              />
+            </div>
           </div>
         )}
       </main>

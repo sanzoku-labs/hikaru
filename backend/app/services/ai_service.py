@@ -310,7 +310,34 @@ Be concise and actionable."""
             for msg in conversation[-5:]:  # Last 5 messages
                 history += f"{msg.role.capitalize()}: {msg.content}\n"
 
-        prompt = f"""You are a data analyst helping a user understand their dataset.
+        # Check if this is a visualization request
+        viz_keywords = ["show", "visualize", "chart", "graph", "plot", "display", "create"]
+        is_viz_request = any(keyword in question.lower() for keyword in viz_keywords)
+
+        if is_viz_request:
+            prompt = f"""The user is requesting a DATA VISUALIZATION. You MUST respond in this EXACT format:
+
+[Brief 1-sentence description]
+
+CHART_CONFIG: {{"chart_type": "TYPE", "category_column": "COL", "value_column": "COL", "title": "Title"}}
+
+Dataset columns:
+{chr(10).join(column_info)}
+
+Sample data:
+{self._format_sample_data(schema.preview[:3])}
+
+User question: {question}
+
+SELECT THE CORRECT CHART TYPE:
+- BAR chart: For categorical + numeric (e.g., revenue by region)
+- PIE chart: For categorical + numeric showing parts of whole
+- LINE chart: For datetime + numeric (trends over time)
+- SCATTER: For two numeric columns
+
+RESPOND NOW with the format above. Use ONLY columns that exist in the dataset."""
+        else:
+            prompt = f"""You are a data analyst helping a user understand their dataset.
 
 Dataset Information:
 - Total rows: {schema.row_count}
@@ -323,19 +350,7 @@ Sample data (first 3 rows):
 
 User's question: {question}
 
-IMPORTANT: If the question requests a visualization (keywords: "show", "visualize", "chart", "graph", "plot", "display"), respond with:
-1. A natural language answer
-2. CHART_CONFIG JSON at the end in this exact format:
-
-CHART_CONFIG: {{"chart_type": "line|bar|pie|scatter", "x_column": "column_name", "y_column": "column_name", "title": "Chart Title"}}
-
-For example:
-- "Show me revenue over time" → Use "line" chart with datetime x_column and numeric y_column
-- "Visualize sales by region" → Use "bar" chart with categorical x_column (category_column) and numeric y_column (value_column)
-- "Pie chart of expenses by category" → Use "pie" chart with category_column and value_column
-- "Plot price vs quantity" → Use "scatter" chart with two numeric columns
-
-Only include CHART_CONFIG if a visualization is explicitly requested. For regular questions, just provide a text answer."""
+Provide a clear, concise answer based on the data. If you need specific data values that aren't in the sample, make reasonable inferences based on the schema and sample. Be helpful and specific."""
 
         return prompt
 

@@ -56,9 +56,19 @@ function App() {
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">Hikaru</h1>
-            <p className="text-sm text-muted-foreground">AI Data Insight Board</p>
+          <div className="flex items-center gap-8">
+            <div className="cursor-pointer" onClick={() => navigate('/')}>
+              <h1 className="text-2xl font-bold">Hikaru</h1>
+              <p className="text-sm text-muted-foreground">AI Data Insight Board</p>
+            </div>
+            <nav className="flex gap-2">
+              <Button variant="ghost" onClick={() => navigate('/')}>
+                Quick Analysis
+              </Button>
+              <Button variant="ghost" onClick={() => navigate('/projects')}>
+                Projects
+              </Button>
+            </nav>
           </div>
           <div className="flex items-center gap-4">
             {uploadData && analyzeData && (

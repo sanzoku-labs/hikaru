@@ -617,6 +617,107 @@ IMPORTANT:
 
         return prompt
 
+    async def generate_comparison_insight(
+        self,
+        file_a_name: str,
+        file_b_name: str,
+        metrics: Dict,
+        comparison_type: str
+    ) -> str:
+        """
+        Generate AI insight comparing two files.
+
+        Args:
+            file_a_name: Name of first file
+            file_b_name: Name of second file
+            metrics: Comparison metrics dictionary
+            comparison_type: Type of comparison (trend, yoy, side_by_side)
+
+        Returns:
+            Summary insight string
+        """
+        if not self.enabled:
+            return f"Comparison between {file_a_name} and {file_b_name} generated successfully."
+
+        try:
+            prompt = f"""Analyze this data comparison and provide a concise business insight (3-4 sentences).
+
+Comparison Type: {comparison_type}
+File A: {file_a_name}
+File B: {file_b_name}
+
+Metrics:
+- Row count change: {metrics.get('row_count_a', 0)} → {metrics.get('row_count_b', 0)} ({metrics.get('row_count_pct_change', 0):.1f}% change)
+
+Numeric columns:
+{json.dumps(metrics.get('numeric_columns', {}), indent=2)}
+
+Focus on:
+1. Most significant changes (both magnitude and percentage)
+2. Business implications
+3. Key trends or patterns
+4. Actionable insights
+
+Provide a concise summary highlighting the most important findings."""
+
+            message = self.client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=300,
+                messages=[{"role": "user", "content": prompt}]
+            )
+
+            return message.content[0].text.strip()
+
+        except Exception as e:
+            print(f"Error generating comparison insight: {e}")
+            return f"Comparison between {file_a_name} and {file_b_name} shows data differences across multiple metrics."
+
+    async def generate_chart_comparison_insight(
+        self,
+        chart,
+        metrics: Dict
+    ) -> Optional[str]:
+        """
+        Generate insight for a specific comparison chart.
+
+        Args:
+            chart: OverlayChartData object
+            metrics: Comparison metrics
+
+        Returns:
+            Insight string for the chart
+        """
+        if not self.enabled:
+            return None
+
+        try:
+            # Get relevant metric for this chart's y_column
+            y_col_metrics = metrics.get('numeric_columns', {}).get(chart.y_column, {})
+
+            prompt = f"""Provide a 1-2 sentence insight for this comparison chart.
+
+Chart: {chart.title}
+Type: {chart.chart_type}
+Comparing: {chart.file_a_name} vs {chart.file_b_name}
+X-axis: {chart.x_column}
+Y-axis: {chart.y_column}
+
+Metrics for {chart.y_column}:
+{json.dumps(y_col_metrics, indent=2)}
+
+Focus on the most notable difference or trend visible in this specific chart."""
+
+            message = self.client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=150,
+                messages=[{"role": "user", "content": prompt}]
+            )
+
+            return message.content[0].text.strip()
+
+        except Exception:
+            return None
+
     @staticmethod
     def clear_cache():
         """Clear the insight cache (useful for testing)"""

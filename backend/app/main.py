@@ -1,12 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.api.routes import upload, analyze, query, export, auth
+from app.api.routes import upload, analyze, query, export, auth, projects, compare, merge
 
 app = FastAPI(
     title="Hikaru API",
-    description="AI Data Insight Board API - Phase 8 (Authentication Enabled)",
-    version="2.0.0"
+    description="AI Data Insight Board API - Phase 7 (Projects & Multi-File Workspaces)",
+    version="3.0.0"
 )
 
 # CORS
@@ -24,6 +24,9 @@ app.include_router(upload.router)
 app.include_router(analyze.router)
 app.include_router(query.router)
 app.include_router(export.router)
+app.include_router(projects.router)  # Phase 7A: Project management
+app.include_router(compare.router)   # Phase 7B: File comparison
+app.include_router(merge.router)     # Phase 7C: File merging
 
 @app.get("/health")
 async def health_check():

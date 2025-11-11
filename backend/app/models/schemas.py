@@ -133,3 +133,162 @@ class ExportResponse(BaseModel):
     download_url: str
     filename: str
     generated_at: datetime
+
+
+# ===== Phase 7: Projects & Multi-File Workspaces Schemas =====
+
+# Phase 7A: Project Management
+class ProjectCreate(BaseModel):
+    """Request schema for creating a new project."""
+    name: str = Field(..., min_length=1, max_length=255)
+    description: Optional[str] = Field(None, max_length=1000)
+
+
+class ProjectUpdate(BaseModel):
+    """Request schema for updating an existing project."""
+    name: Optional[str] = Field(None, min_length=1, max_length=255)
+    description: Optional[str] = Field(None, max_length=1000)
+    is_archived: Optional[bool] = None
+
+
+class FileInProject(BaseModel):
+    """Schema for file metadata within a project."""
+    id: int
+    project_id: int
+    filename: str
+    upload_id: str
+    file_size: int
+    row_count: Optional[int]
+    schema_json: Optional[str]
+    uploaded_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ProjectResponse(BaseModel):
+    """Response schema for project information."""
+    id: int
+    name: str
+    description: Optional[str]
+    user_id: int
+    created_at: datetime
+    updated_at: datetime
+    is_archived: bool
+    file_count: Optional[int] = None  # Optional computed field
+    files: Optional[List[FileInProject]] = None  # Optional when listing
+
+    class Config:
+        from_attributes = True
+
+
+class ProjectListResponse(BaseModel):
+    """Response schema for listing projects."""
+    projects: List[ProjectResponse]
+    total: int
+
+
+class ProjectFileUploadResponse(BaseModel):
+    """Response schema after uploading file to project."""
+    file_id: int
+    upload_id: str
+    filename: str
+    file_size: int
+    row_count: int
+    schema: DataSchema
+    uploaded_at: datetime
+
+
+# Phase 7B: File Comparison
+class ComparisonRequest(BaseModel):
+    """Request schema for comparing two files."""
+    file_a_id: int
+    file_b_id: int
+    comparison_type: Literal["trend", "yoy", "side_by_side"] = "side_by_side"
+
+
+class OverlayChartData(BaseModel):
+    """Schema for overlay chart with data from two files."""
+    chart_type: Literal["line", "bar", "scatter"]
+    title: str
+    file_a_name: str
+    file_b_name: str
+    x_column: str
+    y_column: str
+    file_a_data: List[Dict[str, Any]]
+    file_b_data: List[Dict[str, Any]]
+    comparison_insight: Optional[str] = None
+
+
+class ComparisonResponse(BaseModel):
+    """Response schema for file comparison."""
+    comparison_id: int
+    file_a: FileInProject
+    file_b: FileInProject
+    comparison_type: str
+    overlay_charts: List[OverlayChartData]
+    summary_insight: str
+    created_at: datetime
+
+
+# Phase 7C: File Merging
+class RelationshipCreate(BaseModel):
+    """Request schema for creating a file relationship (for merging)."""
+    file_a_id: int
+    file_b_id: int
+    join_type: Literal["inner", "left", "right", "outer"] = "inner"
+    left_key: str  # Column name in file_a
+    right_key: str  # Column name in file_b
+    left_suffix: str = "_a"
+    right_suffix: str = "_b"
+
+
+class RelationshipResponse(BaseModel):
+    """Response schema for file relationship."""
+    id: int
+    project_id: int
+    file_a_id: int
+    file_b_id: int
+    relationship_type: str
+    config_json: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class MergeAnalyzeRequest(BaseModel):
+    """Request schema for analyzing merged data."""
+    relationship_id: int
+
+
+class MergeAnalyzeResponse(BaseModel):
+    """Response schema for merged data analysis."""
+    relationship_id: int
+    merged_row_count: int
+    merged_schema: DataSchema
+    charts: List[ChartData]
+    global_summary: Optional[str] = None
+
+
+# Dashboard schemas
+class DashboardCreate(BaseModel):
+    """Request schema for creating a dashboard."""
+    name: str = Field(..., min_length=1, max_length=255)
+    dashboard_type: Literal["single_file", "comparison", "merged"]
+    config_json: str  # JSON string with chart configs, file IDs, etc.
+
+
+class DashboardResponse(BaseModel):
+    """Response schema for dashboard information."""
+    id: int
+    project_id: int
+    name: str
+    dashboard_type: str
+    config_json: str
+    chart_data: Optional[str]
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True

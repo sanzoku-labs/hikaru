@@ -336,7 +336,18 @@ async def upload_file_to_project(
 
         # Process file with DataProcessor
         processor = DataProcessor()
-        df, schema = processor.process_file(str(file_path))
+        file_ext = Path(file.filename).suffix.lstrip('.')
+        df = processor.parse_file(str(file_path), file_ext)
+
+        # Validate dataframe
+        is_valid, error_msg = processor.validate_dataframe(df)
+        if not is_valid:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            raise HTTPException(status_code=400, detail=error_msg)
+
+        # Generate schema
+        schema = processor.analyze_schema(df)
 
         # Create file record
         new_file = FileModel(

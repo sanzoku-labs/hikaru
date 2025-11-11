@@ -13,6 +13,23 @@ export class ApiError extends Error {
   }
 }
 
+// Helper function to get auth token from localStorage
+function getAuthToken(): string | null {
+  return localStorage.getItem('auth_token')
+}
+
+// Helper function to create headers with authentication
+function getAuthHeaders(): HeadersInit {
+  const token = getAuthToken()
+  const headers: HeadersInit = {}
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  return headers
+}
+
 export const api = {
   async uploadFile(file: File): Promise<UploadResponse> {
     const formData = new FormData()
@@ -20,6 +37,7 @@ export const api = {
 
     const response = await fetch(`${API_BASE_URL}/api/upload`, {
       method: 'POST',
+      headers: getAuthHeaders(),
       body: formData,
     })
 
@@ -43,6 +61,7 @@ export const api = {
 
     const response = await fetch(url.toString(), {
       method: 'GET',
+      headers: getAuthHeaders(),
     })
 
     if (!response.ok) {
@@ -62,6 +81,7 @@ export const api = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...getAuthHeaders(),
       },
       body: JSON.stringify(request),
     })
@@ -83,6 +103,7 @@ export const api = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...getAuthHeaders(),
       },
       body: JSON.stringify(request),
     })
@@ -102,6 +123,7 @@ export const api = {
   async downloadPDF(exportId: string): Promise<Blob> {
     const response = await fetch(`${API_BASE_URL}/api/download/${exportId}`, {
       method: 'GET',
+      headers: getAuthHeaders(),
     })
 
     if (!response.ok) {

@@ -15,8 +15,16 @@ class Settings(BaseSettings):
     max_file_size_mb: int = 10
     allowed_extensions: str | List[str] = "csv,xlsx"
 
-    # Future
+    # AI
     anthropic_api_key: str = ""
+
+    # Database
+    database_url: str = "sqlite:///./hikaru.db"  # Default to SQLite for backwards compatibility
+
+    # JWT Authentication
+    secret_key: str = "your-secret-key-change-in-production"  # MUST be changed in production
+    algorithm: str = "HS256"
+    access_token_expire_days: int = 7
 
     @field_validator('cors_origins', mode='before')
     @classmethod

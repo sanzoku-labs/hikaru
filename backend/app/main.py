@@ -1,12 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.api.routes import upload, analyze, query, export
+from app.api.routes import upload, analyze, query, export, auth
 
 app = FastAPI(
     title="Hikaru API",
-    description="AI Data Insight Board API",
-    version="1.0.0"
+    description="AI Data Insight Board API - Phase 8 (Authentication Enabled)",
+    version="2.0.0"
 )
 
 # CORS
@@ -19,6 +19,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth.router)  # Phase 8: Authentication endpoints
 app.include_router(upload.router)
 app.include_router(analyze.router)
 app.include_router(query.router)

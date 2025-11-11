@@ -1,10 +1,14 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from sqlalchemy.orm import Session
 from app.models.schemas import UploadResponse, ErrorResponse
 from app.services.data_processor import DataProcessor
 from app.config import settings
 from app.storage import store_upload
+from app.middleware.auth import get_current_active_user
+from app.models.database import User, Upload
+from app.database import get_db
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import shutil
 import pandas as pd
@@ -16,7 +20,11 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.post("/upload", response_model=UploadResponse)
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
     """Upload CSV or XLSX file for analysis"""
 
     # Validate file extension
@@ -67,6 +75,18 @@ async def upload_file(file: UploadFile = File(...)):
             schema=schema,
             df=df
         )
+
+        # Create Upload record in database (Phase 8: associate with user)
+        upload_record = Upload(
+            upload_id=upload_id,
+            user_id=current_user.id,
+            filename=file.filename,
+            file_size=file_size,
+            uploaded_at=datetime.utcnow(),
+            expires_at=datetime.utcnow() + timedelta(hours=1)  # 1-hour TTL
+        )
+        db.add(upload_record)
+        db.commit()
 
         return UploadResponse(
             upload_id=upload_id,

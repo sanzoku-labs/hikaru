@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '@/contexts/AuthContext'
 import { FileUploader } from '@/components/FileUploader'
 import { DataPreview } from '@/components/DataPreview'
 import { ChartGrid } from '@/components/ChartGrid'
@@ -10,9 +12,11 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { api } from '@/services/api'
 import type { UploadResponse, AnalyzeResponse } from '@/types'
-import { RotateCcw, Download, Sparkles, ArrowRight } from 'lucide-react'
+import { RotateCcw, Download, Sparkles, ArrowRight, LogOut } from 'lucide-react'
 
 function App() {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const [uploadData, setUploadData] = useState<UploadResponse | null>(null)
   const [analyzeData, setAnalyzeData] = useState<AnalyzeResponse | null>(null)
   const [chartsLoading, setChartsLoading] = useState(false)
@@ -56,21 +60,38 @@ function App() {
             <h1 className="text-2xl font-bold">Hikaru</h1>
             <p className="text-sm text-muted-foreground">AI Data Insight Board</p>
           </div>
-          {uploadData && analyzeData && (
-            <div className="flex gap-2">
+          <div className="flex items-center gap-4">
+            {uploadData && analyzeData && (
+              <div className="flex gap-2">
+                <Button
+                  variant="default"
+                  onClick={() => setExportModalOpen(true)}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export PDF
+                </Button>
+                <Button variant="outline" onClick={handleReset}>
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  New Upload
+                </Button>
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                {user?.username || user?.email}
+              </span>
               <Button
-                variant="default"
-                onClick={() => setExportModalOpen(true)}
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  logout()
+                  navigate('/login')
+                }}
               >
-                <Download className="h-4 w-4 mr-2" />
-                Export PDF
-              </Button>
-              <Button variant="outline" onClick={handleReset}>
-                <RotateCcw className="h-4 w-4 mr-2" />
-                New Upload
+                <LogOut className="h-4 w-4" />
               </Button>
             </div>
-          )}
+          </div>
         </div>
       </header>
 

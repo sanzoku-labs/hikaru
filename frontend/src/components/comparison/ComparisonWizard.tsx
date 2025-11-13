@@ -7,7 +7,7 @@
  * - Step 3: Preview and execute
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Wizard, WizardStep } from '../shared/Wizard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

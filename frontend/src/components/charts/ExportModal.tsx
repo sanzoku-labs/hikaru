@@ -8,7 +8,7 @@
  * - Preview before export
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { FileDown, FileText, Image, FileSpreadsheet, Download } from 'lucide-react';
+import { FileText, Image, FileSpreadsheet, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ExportModalProps {
@@ -71,8 +71,8 @@ export function ExportModal({
   open,
   onClose,
   onExport,
-  fileId,
-  projectId,
+  fileId: _fileId,
+  projectId: _projectId,
   defaultFilename = 'export'
 }: ExportModalProps) {
   const [format, setFormat] = useState<'pdf' | 'png' | 'excel'>('pdf');

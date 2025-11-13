@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
-import { FolderOpen, Plus, Calendar, FileText, ArrowRight, Search, SlidersHorizontal } from 'lucide-react'
+import { FolderOpen, Plus, Calendar, FileText, ArrowRight, Search } from 'lucide-react'
 
 export function ProjectList() {
   const navigate = useNavigate()
@@ -237,8 +237,6 @@ export function ProjectList() {
               </Card>
             ))}
           </div>
-
-        {/* Empty State */}
         ) : projects.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
             <FolderOpen className="h-16 w-16 text-muted-foreground mb-4" />
@@ -251,8 +249,6 @@ export function ProjectList() {
               Create Your First Project
             </Button>
           </div>
-
-        {/* Projects List */}
         ) : (
           <>
             {/* Recently Opened Section */}

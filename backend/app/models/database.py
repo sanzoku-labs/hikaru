@@ -108,6 +108,11 @@ class File(Base):
     schema_json = Column(Text, nullable=True)  # JSON string of column schema
     uploaded_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
+    # Analysis fields (for persistent analysis results)
+    analysis_json = Column(Text, nullable=True)  # JSON string of analysis results (charts, insights)
+    analysis_timestamp = Column(DateTime, nullable=True)  # When analysis was last run
+    user_intent = Column(Text, nullable=True)  # User's intent when analysis was run
+
     # Relationships
     project = relationship("Project", back_populates="files")
 

@@ -161,6 +161,8 @@ class FileInProject(BaseModel):
     row_count: Optional[int]
     schema_json: Optional[str]
     uploaded_at: datetime
+    has_analysis: bool = False  # Whether analysis has been performed
+    analyzed_at: Optional[datetime] = None  # When analysis was last run
 
     class Config:
         from_attributes = True
@@ -292,3 +294,19 @@ class DashboardResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# Phase 7D: File Analysis (Persistent Analysis Results)
+class FileAnalyzeRequest(BaseModel):
+    """Request schema for analyzing a file in a project."""
+    user_intent: Optional[str] = Field(None, max_length=500, description="User's intent or question for analysis")
+
+
+class FileAnalysisResponse(BaseModel):
+    """Response schema for file analysis results."""
+    file_id: int
+    filename: str
+    charts: List[ChartData]
+    global_summary: Optional[str] = None
+    user_intent: Optional[str] = None
+    analyzed_at: datetime

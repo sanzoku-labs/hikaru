@@ -33,6 +33,8 @@ export interface FileInProject {
   row_count: number | null;
   schema_json: string | null;
   uploaded_at: string;
+  has_analysis: boolean;
+  analyzed_at: string | null;
 }
 
 export interface ProjectListResponse {
@@ -134,4 +136,14 @@ export interface DashboardResponse {
   chart_data: string | null;
   created_at: string;
   updated_at: string;
+}
+
+// Phase 7D: File Analysis Types
+export interface FileAnalysisResponse {
+  file_id: number;
+  filename: string;
+  charts: any[]; // ChartData[]
+  global_summary: string | null;
+  user_intent: string | null;
+  analyzed_at: string;
 }

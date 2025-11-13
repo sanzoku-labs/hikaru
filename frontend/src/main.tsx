@@ -8,6 +8,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import { ProjectList } from './pages/ProjectList'
 import { ProjectDetail } from './pages/ProjectDetail'
+import ProjectFileAnalysis from './pages/ProjectFileAnalysis'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -30,6 +31,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             element={
               <ProtectedRoute>
                 <ProjectList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/projects/:projectId/files/:fileId/analysis"
+            element={
+              <ProtectedRoute>
+                <ProjectFileAnalysis />
               </ProtectedRoute>
             }
           />

@@ -28,6 +28,8 @@ import {
   GitMerge,
   Calendar,
   X,
+  BarChart3,
+  Eye,
 } from 'lucide-react'
 import { ChartGrid } from '@/components/ChartGrid'
 import { GlobalSummary } from '@/components/GlobalSummary'
@@ -310,23 +312,50 @@ export function ProjectDetail() {
                 <Card key={file.id}>
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
-                      <div>
+                      <div className="flex-1">
                         <CardTitle className="text-lg">{file.filename}</CardTitle>
                         <CardDescription className="mt-1">
                           <div className="flex items-center gap-4 text-sm">
                             <span>{formatFileSize(file.file_size)}</span>
                             <span>{file.row_count?.toLocaleString() || 0} rows</span>
                             <span>{formatDate(file.uploaded_at)}</span>
+                            {file.has_analysis && file.analyzed_at && (
+                              <Badge variant="secondary" className="ml-2">
+                                <BarChart3 className="h-3 w-3 mr-1" />
+                                Analyzed {formatDate(file.analyzed_at)}
+                              </Badge>
+                            )}
                           </div>
                         </CardDescription>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteFile(file.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <div className="flex gap-2">
+                        {file.has_analysis ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate(`/projects/${projectId}/files/${file.id}/analysis`)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Analysis
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => navigate(`/projects/${projectId}/files/${file.id}/analysis`)}
+                          >
+                            <BarChart3 className="h-4 w-4 mr-2" />
+                            Analyze
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteFile(file.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                 </Card>

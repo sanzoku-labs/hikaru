@@ -111,6 +111,8 @@ export interface FileInProject {
   row_count?: number;
   schema_json?: string;
   uploaded_at: string;
+  has_analysis: boolean;
+  analyzed_at?: string;
 }
 
 export interface ProjectResponse {
@@ -190,4 +192,14 @@ export interface MergeAnalyzeResponse {
   merged_schema: DataSchema;
   charts: ChartData[];
   global_summary?: string;
+}
+
+// Phase 7D: File Analysis Types
+export interface FileAnalysisResponse {
+  file_id: number;
+  filename: string;
+  charts: ChartData[];
+  global_summary?: string;
+  user_intent?: string;
+  analyzed_at: string;
 }

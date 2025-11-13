@@ -16,10 +16,15 @@ from app.models.schemas import (
     ProjectListResponse,
     ProjectFileUploadResponse,
     FileInProject,
-    ErrorResponse
+    ErrorResponse,
+    FileAnalyzeRequest,
+    FileAnalysisResponse
 )
 from app.models.database import User, Project, File as FileModel
 from app.services.data_processor import DataProcessor
+from app.services.chart_generator import ChartGenerator
+from app.services.ai_service import AIService
+import json
 import uuid
 import os
 import shutil
@@ -154,7 +159,16 @@ async def get_project(
         # Convert to response and include files
         project_response = ProjectResponse.model_validate(project)
         project_response.file_count = len(project.files)
-        project_response.files = [FileInProject.model_validate(f) for f in project.files]
+
+        # Populate files with analysis status
+        files_with_analysis = []
+        for f in project.files:
+            file_dict = FileInProject.model_validate(f).model_dump()
+            file_dict['has_analysis'] = f.analysis_json is not None
+            file_dict['analyzed_at'] = f.analysis_timestamp
+            files_with_analysis.append(FileInProject(**file_dict))
+
+        project_response.files = files_with_analysis
 
         return project_response
 
@@ -423,7 +437,15 @@ async def list_project_files(
                 detail=f"Project {project_id} not found"
             )
 
-        return [FileInProject.model_validate(f) for f in project.files]
+        # Populate files with analysis status
+        files_with_analysis = []
+        for f in project.files:
+            file_dict = FileInProject.model_validate(f).model_dump()
+            file_dict['has_analysis'] = f.analysis_json is not None
+            file_dict['analyzed_at'] = f.analysis_timestamp
+            files_with_analysis.append(FileInProject(**file_dict))
+
+        return files_with_analysis
 
     except HTTPException:
         raise
@@ -498,4 +520,190 @@ async def delete_project_file(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete file: {str(e)}"
+        )
+
+
+@router.post("/{project_id}/files/{file_id}/analyze", response_model=FileAnalysisResponse)
+async def analyze_project_file(
+    project_id: int,
+    file_id: int,
+    request: FileAnalyzeRequest,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Analyze a file in a project, generating charts and AI insights.
+    Results are saved to the database for fast retrieval.
+
+    Args:
+        project_id: Project ID
+        file_id: File ID
+        request: Analysis request with optional user intent
+        current_user: Authenticated user
+        db: Database session
+
+    Returns:
+        FileAnalysisResponse with charts, insights, and metadata
+
+    Raises:
+        HTTP 404: If project or file not found
+        HTTP 500: If analysis fails
+    """
+    try:
+        # Verify project exists and user owns it
+        project = db.query(Project).filter(
+            Project.id == project_id,
+            Project.user_id == current_user.id
+        ).first()
+
+        if not project:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Project {project_id} not found"
+            )
+
+        # Find file
+        file = db.query(FileModel).filter(
+            FileModel.id == file_id,
+            FileModel.project_id == project_id
+        ).first()
+
+        if not file:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"File {file_id} not found in project {project_id}"
+            )
+
+        # Load the dataframe
+        processor = DataProcessor()
+        file_ext = Path(file.filename).suffix.lstrip('.')
+        df = processor.parse_file(file.file_path, file_ext)
+
+        # Parse schema from stored JSON
+        schema = processor.analyze_schema(df)
+
+        # Generate charts
+        chart_generator = ChartGenerator()
+        charts_data = chart_generator.generate_charts(df, schema, user_intent=request.user_intent)
+
+        # Generate AI insights
+        ai_service = AIService()
+
+        # Add insights to charts
+        for chart in charts_data:
+            insight = ai_service.generate_chart_insight(chart, schema)
+            chart.insight = insight
+
+        # Generate global summary
+        global_summary = ai_service.generate_global_summary(charts_data, schema, user_intent=request.user_intent)
+
+        # Store analysis results in database
+        analysis_json = {
+            "charts": [chart.model_dump() for chart in charts_data],
+            "global_summary": global_summary,
+            "schema": schema.model_dump()
+        }
+
+        file.analysis_json = json.dumps(analysis_json)
+        file.analysis_timestamp = datetime.utcnow()
+        file.user_intent = request.user_intent
+
+        db.commit()
+        db.refresh(file)
+
+        return FileAnalysisResponse(
+            file_id=file.id,
+            filename=file.filename,
+            charts=charts_data,
+            global_summary=global_summary,
+            user_intent=request.user_intent,
+            analyzed_at=file.analysis_timestamp
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to analyze file: {str(e)}"
+        )
+
+
+@router.get("/{project_id}/files/{file_id}/analysis", response_model=FileAnalysisResponse)
+async def get_project_file_analysis(
+    project_id: int,
+    file_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get saved analysis results for a file in a project.
+
+    Args:
+        project_id: Project ID
+        file_id: File ID
+        current_user: Authenticated user
+        db: Database session
+
+    Returns:
+        FileAnalysisResponse with saved analysis results
+
+    Raises:
+        HTTP 404: If project, file, or analysis not found
+    """
+    try:
+        # Verify project exists and user owns it
+        project = db.query(Project).filter(
+            Project.id == project_id,
+            Project.user_id == current_user.id
+        ).first()
+
+        if not project:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Project {project_id} not found"
+            )
+
+        # Find file
+        file = db.query(FileModel).filter(
+            FileModel.id == file_id,
+            FileModel.project_id == project_id
+        ).first()
+
+        if not file:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"File {file_id} not found in project {project_id}"
+            )
+
+        # Check if analysis exists
+        if not file.analysis_json:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No analysis found for file {file_id}. Please analyze the file first."
+            )
+
+        # Parse stored analysis
+        analysis_data = json.loads(file.analysis_json)
+
+        # Import ChartData for deserialization
+        from app.models.schemas import ChartData
+        charts = [ChartData(**chart) for chart in analysis_data["charts"]]
+
+        return FileAnalysisResponse(
+            file_id=file.id,
+            filename=file.filename,
+            charts=charts,
+            global_summary=analysis_data.get("global_summary"),
+            user_intent=file.user_intent,
+            analyzed_at=file.analysis_timestamp
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve analysis: {str(e)}"
         )

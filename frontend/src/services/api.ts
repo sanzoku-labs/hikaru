@@ -15,7 +15,8 @@ import type {
   RelationshipCreate,
   RelationshipResponse,
   MergeAnalyzeRequest,
-  MergeAnalyzeResponse
+  MergeAnalyzeResponse,
+  FileAnalysisResponse
 } from '@/types'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
@@ -362,6 +363,40 @@ export const api = {
     if (!response.ok) {
       const error = await response.json()
       throw new ApiError(error.error || 'Merge analysis failed', response.status, error.detail)
+    }
+
+    return response.json()
+  },
+
+  // Phase 7D: File Analysis
+  async analyzeProjectFile(projectId: number, fileId: number, userIntent?: string): Promise<FileAnalysisResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/projects/${projectId}/files/${fileId}/analyze`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({ user_intent: userIntent }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new ApiError(error.error || 'File analysis failed', response.status, error.detail)
+    }
+
+    return response.json()
+  },
+
+  async getProjectFileAnalysis(projectId: number, fileId: number): Promise<FileAnalysisResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/projects/${projectId}/files/${fileId}/analysis`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      // FastAPI returns errors in "detail" field, not "error" field
+      throw new ApiError(error.detail || 'Failed to get file analysis', response.status, error.detail)
     }
 
     return response.json()

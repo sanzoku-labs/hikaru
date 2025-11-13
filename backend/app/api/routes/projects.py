@@ -18,7 +18,9 @@ from app.models.schemas import (
     FileInProject,
     ErrorResponse,
     FileAnalyzeRequest,
-    FileAnalysisResponse
+    FileAnalysisResponse,
+    AnalysisHistoryResponse,
+    AnalysisHistoryItem
 )
 from app.models.database import User, Project, File as FileModel
 from app.services.data_processor import DataProcessor
@@ -706,4 +708,92 @@ async def get_project_file_analysis(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve analysis: {str(e)}"
+        )
+
+
+@router.get("/{project_id}/files/{file_id}/analysis-history", response_model=AnalysisHistoryResponse)
+async def get_analysis_history(
+    project_id: int,
+    file_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get analysis history for a file (Mockup 3 - Saved Analyses).
+
+    Returns all saved analysis sessions for a specific file.
+    Currently returns the single latest analysis (future: support versioning).
+
+    Args:
+        project_id: Project ID
+        file_id: File ID
+        current_user: Authenticated user
+        db: Database session
+
+    Returns:
+        AnalysisHistoryResponse with list of analysis sessions
+
+    Raises:
+        HTTP 404: If project or file not found
+    """
+    try:
+        # Verify project exists and user owns it
+        project = db.query(Project).filter(
+            Project.id == project_id,
+            Project.user_id == current_user.id
+        ).first()
+
+        if not project:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Project {project_id} not found"
+            )
+
+        # Find file
+        file = db.query(FileModel).filter(
+            FileModel.id == file_id,
+            FileModel.project_id == project_id
+        ).first()
+
+        if not file:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"File {file_id} not found in project {project_id}"
+            )
+
+        # Build analysis history
+        analyses = []
+
+        if file.analysis_json and file.analysis_timestamp:
+            # Parse analysis to get metadata
+            analysis_data = json.loads(file.analysis_json)
+            charts_count = len(analysis_data.get("charts", []))
+            has_summary = analysis_data.get("global_summary") is not None
+
+            # Generate analysis ID from timestamp
+            analysis_id = f"analysis_{file.id}_{int(file.analysis_timestamp.timestamp())}"
+
+            analyses.append(AnalysisHistoryItem(
+                analysis_id=analysis_id,
+                file_id=file.id,
+                filename=file.filename,
+                charts_count=charts_count,
+                user_intent=file.user_intent,
+                analyzed_at=file.analysis_timestamp,
+                has_global_summary=has_summary
+            ))
+
+        return AnalysisHistoryResponse(
+            file_id=file.id,
+            filename=file.filename,
+            total_analyses=len(analyses),
+            analyses=analyses
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve analysis history: {str(e)}"
         )

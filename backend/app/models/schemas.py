@@ -135,6 +135,49 @@ class ExportResponse(BaseModel):
     generated_at: datetime
 
 
+# Phase 5B: Advanced Export Schemas (Mockup 6)
+class AdvancedExportRequest(BaseModel):
+    """Request schema for advanced export with custom options."""
+    project_id: Optional[int] = None  # For project exports
+    file_id: Optional[int] = None  # For single file exports
+    upload_id: Optional[str] = None  # Legacy support
+
+    export_format: Literal["pdf", "png", "excel"] = "pdf"
+
+    # Export content options
+    include_charts: bool = True
+    include_insights: bool = True
+    include_raw_data: bool = False
+    include_summary: bool = True
+
+    # Customization
+    custom_filename: Optional[str] = None
+    custom_title: Optional[str] = None
+
+    # Chart-specific options
+    chart_ids: Optional[List[int]] = None  # Specific charts to include (None = all)
+
+    @field_validator('export_format')
+    @classmethod
+    def validate_export_format(cls, v):
+        """Ensure export format is supported."""
+        supported_formats = ["pdf", "png", "excel"]
+        if v not in supported_formats:
+            raise ValueError(f"Export format must be one of: {', '.join(supported_formats)}")
+        return v
+
+
+class AdvancedExportResponse(BaseModel):
+    """Response schema for advanced export."""
+    export_id: str
+    download_url: str
+    filename: str
+    file_size: Optional[int] = None  # Size in bytes
+    export_format: str
+    generated_at: datetime
+    expires_at: datetime  # When export will be deleted
+
+
 # ===== Phase 7: Projects & Multi-File Workspaces Schemas =====
 
 # Phase 7A: Project Management
@@ -281,6 +324,13 @@ class DashboardCreate(BaseModel):
     config_json: str  # JSON string with chart configs, file IDs, etc.
 
 
+class DashboardUpdate(BaseModel):
+    """Request schema for updating a dashboard."""
+    name: Optional[str] = Field(None, min_length=1, max_length=255)
+    config_json: Optional[str] = None
+    chart_data: Optional[str] = None
+
+
 class DashboardResponse(BaseModel):
     """Response schema for dashboard information."""
     id: int
@@ -294,6 +344,32 @@ class DashboardResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class DashboardListResponse(BaseModel):
+    """Response schema for listing dashboards in a project."""
+    dashboards: List[DashboardResponse]
+    total: int
+
+
+# Analysis History schemas
+class AnalysisHistoryItem(BaseModel):
+    """Schema for a single analysis history entry."""
+    analysis_id: str  # Generated from timestamp
+    file_id: int
+    filename: str
+    charts_count: int
+    user_intent: Optional[str] = None
+    analyzed_at: datetime
+    has_global_summary: bool
+
+
+class AnalysisHistoryResponse(BaseModel):
+    """Response schema for analysis history."""
+    file_id: int
+    filename: str
+    total_analyses: int
+    analyses: List[AnalysisHistoryItem]
 
 
 # Phase 7D: File Analysis (Persistent Analysis Results)

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.api.routes import upload, analyze, query, export, auth, projects, compare, merge
+from app.api.routes import upload, analyze, query, export, auth, projects, compare, merge, dashboards
 
 app = FastAPI(
     title="Hikaru API",
@@ -27,6 +27,7 @@ app.include_router(export.router)
 app.include_router(projects.router)  # Phase 7A: Project management
 app.include_router(compare.router)   # Phase 7B: File comparison
 app.include_router(merge.router)     # Phase 7C: File merging
+app.include_router(dashboards.router)  # Phase 7E: Dashboard management
 
 @app.get("/health")
 async def health_check():

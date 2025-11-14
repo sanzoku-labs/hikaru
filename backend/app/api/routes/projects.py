@@ -4,6 +4,7 @@ Project management API endpoints for Phase 7.
 Handles CRUD operations for projects and project files.
 """
 import json
+import logging
 import os
 import shutil
 import uuid
@@ -18,6 +19,8 @@ from app.core.exceptions import ProjectNotFoundError, ValidationError
 from app.database import get_db
 from app.middleware.auth import get_current_active_user
 from app.models.database import File as FileModel
+
+logger = logging.getLogger(__name__)
 from app.models.database import Project, User
 from app.models.schemas import (
     AnalysisHistoryItem,
@@ -605,9 +608,7 @@ async def analyze_project_file(
 
         # Generate charts
         chart_generator = ChartGenerator()
-        charts_data_raw = chart_generator.generate_charts(
-            df, schema, user_intent=request.user_intent
-        )
+        charts_data_raw = chart_generator.generate_charts(df, schema)
 
         # Generate AI insights
         ai_service = AIService()

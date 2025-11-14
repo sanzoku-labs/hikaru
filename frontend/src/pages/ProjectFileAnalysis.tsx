@@ -104,9 +104,8 @@ export default function ProjectFileAnalysis() {
     }
   };
 
-  const handleExport = async (options: ExportOptions) => {
+  const handleExport = async (_options: ExportOptions) => {
     try {
-      console.log("Exporting with options:", options);
       // TODO: Implement actual export API call
       alert(
         "Export functionality will be implemented with backend integration",

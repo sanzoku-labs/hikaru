@@ -92,12 +92,12 @@ export function Comparisons() {
 
   const handleFileAClick = () => {
     // TODO: Open file selector dialog
-    console.log("Select File A");
+    // File selector dialog implementation pending
   };
 
   const handleFileBClick = () => {
     // TODO: Open file selector dialog
-    console.log("Select File B");
+    // File selector dialog implementation pending
   };
 
   const handleViewModeChange = (mode: "side-by-side" | "overlay") => {

@@ -1,21 +1,23 @@
 """
 Authentication middleware for JWT token validation.
 """
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
+
 from typing import Optional
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.orm import Session
+
 from app.database import get_db
+from app.models.database import Project, User
 from app.services import auth_service
-from app.models.database import User
 
 # HTTP Bearer token scheme
 security = HTTPBearer()
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
+    credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)
 ) -> User:
     """
     Dependency to get the current authenticated user from JWT token.
@@ -75,16 +77,13 @@ async def get_current_user(
     # Check if user is active
     if not user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User account is disabled"
+            status_code=status.HTTP_403_FORBIDDEN, detail="User account is disabled"
         )
 
     return user
 
 
-async def get_current_active_user(
-    current_user: User = Depends(get_current_user)
-) -> User:
+async def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
     """
     Dependency to get the current authenticated and active user.
 
@@ -102,15 +101,12 @@ async def get_current_active_user(
     """
     if not current_user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User account is disabled"
+            status_code=status.HTTP_403_FORBIDDEN, detail="User account is disabled"
         )
     return current_user
 
 
-async def get_current_superuser(
-    current_user: User = Depends(get_current_user)
-) -> User:
+async def get_current_superuser(current_user: User = Depends(get_current_user)) -> User:
     """
     Dependency to get the current authenticated superuser.
 
@@ -128,14 +124,14 @@ async def get_current_superuser(
     if not current_user.is_superuser:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions. Superuser access required."
+            detail="Insufficient permissions. Superuser access required.",
         )
     return current_user
 
 
 def get_optional_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ) -> Optional[User]:
     """
     Dependency to optionally get the current user if a token is provided.
@@ -153,25 +149,45 @@ def get_optional_current_user(
     if credentials is None:
         return None
 
-    try:
-        token = credentials.credentials
-        payload = auth_service.decode_access_token(token)
-        if payload is None:
-            return None
 
-        user_id: Optional[int] = payload.get("sub")
-        if user_id is None:
-            return None
+async def get_user_project(
+    project_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+) -> Project:
+    """
+    Dependency to get a project owned by the current user.
 
-        token_jti: Optional[str] = payload.get("jti")
-        if token_jti and auth_service.is_session_revoked(db, token_jti):
-            return None
+    This is a reusable dependency that verifies:
+    1. The project exists
+    2. The current user owns the project
 
-        user = auth_service.get_user_by_id(db, int(user_id))
-        if user and user.is_active:
-            return user
+    Usage:
+        @router.get("/projects/{project_id}")
+        def get_project(project: Project = Depends(get_user_project)):
+            return project
 
-    except Exception:
-        return None
+    Args:
+        project_id: Project ID from path parameter
+        current_user: Current authenticated user
+        db: Database session
 
-    return None
+    Returns:
+        Project object if found and owned by user
+
+    Raises:
+        HTTPException: 404 if project not found or not owned by user
+    """
+    project = (
+        db.query(Project)
+        .filter(Project.id == project_id, Project.user_id == current_user.id)
+        .first()
+    )
+
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Project with id {project_id} not found or you don't have access to it",
+        )
+
+    return project

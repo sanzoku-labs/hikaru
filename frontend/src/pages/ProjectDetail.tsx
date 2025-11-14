@@ -1,22 +1,33 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { api } from '@/services/api'
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { api } from "@/services/api";
 import type {
   ProjectResponse,
   FileInProject,
   ComparisonResponse,
-  MergeAnalyzeResponse
-} from '@/types'
-import { Layout } from '@/components/Layout'
-import { FileExplorer } from '@/components/projects/FileExplorer'
-import { FileInfoCard } from '@/components/projects/FileInfoCard'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+  MergeAnalyzeResponse,
+} from "@/types";
+import { Layout } from "@/components/Layout";
+import { FileExplorer } from "@/components/projects/FileExplorer";
+import { FileInfoCard } from "@/components/projects/FileInfoCard";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   ArrowLeft,
   Upload,
@@ -28,183 +39,195 @@ import {
   BarChart3,
   Table,
   MessageSquare,
-} from 'lucide-react'
-import { ChartGrid } from '@/components/ChartGrid'
-import { GlobalSummary } from '@/components/GlobalSummary'
-import { DataPreview } from '@/components/DataPreview'
-import { FileUploadZone } from '@/components/projects/FileUploadZone'
-import { ComparisonWizard } from '@/components/comparison/ComparisonWizard'
-import { MergeWizard } from '@/components/merging/MergeWizard'
+} from "lucide-react";
+import { ChartGrid } from "@/components/ChartGrid";
+import { GlobalSummary } from "@/components/GlobalSummary";
+import { DataPreview } from "@/components/DataPreview";
+import { FileUploadZone } from "@/components/projects/FileUploadZone";
+import { ComparisonWizard } from "@/components/comparison/ComparisonWizard";
+import { MergeWizard } from "@/components/merging/MergeWizard";
 
 export function ProjectDetail() {
-  const { projectId } = useParams<{ projectId: string }>()
-  const navigate = useNavigate()
+  const { projectId } = useParams<{ projectId: string }>();
+  const navigate = useNavigate();
 
-  const [project, setProject] = useState<ProjectResponse | null>(null)
-  const [files, setFiles] = useState<FileInProject[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [project, setProject] = useState<ProjectResponse | null>(null);
+  const [files, setFiles] = useState<FileInProject[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // File selection and workspace state
-  const [selectedFileId, setSelectedFileId] = useState<number | undefined>()
-  const [workspaceTab, setWorkspaceTab] = useState<'preview' | 'analytics' | 'compare' | 'merge' | 'chat'>('preview')
+  const [selectedFileId, setSelectedFileId] = useState<number | undefined>();
+  const [workspaceTab, setWorkspaceTab] = useState<
+    "preview" | "analytics" | "compare" | "merge" | "chat"
+  >("preview");
 
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
-  const [comparisonWizardOpen, setComparisonWizardOpen] = useState(false)
-  const [mergeWizardOpen, setMergeWizardOpen] = useState(false)
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [comparisonWizardOpen, setComparisonWizardOpen] = useState(false);
+  const [mergeWizardOpen, setMergeWizardOpen] = useState(false);
 
-  const [comparisonData, setComparisonData] = useState<ComparisonResponse | null>(null)
-  const [mergeResult, setMergeResult] = useState<MergeAnalyzeResponse | null>(null)
-  const [fileAnalysis, setFileAnalysis] = useState<any>(null)
+  const [comparisonData, setComparisonData] =
+    useState<ComparisonResponse | null>(null);
+  const [mergeResult, setMergeResult] = useState<MergeAnalyzeResponse | null>(
+    null,
+  );
+  const [fileAnalysis, setFileAnalysis] = useState<any>(null);
 
   useEffect(() => {
     if (projectId) {
-      loadProjectData()
+      loadProjectData();
     }
-  }, [projectId])
+  }, [projectId]);
 
   const loadProjectData = async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
       const [projectRes, filesRes] = await Promise.all([
         api.getProject(Number(projectId)),
         api.listProjectFiles(Number(projectId)),
-      ])
-      setProject(projectRes)
-      setFiles(filesRes)
+      ]);
+      setProject(projectRes);
+      setFiles(filesRes);
 
       // Auto-select first file if none selected
       if (filesRes.length > 0 && !selectedFileId) {
-        setSelectedFileId(filesRes[0].id)
+        setSelectedFileId(filesRes[0].id);
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to load project')
+      setError(err.message || "Failed to load project");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // Handle file selection
   const handleFileSelect = async (fileId: number) => {
-    setSelectedFileId(fileId)
-    setWorkspaceTab('preview')
+    setSelectedFileId(fileId);
+    setWorkspaceTab("preview");
 
     // Load analysis if available
-    const file = files.find(f => f.id === fileId)
+    const file = files.find((f) => f.id === fileId);
     if (file?.has_analysis) {
       try {
-        const analysis = await api.getProjectFileAnalysis(Number(projectId), fileId)
-        setFileAnalysis(analysis)
+        const analysis = await api.getProjectFileAnalysis(
+          Number(projectId),
+          fileId,
+        );
+        setFileAnalysis(analysis);
       } catch (err) {
-        console.error('Failed to load analysis:', err)
+        console.error("Failed to load analysis:", err);
       }
     } else {
-      setFileAnalysis(null)
+      setFileAnalysis(null);
     }
-  }
+  };
 
   // Get selected file data
-  const selectedFile = files.find(f => f.id === selectedFileId)
+  const selectedFile = files.find((f) => f.id === selectedFileId);
 
   // Convert files for FileExplorer
-  const explorerFiles = files.map(file => ({
+  const explorerFiles = files.map((file) => ({
     id: file.id,
     filename: file.filename,
     fileSize: `${(file.file_size / 1024).toFixed(1)} KB`,
-    fileType: file.filename.split('.').pop()?.toLowerCase() as any || 'other',
+    fileType: (file.filename.split(".").pop()?.toLowerCase() as any) || "other",
     hasAnalysis: file.has_analysis,
-    uploadedAt: file.uploaded_at
-  }))
+    uploadedAt: file.uploaded_at,
+  }));
 
   const handleFileUpload = async (filesToUpload: File[]) => {
-    if (!projectId || filesToUpload.length === 0) return
+    if (!projectId || filesToUpload.length === 0) return;
 
     try {
       // Upload first file (single file upload for now)
-      await api.uploadFileToProject(Number(projectId), filesToUpload[0])
-      await loadProjectData()
-      setUploadDialogOpen(false)
+      await api.uploadFileToProject(Number(projectId), filesToUpload[0]);
+      await loadProjectData();
+      setUploadDialogOpen(false);
     } catch (err: any) {
-      setError(err.message || 'File upload failed')
-      throw err
+      setError(err.message || "File upload failed");
+      throw err;
     }
-  }
+  };
 
   const handleAnalyzeFile = (fileId: number) => {
-    navigate(`/projects/${projectId}/files/${fileId}/analysis`)
-  }
+    navigate(`/projects/${projectId}/files/${fileId}/analysis`);
+  };
 
-  const handleCompareFiles = async (fileAId: number, fileBId: number, comparisonType: string) => {
-    if (!projectId) return
+  const handleCompareFiles = async (
+    fileAId: number,
+    fileBId: number,
+    comparisonType: string,
+  ) => {
+    if (!projectId) return;
 
     try {
-      setError(null)
+      setError(null);
       const result = await api.compareFiles(Number(projectId), {
         file_a_id: fileAId,
         file_b_id: fileBId,
         comparison_type: comparisonType as any,
-      })
-      setComparisonData(result)
-      setComparisonWizardOpen(false)
+      });
+      setComparisonData(result);
+      setComparisonWizardOpen(false);
     } catch (err: any) {
-      setError(err.message || 'Comparison failed')
-      throw err
+      setError(err.message || "Comparison failed");
+      throw err;
     }
-  }
+  };
 
   const handleMergeFiles = async (
     fileAId: number,
     fileBId: number,
     joinKey: string,
-    mergeType: string
+    mergeType: string,
   ) => {
-    if (!projectId) return
+    if (!projectId) return;
 
     try {
-      setError(null)
+      setError(null);
       const relationship = await api.createRelationship(Number(projectId), {
         file_a_id: fileAId,
         file_b_id: fileBId,
         join_type: mergeType as any,
         left_key: joinKey,
         right_key: joinKey,
-        left_suffix: '_a',
-        right_suffix: '_b',
-      })
+        left_suffix: "_a",
+        right_suffix: "_b",
+      });
 
       // Analyze merged data
       const mergeAnalysis = await api.analyzeMergedData(Number(projectId), {
         relationship_id: relationship.id,
-      })
-      setMergeResult(mergeAnalysis)
-      setMergeWizardOpen(false)
-      await loadProjectData()
+      });
+      setMergeResult(mergeAnalysis);
+      setMergeWizardOpen(false);
+      await loadProjectData();
     } catch (err: any) {
-      setError(err.message || 'Merge failed')
-      throw err
+      setError(err.message || "Merge failed");
+      throw err;
     }
-  }
+  };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   // Convert files to format expected by wizards
-  const wizardFiles = files.map(file => ({
+  const wizardFiles = files.map((file) => ({
     id: file.id,
     filename: file.filename,
     file_size: file.file_size,
     row_count: file.row_count || 0,
     columns: [], // TODO: Add columns from schema_json
     uploaded_at: file.uploaded_at,
-  }))
+  }));
 
   if (loading) {
     return (
@@ -218,7 +241,7 @@ export function ProjectDetail() {
           </div>
         </div>
       </Layout>
-    )
+    );
   }
 
   if (!project) {
@@ -230,7 +253,7 @@ export function ProjectDetail() {
           </Alert>
         </div>
       </Layout>
-    )
+    );
   }
 
   return (
@@ -251,7 +274,12 @@ export function ProjectDetail() {
           <div className="container mx-auto px-6 py-6 space-y-6">
             {/* Project Header */}
             <div>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/projects')} className="mb-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/projects")}
+                className="mb-4"
+              >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Projects
               </Button>
@@ -259,7 +287,9 @@ export function ProjectDetail() {
                 <div>
                   <h1 className="text-3xl font-bold mb-2">{project.name}</h1>
                   {project.description && (
-                    <p className="text-muted-foreground">{project.description}</p>
+                    <p className="text-muted-foreground">
+                      {project.description}
+                    </p>
                   )}
                   <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
@@ -298,7 +328,11 @@ export function ProjectDetail() {
               <Alert variant="destructive">
                 <AlertDescription className="flex items-center justify-between">
                   {error}
-                  <Button variant="ghost" size="sm" onClick={() => setError(null)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setError(null)}
+                  >
                     <X className="h-4 w-4" />
                   </Button>
                 </AlertDescription>
@@ -313,10 +347,13 @@ export function ProjectDetail() {
                 totalRows={selectedFile.row_count}
                 totalColumns={selectedFile.column_count}
                 dataQuality={selectedFile.data_quality}
-                fileType={selectedFile.filename.split('.').pop()?.toUpperCase() || 'UNKNOWN'}
+                fileType={
+                  selectedFile.filename.split(".").pop()?.toUpperCase() ||
+                  "UNKNOWN"
+                }
                 onDownload={() => {
                   // TODO: Implement file download
-                  console.log('Download file:', selectedFile.id)
+                  // File download implementation pending
                 }}
                 onAnalyze={() => handleAnalyzeFile(selectedFile.id)}
               />
@@ -324,7 +361,11 @@ export function ProjectDetail() {
 
             {/* Workspace Tabs (Horizontal) */}
             {selectedFile ? (
-              <Tabs value={workspaceTab} onValueChange={(value) => setWorkspaceTab(value as any)} className="w-full">
+              <Tabs
+                value={workspaceTab}
+                onValueChange={(value) => setWorkspaceTab(value as any)}
+                className="w-full"
+              >
                 <TabsList className="grid w-full grid-cols-5">
                   <TabsTrigger value="preview">
                     <Table className="h-4 w-4 mr-2" />
@@ -359,11 +400,16 @@ export function ProjectDetail() {
                     <Card>
                       <CardContent className="flex flex-col items-center justify-center py-12">
                         <FileText className="h-16 w-16 text-muted-foreground mb-4" />
-                        <p className="text-lg font-medium mb-2">No analysis available</p>
+                        <p className="text-lg font-medium mb-2">
+                          No analysis available
+                        </p>
                         <p className="text-muted-foreground text-center mb-6 max-w-md">
                           Analyze this file to see data preview and insights
                         </p>
-                        <Button onClick={() => handleAnalyzeFile(selectedFile.id)} size="lg">
+                        <Button
+                          onClick={() => handleAnalyzeFile(selectedFile.id)}
+                          size="lg"
+                        >
                           <BarChart3 className="h-5 w-5 mr-2" />
                           Analyze File
                         </Button>
@@ -379,17 +425,25 @@ export function ProjectDetail() {
                       {fileAnalysis.global_summary && (
                         <GlobalSummary summary={fileAnalysis.global_summary} />
                       )}
-                      <ChartGrid charts={fileAnalysis.charts || []} loading={false} />
+                      <ChartGrid
+                        charts={fileAnalysis.charts || []}
+                        loading={false}
+                      />
                     </div>
                   ) : (
                     <Card>
                       <CardContent className="flex flex-col items-center justify-center py-12">
                         <BarChart3 className="h-16 w-16 text-muted-foreground mb-4" />
-                        <p className="text-lg font-medium mb-2">No analytics available</p>
+                        <p className="text-lg font-medium mb-2">
+                          No analytics available
+                        </p>
                         <p className="text-muted-foreground text-center mb-6 max-w-md">
                           Generate charts and AI insights for this file
                         </p>
-                        <Button onClick={() => handleAnalyzeFile(selectedFile.id)} size="lg">
+                        <Button
+                          onClick={() => handleAnalyzeFile(selectedFile.id)}
+                          size="lg"
+                        >
                           <BarChart3 className="h-5 w-5 mr-2" />
                           Analyze File
                         </Button>
@@ -404,15 +458,26 @@ export function ProjectDetail() {
                     <div className="space-y-6">
                       <GlobalSummary summary={comparisonData.summary_insight} />
                       <div>
-                        <h3 className="text-lg font-semibold mb-4">Overlay Charts</h3>
+                        <h3 className="text-lg font-semibold mb-4">
+                          Overlay Charts
+                        </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {comparisonData.overlay_charts.map((chart, index) => (
                             <Card key={index}>
                               <CardHeader>
-                                <CardTitle className="text-base">{chart.title}</CardTitle>
+                                <CardTitle className="text-base">
+                                  {chart.title}
+                                </CardTitle>
                                 <div className="flex gap-2">
-                                  <Badge variant="secondary" className="text-xs">{chart.file_a_name}</Badge>
-                                  <Badge variant="outline" className="text-xs">{chart.file_b_name}</Badge>
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
+                                    {chart.file_a_name}
+                                  </Badge>
+                                  <Badge variant="outline" className="text-xs">
+                                    {chart.file_b_name}
+                                  </Badge>
                                 </div>
                               </CardHeader>
                               <CardContent>
@@ -431,11 +496,16 @@ export function ProjectDetail() {
                     <Card>
                       <CardContent className="flex flex-col items-center justify-center py-12">
                         <GitCompare className="h-16 w-16 text-muted-foreground mb-4" />
-                        <p className="text-lg font-medium mb-2">No comparison results yet</p>
+                        <p className="text-lg font-medium mb-2">
+                          No comparison results yet
+                        </p>
                         <p className="text-muted-foreground text-center mb-6 max-w-md">
                           Start a comparison to see overlay charts and insights
                         </p>
-                        <Button onClick={() => setComparisonWizardOpen(true)} size="lg">
+                        <Button
+                          onClick={() => setComparisonWizardOpen(true)}
+                          size="lg"
+                        >
                           <GitCompare className="h-5 w-5 mr-2" />
                           Start Comparison
                         </Button>
@@ -452,7 +522,8 @@ export function ProjectDetail() {
                         <CardHeader>
                           <CardTitle>Merged Data Summary</CardTitle>
                           <CardDescription>
-                            {mergeResult.merged_row_count.toLocaleString()} rows in merged dataset
+                            {mergeResult.merged_row_count.toLocaleString()} rows
+                            in merged dataset
                           </CardDescription>
                         </CardHeader>
                       </Card>
@@ -462,19 +533,29 @@ export function ProjectDetail() {
                       )}
 
                       <div>
-                        <h3 className="text-lg font-semibold mb-4">Analysis of Merged Data</h3>
-                        <ChartGrid charts={mergeResult.charts} loading={false} />
+                        <h3 className="text-lg font-semibold mb-4">
+                          Analysis of Merged Data
+                        </h3>
+                        <ChartGrid
+                          charts={mergeResult.charts}
+                          loading={false}
+                        />
                       </div>
                     </div>
                   ) : (
                     <Card>
                       <CardContent className="flex flex-col items-center justify-center py-12">
                         <GitMerge className="h-16 w-16 text-muted-foreground mb-4" />
-                        <p className="text-lg font-medium mb-2">No merge results yet</p>
+                        <p className="text-lg font-medium mb-2">
+                          No merge results yet
+                        </p>
                         <p className="text-muted-foreground text-center mb-6 max-w-md">
                           Merge files to create enriched datasets for analysis
                         </p>
-                        <Button onClick={() => setMergeWizardOpen(true)} size="lg">
+                        <Button
+                          onClick={() => setMergeWizardOpen(true)}
+                          size="lg"
+                        >
                           <GitMerge className="h-5 w-5 mr-2" />
                           Start Merge
                         </Button>
@@ -488,9 +569,12 @@ export function ProjectDetail() {
                   <Card>
                     <CardContent className="flex flex-col items-center justify-center py-12">
                       <MessageSquare className="h-16 w-16 text-muted-foreground mb-4" />
-                      <p className="text-lg font-medium mb-2">Chat feature coming soon</p>
+                      <p className="text-lg font-medium mb-2">
+                        Chat feature coming soon
+                      </p>
                       <p className="text-muted-foreground text-center max-w-md">
-                        Ask questions about your data and get AI-powered insights
+                        Ask questions about your data and get AI-powered
+                        insights
                       </p>
                     </CardContent>
                   </Card>
@@ -501,12 +585,14 @@ export function ProjectDetail() {
                 <CardContent className="flex flex-col items-center justify-center py-24">
                   <FileText className="h-20 w-20 text-muted-foreground mb-4" />
                   <p className="text-xl font-medium mb-2">
-                    {files.length === 0 ? 'No files uploaded yet' : 'Select a file to get started'}
+                    {files.length === 0
+                      ? "No files uploaded yet"
+                      : "Select a file to get started"}
                   </p>
                   <p className="text-muted-foreground text-center mb-6 max-w-md">
                     {files.length === 0
-                      ? 'Upload CSV or Excel files to start analyzing your data'
-                      : 'Choose a file from the sidebar to view preview, analytics, and more'}
+                      ? "Upload CSV or Excel files to start analyzing your data"
+                      : "Choose a file from the sidebar to view preview, analytics, and more"}
                   </p>
                   {files.length === 0 && (
                     <Button onClick={() => setUploadDialogOpen(true)} size="lg">
@@ -529,14 +615,17 @@ export function ProjectDetail() {
           </DialogHeader>
           <FileUploadZone
             onUpload={handleFileUpload}
-            acceptedFileTypes={['.csv', '.xlsx', '.xls']}
+            acceptedFileTypes={[".csv", ".xlsx", ".xls"]}
             maxSize={10}
           />
         </DialogContent>
       </Dialog>
 
       {/* Comparison Wizard Dialog */}
-      <Dialog open={comparisonWizardOpen} onOpenChange={setComparisonWizardOpen}>
+      <Dialog
+        open={comparisonWizardOpen}
+        onOpenChange={setComparisonWizardOpen}
+      >
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Compare Files</DialogTitle>
@@ -563,5 +652,5 @@ export function ProjectDetail() {
         </DialogContent>
       </Dialog>
     </Layout>
-  )
+  );
 }

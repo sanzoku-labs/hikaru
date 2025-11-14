@@ -1,8 +1,14 @@
+import logging
+from typing import Any, Dict, List, Literal, Optional
+
 import pandas as pd
-from typing import List, Dict, Any, Optional, Literal
-from app.models.schemas import DataSchema, ColumnInfo
+
+from app.models.schemas import ColumnInfo, DataSchema
+
+logger = logging.getLogger(__name__)
 
 ChartType = Literal["line", "bar", "pie", "scatter"]
+
 
 class ChartConfig:
     def __init__(
@@ -14,7 +20,7 @@ class ChartConfig:
         category_column: Optional[str] = None,
         value_column: Optional[str] = None,
         data: List[Dict[str, Any]] = None,
-        priority: int = 0
+        priority: int = 0,
     ):
         self.chart_type = chart_type
         self.title = title
@@ -34,7 +40,7 @@ class ChartConfig:
             "category_column": self.category_column,
             "value_column": self.value_column,
             "data": self.data,
-            "priority": self.priority
+            "priority": self.priority,
         }
 
 
@@ -61,16 +67,16 @@ class ChartGenerator:
         """
         # Check if it's an ID column (but keep time dimensions)
         col_name_lower = col_name.lower()
-        time_keywords = ['month', 'week', 'year', 'quarter', 'day', 'date', 'period']
+        time_keywords = ["month", "week", "year", "quarter", "day", "date", "period"]
         is_time_column = any(kw in col_name_lower for kw in time_keywords)
 
         if not is_time_column:
             # Skip ID-like columns
-            if col_name.endswith(('_id', '_code', '_cip', '_cd')):
+            if col_name.endswith(("_id", "_code", "_cip", "_cd")):
                 return True
-            if any(word in col_name_lower for word in ['id', 'code']):
+            if any(word in col_name_lower for word in ["id", "code"]):
                 # Be conservative: only skip if it's clearly an ID
-                if col_name_lower.endswith('id') or col_name_lower.endswith('code'):
+                if col_name_lower.endswith("id") or col_name_lower.endswith("code"):
                     return True
 
         # Skip columns with only 1 unique value
@@ -84,7 +90,9 @@ class ChartGenerator:
         return False
 
     @staticmethod
-    def generate_charts(df: pd.DataFrame, schema: DataSchema, max_charts: int = 4) -> List[Dict[str, Any]]:
+    def generate_charts(
+        df: pd.DataFrame, schema: DataSchema, max_charts: int = 4
+    ) -> List[Dict[str, Any]]:
         """Generate up to max_charts based on data schema"""
         potential_charts = []
 
@@ -131,7 +139,7 @@ class ChartGenerator:
         # Priority 4: 2+ Numeric → Scatter Plot
         if len(numeric_cols) >= 2:
             for i, x_col in enumerate(numeric_cols):
-                for y_col in numeric_cols[i+1:]:
+                for y_col in numeric_cols[i + 1 :]:
                     chart = ChartGenerator._create_scatter_chart(df, x_col, y_col, priority=4)
                     if chart:
                         potential_charts.append(chart)
@@ -143,18 +151,16 @@ class ChartGenerator:
         return [chart.to_dict() for chart in selected_charts]
 
     @staticmethod
-    def _create_line_chart(df: pd.DataFrame, x_col: str, y_col: str, priority: int) -> Optional[ChartConfig]:
+    def _create_line_chart(
+        df: pd.DataFrame, x_col: str, y_col: str, priority: int
+    ) -> Optional[ChartConfig]:
         """Create line chart for datetime vs numeric"""
         try:
             # Sort by datetime
             chart_df = df[[x_col, y_col]].dropna().sort_values(by=x_col)
 
             data = [
-                {
-                    "x": str(row[x_col]),
-                    "y": float(row[y_col])
-                }
-                for _, row in chart_df.iterrows()
+                {"x": str(row[x_col]), "y": float(row[y_col])} for _, row in chart_df.iterrows()
             ]
 
             return ChartConfig(
@@ -163,24 +169,23 @@ class ChartGenerator:
                 x_column=x_col,
                 y_column=y_col,
                 data=data,
-                priority=priority
+                priority=priority,
             )
         except Exception as e:
-            print(f"Error creating line chart: {e}")
+            logger.error(f"Error creating line chart: {e}")
             return None
 
     @staticmethod
-    def _create_pie_chart(df: pd.DataFrame, cat_col: str, val_col: str, priority: int) -> Optional[ChartConfig]:
+    def _create_pie_chart(
+        df: pd.DataFrame, cat_col: str, val_col: str, priority: int
+    ) -> Optional[ChartConfig]:
         """Create pie chart for categorical distribution"""
         try:
             # Aggregate by category
             grouped = df.groupby(cat_col)[val_col].sum().reset_index()
 
             data = [
-                {
-                    "name": str(row[cat_col]),
-                    "value": float(row[val_col])
-                }
+                {"name": str(row[cat_col]), "value": float(row[val_col])}
                 for _, row in grouped.iterrows()
             ]
 
@@ -190,14 +195,16 @@ class ChartGenerator:
                 category_column=cat_col,
                 value_column=val_col,
                 data=data,
-                priority=priority
+                priority=priority,
             )
         except Exception as e:
-            print(f"Error creating pie chart: {e}")
+            logger.error(f"Error creating pie chart: {e}")
             return None
 
     @staticmethod
-    def _create_bar_chart(df: pd.DataFrame, cat_col: str, val_col: str, priority: int) -> Optional[ChartConfig]:
+    def _create_bar_chart(
+        df: pd.DataFrame, cat_col: str, val_col: str, priority: int
+    ) -> Optional[ChartConfig]:
         """Create bar chart for categorical comparison"""
         try:
             # Aggregate by category
@@ -208,10 +215,7 @@ class ChartGenerator:
                 grouped = grouped.nlargest(15, val_col)
 
             data = [
-                {
-                    "category": str(row[cat_col]),
-                    "value": float(row[val_col])
-                }
+                {"category": str(row[cat_col]), "value": float(row[val_col])}
                 for _, row in grouped.iterrows()
             ]
 
@@ -221,14 +225,16 @@ class ChartGenerator:
                 category_column=cat_col,
                 value_column=val_col,
                 data=data,
-                priority=priority
+                priority=priority,
             )
         except Exception as e:
-            print(f"Error creating bar chart: {e}")
+            logger.error(f"Error creating bar chart: {e}")
             return None
 
     @staticmethod
-    def _create_scatter_chart(df: pd.DataFrame, x_col: str, y_col: str, priority: int) -> Optional[ChartConfig]:
+    def _create_scatter_chart(
+        df: pd.DataFrame, x_col: str, y_col: str, priority: int
+    ) -> Optional[ChartConfig]:
         """Create scatter plot for numeric correlation"""
         try:
             # Sample if too many points (max 500 for performance)
@@ -237,11 +243,7 @@ class ChartGenerator:
                 chart_df = chart_df.sample(500)
 
             data = [
-                {
-                    "x": float(row[x_col]),
-                    "y": float(row[y_col])
-                }
-                for _, row in chart_df.iterrows()
+                {"x": float(row[x_col]), "y": float(row[y_col])} for _, row in chart_df.iterrows()
             ]
 
             return ChartConfig(
@@ -250,14 +252,15 @@ class ChartGenerator:
                 x_column=x_col,
                 y_column=y_col,
                 data=data,
-                priority=priority
+                priority=priority,
             )
         except Exception as e:
-            print(f"Error creating scatter chart: {e}")
+            logger.error(f"Error creating scatter chart: {e}")
             return None
 
-    def generate_charts_from_suggestions(self, df: pd.DataFrame, schema: DataSchema,
-                                        suggestions: List[Dict]) -> List[Dict]:
+    def generate_charts_from_suggestions(
+        self, df: pd.DataFrame, schema: DataSchema, suggestions: List[Dict]
+    ) -> List[Dict]:
         """
         Generate charts based on AI suggestions.
 
@@ -269,11 +272,13 @@ class ChartGenerator:
         Returns:
             List of chart data dictionaries
         """
-        print(f"[ChartGenerator] Generating charts from {len(suggestions)} AI suggestions")
+        logger.info(f"Generating charts from {len(suggestions)} AI suggestions")
         charts = []
 
         for idx, suggestion in enumerate(suggestions):
-            print(f"[ChartGenerator] Processing suggestion {idx + 1}/{len(suggestions)}: {suggestion.get('chart_type', 'unknown')} - {suggestion.get('title', 'untitled')}")
+            logger.debug(
+                f"Processing suggestion {idx + 1}/{len(suggestions)}: {suggestion.get('chart_type', 'unknown')} - {suggestion.get('title', 'untitled')}"
+            )
             try:
                 chart_type = suggestion.get("chart_type")
                 title = suggestion.get("title", "Chart")
@@ -288,22 +293,24 @@ class ChartGenerator:
                 elif chart_type == "scatter":
                     chart = self._create_scatter_chart_from_suggestion(df, suggestion)
                 else:
-                    print(f"Unknown chart type from AI: {chart_type}")
+                    logger.warning(f"Unknown chart type from AI: {chart_type}")
                     continue
 
                 if chart:
                     charts.append(chart.to_dict())
 
             except Exception as e:
-                print(f"Error generating chart from suggestion {suggestion}: {e}")
-                import traceback
-                traceback.print_exc()
+                logger.error(
+                    f"Error generating chart from suggestion {suggestion}: {e}", exc_info=True
+                )
                 continue
 
-        print(f"[ChartGenerator] Successfully generated {len(charts)} charts from AI suggestions")
+        logger.info(f"Successfully generated {len(charts)} charts from AI suggestions")
         return charts
 
-    def _create_line_chart_from_suggestion(self, df: pd.DataFrame, suggestion: Dict) -> Optional[ChartConfig]:
+    def _create_line_chart_from_suggestion(
+        self, df: pd.DataFrame, suggestion: Dict
+    ) -> Optional[ChartConfig]:
         """Create line chart from AI suggestion"""
         x_col = suggestion.get("x_column")
         y_col = suggestion.get("y_column")
@@ -314,7 +321,9 @@ class ChartGenerator:
         # Use existing method
         return self._create_line_chart(df, x_col, y_col, priority=1)
 
-    def _create_bar_chart_from_suggestion(self, df: pd.DataFrame, suggestion: Dict) -> Optional[ChartConfig]:
+    def _create_bar_chart_from_suggestion(
+        self, df: pd.DataFrame, suggestion: Dict
+    ) -> Optional[ChartConfig]:
         """Create bar chart from AI suggestion"""
         x_col = suggestion.get("x_column")
         y_col = suggestion.get("y_column")
@@ -325,18 +334,27 @@ class ChartGenerator:
         # Use existing method
         return self._create_bar_chart(df, x_col, y_col, priority=2)
 
-    def _create_pie_chart_from_suggestion(self, df: pd.DataFrame, suggestion: Dict) -> Optional[ChartConfig]:
+    def _create_pie_chart_from_suggestion(
+        self, df: pd.DataFrame, suggestion: Dict
+    ) -> Optional[ChartConfig]:
         """Create pie chart from AI suggestion"""
         category_col = suggestion.get("category_column")
         value_col = suggestion.get("value_column")
 
-        if not category_col or not value_col or category_col not in df.columns or value_col not in df.columns:
+        if (
+            not category_col
+            or not value_col
+            or category_col not in df.columns
+            or value_col not in df.columns
+        ):
             return None
 
         # Use existing method
         return self._create_pie_chart(df, category_col, value_col, priority=3)
 
-    def _create_scatter_chart_from_suggestion(self, df: pd.DataFrame, suggestion: Dict) -> Optional[ChartConfig]:
+    def _create_scatter_chart_from_suggestion(
+        self, df: pd.DataFrame, suggestion: Dict
+    ) -> Optional[ChartConfig]:
         """Create scatter chart from AI suggestion"""
         x_col = suggestion.get("x_column")
         y_col = suggestion.get("y_column")

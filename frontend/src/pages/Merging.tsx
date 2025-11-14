@@ -75,7 +75,7 @@ export function Merging() {
 
   const handleAddFile = () => {
     // TODO: Open file selector dialog
-    console.log("Add file");
+    // File selector dialog implementation pending
   };
 
   const handleRemoveFile = (index: number) => {

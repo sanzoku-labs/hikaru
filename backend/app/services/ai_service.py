@@ -1,10 +1,15 @@
-from anthropic import Anthropic
-from app.config import settings
-from app.models.schemas import DataSchema, ChartData, ConversationMessage
-from typing import List, Dict, Optional
 import json
+import logging
 import uuid
 from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+
+from anthropic import Anthropic
+
+from app.config import settings
+from app.models.schemas import ChartData, ConversationMessage, DataSchema
+
+logger = logging.getLogger(__name__)
 
 # Simple in-memory cache for MVP (24-hour TTL)
 _insight_cache: Dict[str, tuple[str, datetime]] = {}
@@ -23,7 +28,7 @@ class AIService:
         else:
             self.client = None
             self.enabled = False
-            print("Warning: ANTHROPIC_API_KEY not set. AI insights will be disabled.")
+            logger.warning("ANTHROPIC_API_KEY not set. AI insights will be disabled.")
 
     def generate_chart_insight(self, chart: ChartData, schema: DataSchema) -> Optional[str]:
         """Generate insight for a single chart"""
@@ -43,9 +48,7 @@ class AIService:
             message = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=200,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ]
+                messages=[{"role": "user", "content": prompt}],
             )
 
             insight = message.content[0].text.strip()
@@ -56,7 +59,7 @@ class AIService:
             return insight
 
         except Exception as e:
-            print(f"Error generating chart insight: {e}")
+            logger.error(f"Error generating chart insight: {e}")
             return None
 
     def generate_global_summary(self, charts: List[ChartData], schema: DataSchema) -> Optional[str]:
@@ -77,9 +80,7 @@ class AIService:
             message = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=300,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ]
+                messages=[{"role": "user", "content": prompt}],
             )
 
             summary = message.content[0].text.strip()
@@ -90,7 +91,7 @@ class AIService:
             return summary
 
         except Exception as e:
-            print(f"Error generating global summary: {e}")
+            logger.error(f"Error generating global summary: {e}")
             return None
 
     def _build_chart_prompt(self, chart: ChartData, schema: DataSchema) -> str:
@@ -152,7 +153,9 @@ Be concise and specific. Avoid generic statements."""
         lines = ["Actual Data:"]
         for item in data:
             lines.append(f"- {item['category']}: {item['value']:,.2f}")
-        lines.append(f"\nStatistics: Total={total:,.2f}, Average={avg:,.2f}, Min={min(values):,.2f}, Max={max(values):,.2f}")
+        lines.append(
+            f"\nStatistics: Total={total:,.2f}, Average={avg:,.2f}, Min={min(values):,.2f}, Max={max(values):,.2f}"
+        )
 
         return "\n".join(lines)
 
@@ -179,7 +182,9 @@ Be concise and specific. Avoid generic statements."""
         values = [item["y"] for item in data]
         total = sum(values)
         avg = total / len(values) if values else 0
-        lines.append(f"\nStatistics: Total={total:,.2f}, Average={avg:,.2f}, Min={min(values):,.2f}, Max={max(values):,.2f}")
+        lines.append(
+            f"\nStatistics: Total={total:,.2f}, Average={avg:,.2f}, Min={min(values):,.2f}, Max={max(values):,.2f}"
+        )
 
         return "\n".join(lines)
 
@@ -195,8 +200,12 @@ Be concise and specific. Avoid generic statements."""
         # Add statistics
         x_values = [item["x"] for item in data]
         y_values = [item["y"] for item in data]
-        lines.append(f"\nX-axis: Min={min(x_values):.2f}, Max={max(x_values):.2f}, Average={sum(x_values)/len(x_values):.2f}")
-        lines.append(f"Y-axis: Min={min(y_values):.2f}, Max={max(y_values):.2f}, Average={sum(y_values)/len(y_values):.2f}")
+        lines.append(
+            f"\nX-axis: Min={min(x_values):.2f}, Max={max(x_values):.2f}, Average={sum(x_values)/len(x_values):.2f}"
+        )
+        lines.append(
+            f"Y-axis: Min={min(y_values):.2f}, Max={max(y_values):.2f}, Average={sum(y_values)/len(y_values):.2f}"
+        )
         lines.append(f"Total points: {len(data)}")
 
         return "\n".join(lines)
@@ -237,7 +246,7 @@ Be concise and actionable."""
         upload_id: str,
         question: str,
         schema: DataSchema,
-        conversation_id: Optional[str] = None
+        conversation_id: Optional[str] = None,
     ) -> tuple[str, str, Optional[Dict]]:
         """
         Generate response to user's natural language question about the data.
@@ -262,9 +271,7 @@ Be concise and actionable."""
             message = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=600,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ]
+                messages=[{"role": "user", "content": prompt}],
             )
 
             answer = message.content[0].text.strip()
@@ -279,14 +286,11 @@ Be concise and actionable."""
             return clean_answer, conversation_id, chart_config
 
         except Exception as e:
-            print(f"Error generating query response: {e}")
+            logger.error(f"Error generating query response: {e}")
             return "Sorry, I encountered an error processing your question.", conversation_id, None
 
     def _build_query_prompt(
-        self,
-        question: str,
-        schema: DataSchema,
-        conversation: List[ConversationMessage]
+        self, question: str, schema: DataSchema, conversation: List[ConversationMessage]
     ) -> str:
         """Build prompt for Q&A with data context"""
 
@@ -374,13 +378,7 @@ Provide a clear, concise answer based on the data. If you need specific data val
             return []
         return _conversations[upload_id][conversation_id]
 
-    def _store_conversation(
-        self,
-        upload_id: str,
-        conversation_id: str,
-        question: str,
-        answer: str
-    ):
+    def _store_conversation(self, upload_id: str, conversation_id: str, question: str, answer: str):
         """Store question and answer in conversation history"""
         if upload_id not in _conversations:
             _conversations[upload_id] = {}
@@ -391,20 +389,12 @@ Provide a clear, concise answer based on the data. If you need specific data val
 
         # Add user question
         _conversations[upload_id][conversation_id].append(
-            ConversationMessage(
-                role="user",
-                content=question,
-                timestamp=now
-            )
+            ConversationMessage(role="user", content=question, timestamp=now)
         )
 
         # Add assistant answer
         _conversations[upload_id][conversation_id].append(
-            ConversationMessage(
-                role="assistant",
-                content=answer,
-                timestamp=now
-            )
+            ConversationMessage(role="assistant", content=answer, timestamp=now)
         )
 
     def _parse_chart_request(self, answer: str) -> Optional[Dict]:
@@ -418,7 +408,7 @@ Provide a clear, concise answer based on the data. If you need specific data val
         try:
             # Extract JSON after CHART_CONFIG:
             config_start = answer.find("CHART_CONFIG:")
-            config_json = answer[config_start + len("CHART_CONFIG:"):].strip()
+            config_json = answer[config_start + len("CHART_CONFIG:") :].strip()
 
             # Find the JSON object
             if config_json.startswith("{"):
@@ -442,7 +432,7 @@ Provide a clear, concise answer based on the data. If you need specific data val
                     return config
 
         except (json.JSONDecodeError, ValueError) as e:
-            print(f"Failed to parse CHART_CONFIG: {e}")
+            logger.error(f"Failed to parse CHART_CONFIG: {e}")
 
         return None
 
@@ -470,40 +460,36 @@ Provide a clear, concise answer based on the data. If you need specific data val
             return []
 
         try:
-            print(f"[AIService] Suggesting charts with user_intent: {user_intent or 'None'}")
+            logger.info(f"Suggesting charts with user_intent: {user_intent or 'None'}")
             prompt = self._build_chart_suggestion_prompt(schema, user_intent)
 
             message = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=1000,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ]
+                messages=[{"role": "user", "content": prompt}],
             )
 
             response_text = message.content[0].text.strip()
-            print(f"[AIService] Raw AI response: {response_text[:500]}...")  # Log first 500 chars
+            logger.debug(f"Raw AI response: {response_text[:500]}...")  # Log first 500 chars
 
             # Parse JSON response
             try:
                 suggestions = json.loads(response_text)
             except json.JSONDecodeError as json_err:
-                print(f"[AIService] JSON parsing error: {json_err}")
-                print(f"[AIService] Full response text: {response_text}")
+                logger.error(f"JSON parsing error: {json_err}")
+                logger.debug(f"Full response text: {response_text}")
                 return []
 
             # Validate and return
             if isinstance(suggestions, list) and len(suggestions) > 0:
-                print(f"[AIService] Successfully parsed {len(suggestions)} chart suggestions")
+                logger.info(f"Successfully parsed {len(suggestions)} chart suggestions")
                 return suggestions[:4]  # Limit to 4 charts
             else:
-                print(f"[AIService] AI returned empty or invalid suggestions: {suggestions}")
+                logger.warning(f"AI returned empty or invalid suggestions: {suggestions}")
                 return []
 
         except Exception as e:
-            print(f"[AIService] Error suggesting charts: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error(f"Error suggesting charts: {e}", exc_info=True)
             return []
 
     def _build_chart_suggestion_prompt(self, schema: DataSchema, user_intent: Optional[str]) -> str:
@@ -526,7 +512,11 @@ Provide a clear, concise answer based on the data. If you need specific data val
 
         columns_text = "\n".join(columns_info)
 
-        intent_text = f"\nUser Intent: {user_intent}" if user_intent else "\nUser Intent: Not specified - suggest best general visualizations"
+        intent_text = (
+            f"\nUser Intent: {user_intent}"
+            if user_intent
+            else "\nUser Intent: Not specified - suggest best general visualizations"
+        )
 
         prompt = f"""You are an expert data analyst. Analyze this dataset and suggest 3-4 meaningful charts for visualization.
 
@@ -618,11 +608,7 @@ IMPORTANT:
         return prompt
 
     async def generate_comparison_insight(
-        self,
-        file_a_name: str,
-        file_b_name: str,
-        metrics: Dict,
-        comparison_type: str
+        self, file_a_name: str, file_b_name: str, metrics: Dict, comparison_type: str
     ) -> str:
         """
         Generate AI insight comparing two files.
@@ -663,20 +649,16 @@ Provide a concise summary highlighting the most important findings."""
             message = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=300,
-                messages=[{"role": "user", "content": prompt}]
+                messages=[{"role": "user", "content": prompt}],
             )
 
             return message.content[0].text.strip()
 
         except Exception as e:
-            print(f"Error generating comparison insight: {e}")
+            logger.error(f"Error generating comparison insight: {e}")
             return f"Comparison between {file_a_name} and {file_b_name} shows data differences across multiple metrics."
 
-    async def generate_chart_comparison_insight(
-        self,
-        chart,
-        metrics: Dict
-    ) -> Optional[str]:
+    async def generate_chart_comparison_insight(self, chart, metrics: Dict) -> Optional[str]:
         """
         Generate insight for a specific comparison chart.
 
@@ -692,7 +674,7 @@ Provide a concise summary highlighting the most important findings."""
 
         try:
             # Get relevant metric for this chart's y_column
-            y_col_metrics = metrics.get('numeric_columns', {}).get(chart.y_column, {})
+            y_col_metrics = metrics.get("numeric_columns", {}).get(chart.y_column, {})
 
             prompt = f"""Provide a 1-2 sentence insight for this comparison chart.
 
@@ -710,7 +692,7 @@ Focus on the most notable difference or trend visible in this specific chart."""
             message = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=150,
-                messages=[{"role": "user", "content": prompt}]
+                messages=[{"role": "user", "content": prompt}],
             )
 
             return message.content[0].text.strip()

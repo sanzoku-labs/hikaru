@@ -181,15 +181,14 @@ poetry run pytest  # Ensure tests pass
 
 ## 📖 Documentation
 
-| Document | Description |
-|----------|-------------|
-| [`PROGRESS.md`](PROGRESS.md) | Current project status and metrics |
-| [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) | Detailed setup and onboarding |
-| [`docs/README.md`](docs/README.md) | Documentation index |
-| [`docs/features/AUTHENTICATION.md`](docs/features/AUTHENTICATION.md) | Authentication usage guide |
-| [`docs/features/PROJECTS.md`](docs/features/PROJECTS.md) | Projects feature guide |
-| [`docs/completed/`](docs/completed/) | Phase completion documents |
-| [`CLAUDE.md`](CLAUDE.md) | Development guidelines |
+**📍 Looking for something?** → [`DOCUMENTATION_INDEX.md`](DOCUMENTATION_INDEX.md)
+
+**Quick Links:**
+- **Current Status**: [`PROGRESS.md`](PROGRESS.md)
+- **Setup Guide**: [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md)
+- **Development**: [`CLAUDE.md`](CLAUDE.md)
+- **Features**: [`docs/features/`](docs/features/)
+- **Completed Work**: [`docs/completed/`](docs/completed/)
 
 ---
 

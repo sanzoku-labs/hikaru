@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.middleware.auth import get_current_active_user
+from app.models.database import User
 from app.models.schemas import AnalyzeResponse
 from app.services.analysis_service import AnalysisService
 from app.services.upload_service import UploadService
@@ -20,6 +22,7 @@ async def analyze_data(
     user_intent: Optional[str] = Query(
         None, description="Optional: What the user wants to analyze"
     ),
+    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
     """

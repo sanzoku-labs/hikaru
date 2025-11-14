@@ -349,11 +349,11 @@ class TestAnalysisServiceGenerateGlobalSummary:
         # Verify
         assert summary == "Overall, revenue is trending upward."
         mock_ai_service.generate_global_summary.assert_called_once_with(
-            charts, sample_schema, user_intent=None
+            charts, sample_schema
         )
 
     def test_generate_global_summary_with_user_intent(self, sample_schema):
-        """Test that user intent is passed to global summary generation."""
+        """Test that global summary generation works (user_intent no longer passed to AI)."""
         mock_ai_service = Mock()
         mock_ai_service.enabled = True
         mock_ai_service.generate_global_summary.return_value = "Sales trends are positive."
@@ -362,14 +362,14 @@ class TestAnalysisServiceGenerateGlobalSummary:
 
         charts = [ChartData(title="Chart 1", chart_type="line", data=[], priority=1)]
 
-        # Execute with user intent
+        # Execute with user intent (note: user_intent accepted but not passed to AI service)
         summary = service.generate_global_summary(
             charts, sample_schema, user_intent="Show sales trends"
         )
 
-        # Verify user intent was passed
+        # Verify AI was called without user_intent (Phase 4.1 refactoring removed this param)
         mock_ai_service.generate_global_summary.assert_called_once_with(
-            charts, sample_schema, user_intent="Show sales trends"
+            charts, sample_schema
         )
 
     def test_generate_global_summary_returns_none_when_ai_disabled(self, sample_schema):

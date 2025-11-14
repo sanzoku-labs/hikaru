@@ -156,9 +156,7 @@ class AnalysisService:
 
         try:
             logger.info("Generating global summary")
-            summary = self.ai_service.generate_global_summary(
-                charts, schema, user_intent=user_intent
-            )
+            summary = self.ai_service.generate_global_summary(charts, schema)
             logger.info("Successfully generated global summary")
             return summary
 

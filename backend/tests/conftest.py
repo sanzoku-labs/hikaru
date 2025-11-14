@@ -84,7 +84,7 @@ def test_user(db_session: Session) -> User:
 @pytest.fixture
 def auth_token(test_user: User) -> str:
     """Create an authentication token for test user."""
-    token = create_access_token(user_id=test_user.id)
+    token = create_access_token(data={"sub": str(test_user.id)})
     return token
 
 
@@ -113,7 +113,7 @@ def superuser(db_session: Session) -> User:
 @pytest.fixture
 def superuser_token(superuser: User) -> str:
     """Create an authentication token for superuser."""
-    token = create_access_token(user_id=superuser.id)
+    token = create_access_token(data={"sub": str(superuser.id)})
     return token
 
 

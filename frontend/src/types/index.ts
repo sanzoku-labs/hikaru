@@ -316,3 +316,40 @@ export interface DashboardListResponse {
   dashboards: DashboardResponse[];
   total: number;
 }
+
+// Analytics Types
+export interface RecentAnalysis {
+  file_id: number;
+  filename: string;
+  project_id: number;
+  project_name: string;
+  analyzed_at: string;
+  charts_count: number;
+}
+
+export interface ChartDistribution {
+  line: number;
+  bar: number;
+  pie: number;
+  scatter: number;
+}
+
+export interface TopInsight {
+  file_id: number;
+  filename: string;
+  project_name: string;
+  insight: string;
+  analyzed_at: string;
+}
+
+export interface AnalyticsResponse {
+  total_projects: number;
+  total_files: number;
+  total_analyses: number;
+  projects_trend: number;
+  files_trend: number;
+  analyses_trend: number;
+  recent_analyses: RecentAnalysis[];
+  chart_type_distribution: ChartDistribution;
+  top_insights: TopInsight[];
+}

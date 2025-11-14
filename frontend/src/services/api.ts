@@ -29,6 +29,7 @@ import type {
   DashboardResponse,
   DashboardListResponse,
   AnalysisHistoryResponse,
+  AnalyticsResponse,
 } from "@/types";
 
 const API_BASE_URL =
@@ -638,6 +639,26 @@ export const api = {
       const error = await response.json();
       throw new ApiError(
         error.detail || "Failed to get analysis history",
+        response.status,
+        error.detail,
+      );
+    }
+
+    return response.json();
+  },
+
+  // ===== Analytics API =====
+
+  async getAnalytics(): Promise<AnalyticsResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/analytics`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new ApiError(
+        error.detail || "Failed to get analytics",
         response.status,
         error.detail,
       );

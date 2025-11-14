@@ -590,6 +590,14 @@ async def analyze_project_file(
         # Load the dataframe
         processor = DataProcessor()
         file_ext = Path(file.filename).suffix.lstrip(".")
+
+        # Check if file exists
+        if not os.path.exists(file.file_path):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"File not found on disk: {file.file_path}",
+            )
+
         df = processor.parse_file(file.file_path, file_ext)
 
         # Parse schema from stored JSON
@@ -609,16 +617,27 @@ async def analyze_project_file(
 
         charts_with_insights = []
         for chart_data in charts_data_raw:
-            # Generate insight for this chart
-            insight = ai_service.generate_chart_insight(chart_data, schema)
+            try:
+                # Generate insight for this chart
+                insight = ai_service.generate_chart_insight(chart_data, schema)
 
-            # Create new chart dict with insight
-            chart_dict = chart_data if isinstance(chart_data, dict) else chart_data.model_dump()
-            chart_dict["insight"] = insight
-            charts_with_insights.append(ChartData(**chart_dict))
+                # Create new chart dict with insight
+                chart_dict = chart_data if isinstance(chart_data, dict) else chart_data.model_dump()
+                chart_dict["insight"] = insight
+                charts_with_insights.append(ChartData(**chart_dict))
+            except Exception as e:
+                logger.warning(f"Failed to generate insight for chart: {e}")
+                # Add chart without insight
+                chart_dict = chart_data if isinstance(chart_data, dict) else chart_data.model_dump()
+                chart_dict["insight"] = None
+                charts_with_insights.append(ChartData(**chart_dict))
 
         # Generate global summary
-        global_summary = ai_service.generate_global_summary(charts_with_insights, schema)
+        try:
+            global_summary = ai_service.generate_global_summary(charts_with_insights, schema)
+        except Exception as e:
+            logger.warning(f"Failed to generate global summary: {e}")
+            global_summary = None
 
         # Store analysis results in database
         analysis_json = {
@@ -647,6 +666,7 @@ async def analyze_project_file(
         raise
     except Exception as e:
         db.rollback()
+        logger.error(f"Failed to analyze file {file_id} in project {project_id}: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to analyze file: {str(e)}",

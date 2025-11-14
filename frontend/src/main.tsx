@@ -1,21 +1,20 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider } from './contexts/AuthContext'
-import ProtectedRoute from './components/ProtectedRoute'
-import App from './App.tsx'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import { ProjectList } from './pages/ProjectList'
-import { ProjectDetail } from './pages/ProjectDetail'
-import ProjectFileAnalysis from './pages/ProjectFileAnalysis'
-import { Analytics } from './pages/Analytics'
-import { Comparisons } from './pages/Comparisons'
-import { Merging } from './pages/Merging'
-import { Chat } from './pages/Chat'
-import './index.css'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import { ProjectList } from "./pages/ProjectList";
+import { ProjectDetail } from "./pages/ProjectDetail";
+import ProjectFileAnalysis from "./pages/ProjectFileAnalysis";
+import { Analytics } from "./pages/Analytics";
+import { Comparisons } from "./pages/Comparisons";
+import { Merging } from "./pages/Merging";
+import { Chat } from "./pages/Chat";
+import "./index.css";
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <AuthProvider>
       <BrowserRouter>
@@ -27,14 +26,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             element={
               <ProtectedRoute>
                 <Navigate to="/projects" replace />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/quick-analysis"
-            element={
-              <ProtectedRoute>
-                <App />
               </ProtectedRoute>
             }
           />
@@ -99,4 +90,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       </BrowserRouter>
     </AuthProvider>
   </React.StrictMode>,
-)
+);

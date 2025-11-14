@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 import uuid
@@ -14,6 +15,8 @@ from app.models.database import Upload, User
 from app.models.schemas import ErrorResponse, UploadResponse
 from app.services.data_processor import DataProcessor
 from app.services.upload_service import UploadService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["upload"])
 
@@ -92,4 +95,5 @@ async def upload_file(
     except Exception as e:
         if os.path.exists(file_path):
             os.remove(file_path)
+        logger.error(f"Upload failed for file {file.filename}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")

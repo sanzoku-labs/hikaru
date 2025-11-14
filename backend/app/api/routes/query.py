@@ -6,6 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.middleware.auth import get_current_active_user
+from app.models.database import User
 from app.models.schemas import ChartData, QueryRequest, QueryResponse
 from app.services.ai_service import AIService
 from app.services.chart_generator import ChartGenerator
@@ -17,7 +19,11 @@ router = APIRouter(prefix="/api", tags=["query"])
 
 
 @router.post("/query", response_model=QueryResponse)
-async def query_data(request: QueryRequest, db: Session = Depends(get_db)):
+async def query_data(
+    request: QueryRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
     """
     Answer natural language questions about uploaded data.
 

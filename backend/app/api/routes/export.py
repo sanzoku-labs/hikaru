@@ -26,7 +26,11 @@ router = APIRouter(prefix="/api", tags=["export"])
 
 
 @router.post("/export", response_model=ExportResponse)
-async def export_dashboard(request: ExportRequest, db: Session = Depends(get_db)):
+async def export_dashboard(
+    request: ExportRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
     """
     Generate PDF export of dashboard (data preview, charts, AI insights).
 
@@ -93,7 +97,10 @@ async def export_dashboard(request: ExportRequest, db: Session = Depends(get_db)
 
 
 @router.get("/download/{export_id}")
-async def download_export(export_id: str):
+async def download_export(
+    export_id: str,
+    current_user: User = Depends(get_current_active_user),
+):
     """Download generated PDF export"""
     export_service = ExportService()
     filepath = export_service.get_export_path(export_id)

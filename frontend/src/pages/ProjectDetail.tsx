@@ -340,24 +340,53 @@ export function ProjectDetail() {
             )}
 
             {/* File Info Card (when file selected) */}
-            {selectedFile && (
-              <FileInfoCard
-                filename={selectedFile.filename}
-                fileSize={`${(selectedFile.file_size / 1024).toFixed(1)} KB`}
-                totalRows={selectedFile.row_count}
-                totalColumns={selectedFile.column_count}
-                dataQuality={selectedFile.data_quality}
-                fileType={
-                  selectedFile.filename.split(".").pop()?.toUpperCase() ||
-                  "UNKNOWN"
+            {selectedFile &&
+              (() => {
+                // Parse data schema to compute column count and data quality
+                let totalColumns: number | undefined;
+                let dataQuality: number | undefined;
+
+                if (selectedFile.data_schema_json) {
+                  try {
+                    const schema = JSON.parse(selectedFile.data_schema_json);
+                    totalColumns = schema.columns?.length;
+
+                    // Calculate data quality as percentage of non-null values
+                    if (schema.columns && schema.row_count) {
+                      const totalCells =
+                        schema.columns.length * schema.row_count;
+                      const nullCells = schema.columns.reduce(
+                        (sum: number, col: any) => sum + (col.null_count || 0),
+                        0,
+                      );
+                      dataQuality = Math.round(
+                        ((totalCells - nullCells) / totalCells) * 100,
+                      );
+                    }
+                  } catch (e) {
+                    // Ignore parse errors, leave values as undefined
+                  }
                 }
-                onDownload={() => {
-                  // TODO: Implement file download
-                  // File download implementation pending
-                }}
-                onAnalyze={() => handleAnalyzeFile(selectedFile.id)}
-              />
-            )}
+
+                return (
+                  <FileInfoCard
+                    filename={selectedFile.filename}
+                    fileSize={`${(selectedFile.file_size / 1024).toFixed(1)} KB`}
+                    totalRows={selectedFile.row_count}
+                    totalColumns={totalColumns}
+                    dataQuality={dataQuality}
+                    fileType={
+                      selectedFile.filename.split(".").pop()?.toUpperCase() ||
+                      "UNKNOWN"
+                    }
+                    onDownload={() => {
+                      // TODO: Implement file download
+                      // File download implementation pending
+                    }}
+                    onAnalyze={() => handleAnalyzeFile(selectedFile.id)}
+                  />
+                );
+              })()}
 
             {/* Workspace Tabs (Horizontal) */}
             {selectedFile ? (

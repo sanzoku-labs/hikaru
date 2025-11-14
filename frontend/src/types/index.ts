@@ -19,7 +19,7 @@ export interface DataSchema {
 export interface UploadResponse {
   upload_id: string;
   filename: string;
-  schema: DataSchema;
+  data_schema: DataSchema;
   upload_timestamp: string;
 }
 
@@ -45,7 +45,7 @@ export interface ChartData {
 export interface AnalyzeResponse {
   upload_id: string;
   filename: string;
-  schema: DataSchema;
+  data_schema: DataSchema;
   charts: ChartData[];
   upload_timestamp: string;
   global_summary?: string;  // Phase 3: Overall AI summary
@@ -109,7 +109,9 @@ export interface FileInProject {
   upload_id: string;
   file_size: number;
   row_count?: number;
-  schema_json?: string;
+  column_count?: number;
+  data_quality?: number;
+  data_schema_json?: string;
   uploaded_at: string;
   has_analysis: boolean;
   analyzed_at?: string;

@@ -79,7 +79,7 @@ class DataSchema(BaseModel):
 class UploadResponse(BaseModel):
     upload_id: str
     filename: str
-    schema: DataSchema
+    data_schema: DataSchema
     upload_timestamp: datetime
 
 class ErrorResponse(BaseModel):
@@ -102,7 +102,7 @@ class ChartData(BaseModel):
 class AnalyzeResponse(BaseModel):
     upload_id: str
     filename: str
-    schema: DataSchema
+    data_schema: DataSchema
     charts: List[ChartData]
     upload_timestamp: datetime
     global_summary: Optional[str] = None  # Phase 3: Overall AI summary
@@ -202,7 +202,7 @@ class FileInProject(BaseModel):
     upload_id: str
     file_size: int
     row_count: Optional[int]
-    schema_json: Optional[str]
+    data_schema_json: Optional[str]
     uploaded_at: datetime
     has_analysis: bool = False  # Whether analysis has been performed
     analyzed_at: Optional[datetime] = None  # When analysis was last run
@@ -240,7 +240,7 @@ class ProjectFileUploadResponse(BaseModel):
     filename: str
     file_size: int
     row_count: int
-    schema: DataSchema
+    data_schema: DataSchema
     uploaded_at: datetime
 
 

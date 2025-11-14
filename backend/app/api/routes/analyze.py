@@ -92,11 +92,18 @@ async def analyze_data(
         if ai_service.enabled and charts:
             try:
                 print(f"[Analyze] Generating AI insights for {len(charts)} charts")
-                # Generate insight for each chart
+                # Generate insight for each chart by creating new chart objects
+                charts_with_insights = []
                 for idx, chart in enumerate(charts):
                     insight = ai_service.generate_chart_insight(chart, schema)
-                    chart.insight = insight
+                    # Create new chart with insight
+                    chart_dict = chart.model_dump()
+                    chart_dict['insight'] = insight
+                    charts_with_insights.append(ChartData(**chart_dict))
                     print(f"[Analyze] Generated insight for chart {idx + 1}/{len(charts)}: {chart.title}")
+
+                # Replace charts with versions that have insights
+                charts = charts_with_insights
 
                 # Generate global summary
                 print(f"[Analyze] Generating global summary")
@@ -113,7 +120,7 @@ async def analyze_data(
         return AnalyzeResponse(
             upload_id=upload_id,
             filename=filename,
-            schema=schema,
+            data_schema=schema,
             charts=charts,
             upload_timestamp=upload_data["timestamp"],
             global_summary=global_summary

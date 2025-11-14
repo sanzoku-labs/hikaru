@@ -104,6 +104,16 @@ export default {
       boxShadow: {
         'card': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
         'card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        'stat': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+      },
+      backgroundImage: {
+        'gradient-primary': 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)',
+        'gradient-blue': 'linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%)',
+        'gradient-green': 'linear-gradient(135deg, #34D399 0%, #10B981 100%)',
+        'gradient-purple': 'linear-gradient(135deg, #A78BFA 0%, #8B5CF6 100%)',
+        'gradient-orange': 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)',
+        'gradient-pink': 'linear-gradient(135deg, #F472B6 0%, #EC4899 100%)',
+        'gradient-cyan': 'linear-gradient(135deg, #22D3EE 0%, #06B6D4 100%)',
       },
       keyframes: {
         "accordion-down": {

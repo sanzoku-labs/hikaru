@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Merge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { display: none;}
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': '#6366f1',
+                        'primary-dark': '#4f46e5',
+                        'secondary': '#f1f5f9',
+                        'accent': '#10b981',
+                        'dark': '#1e293b',
+                        'light-gray': '#f8fafc',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-light-gray font-inter">
+
+    <div id="main-container" class="flex h-screen">
+        
+        <aside id="sidebar" class="w-64 bg-white border-r border-gray-200 flex flex-col">
+            <div id="sidebar-header" class="p-6 border-b border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-chart-line text-white text-lg"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-dark">Hikaru</h1>
+                </div>
+            </div>
+            
+            <nav id="sidebar-nav" class="flex-1 p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+                            <i class="fa-solid fa-folder-open"></i>
+                            <span class="font-medium">Projects</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+                            <i class="fa-solid fa-chart-bar"></i>
+                            <span class="font-medium">Analytics</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+                            <i class="fa-solid fa-code-compare"></i>
+                            <span class="font-medium">Comparisons</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg bg-primary text-white">
+                            <i class="fa-solid fa-code-merge"></i>
+                            <span class="font-medium">Merging</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+                            <i class="fa-solid fa-comments"></i>
+                            <span class="font-medium">Q&A Chat</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+                            <i class="fa-solid fa-download"></i>
+                            <span class="font-medium">Exports</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div id="sidebar-footer" class="p-4 border-t border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-5.jpg" alt="Profile" class="w-10 h-10 rounded-full object-cover">
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-dark">Sarah Wilson</p>
+                        <p class="text-xs text-gray-500">Premium Plan</p>
+                    </div>
+                    <button class="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fa-solid fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <main id="main-content" class="flex-1 flex flex-col overflow-hidden">
+            
+            <header id="header" class="bg-white border-b border-gray-200 px-8 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-dark">File Merge</h2>
+                        <p class="text-gray-600 mt-1">Configure and execute file merges with intelligent data joining</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
+                            <i class="fa-solid fa-history"></i>
+                        </button>
+                        <button class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
+                            <i class="fa-solid fa-question-circle"></i>
+                        </button>
+                        <button id="save-config-btn" class="px-6 py-2 bg-accent text-white rounded-lg hover:bg-green-600 transition-colors flex items-center space-x-2">
+                            <i class="fa-solid fa-save"></i>
+                            <span>Save Config</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <div id="content-area" class="flex-1 overflow-auto">
+                
+                <div id="merge-configuration" class="grid grid-cols-12 gap-6 p-8">
+                    
+                    <div id="file-selection-panel" class="col-span-4 bg-white rounded-xl border border-gray-200 p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold text-dark">Select Files</h3>
+                            <button id="add-file-btn" class="px-3 py-1 bg-primary text-white text-sm rounded-lg hover:bg-primary-dark transition-colors">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                        
+                        <div id="selected-files" class="space-y-3">
+                            <div id="file-item-1" class="border border-gray-200 rounded-lg p-4 bg-blue-50 border-blue-200">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                                            <i class="fa-solid fa-file-csv text-white text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-dark">sales_data_q4.csv</p>
+                                            <p class="text-xs text-gray-500">Primary File</p>
+                                        </div>
+                                    </div>
+                                    <button class="text-gray-400 hover:text-red-500">
+                                        <i class="fa-solid fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="text-xs text-gray-600">
+                                    <span>12,450 rows • 8 columns • 2.3 MB</span>
+                                </div>
+                            </div>
+                            
+                            <div id="file-item-2" class="border border-gray-200 rounded-lg p-4 bg-green-50 border-green-200">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                                            <i class="fa-solid fa-file-excel text-white text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-dark">customer_info.xlsx</p>
+                                            <p class="text-xs text-gray-500">Secondary File</p>
+                                        </div>
+                                    </div>
+                                    <button class="text-gray-400 hover:text-red-500">
+                                        <i class="fa-solid fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="text-xs text-gray-600">
+                                    <span>8,920 rows • 6 columns • 1.8 MB</span>
+                                </div>
+                            </div>
+                            
+                            <div id="file-item-3" class="border border-gray-200 rounded-lg p-4 bg-purple-50 border-purple-200">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                                            <i class="fa-solid fa-file-alt text-white text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-dark">product_catalog.csv</p>
+                                            <p class="text-xs text-gray-500">Additional File</p>
+                                        </div>
+                                    </div>
+                                    <button class="text-gray-400 hover:text-red-500">
+                                        <i class="fa-solid fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="text-xs text-gray-600">
+                                    <span>2,340 rows • 12 columns • 890 KB</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="merge-stats" class="mt-6 pt-4 border-t border-gray-200">
+                            <div class="grid grid-cols-2 gap-4 text-center">
+                                <div>
+                                    <p class="text-xs text-gray-500">Total Rows</p>
+                                    <p class="text-lg font-semibold text-dark">23,710</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500">Total Size</p>
+                                    <p class="text-lg font-semibold text-dark">4.99 MB</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="merge-config-panel" class="col-span-8 space-y-6">
+                        
+                        <div id="join-configuration" class="bg-white rounded-xl border border-gray-200 p-6">
+                            <h3 class="text-lg font-semibold text-dark mb-6">Join Configuration</h3>
+                            
+                            <div class="grid grid-cols-2 gap-6">
+                                <div id="join-type-selection">
+                                    <label class="block text-sm font-medium text-dark mb-3">Join Type</label>
+                                    <div class="space-y-2">
+                                        <label class="flex items-center space-x-3">
+                                            <input type="radio" name="join-type" value="inner" checked class="text-primary focus:ring-primary">
+                                            <span class="text-sm text-gray-700">Inner Join</span>
+                                        </label>
+                                        <label class="flex items-center space-x-3">
+                                            <input type="radio" name="join-type" value="left" class="text-primary focus:ring-primary">
+                                            <span class="text-sm text-gray-700">Left Join</span>
+                                        </label>
+                                        <label class="flex items-center space-x-3">
+                                            <input type="radio" name="join-type" value="right" class="text-primary focus:ring-primary">
+                                            <span class="text-sm text-gray-700">Right Join</span>
+                                        </label>
+                                        <label class="flex items-center space-x-3">
+                                            <input type="radio" name="join-type" value="outer" class="text-primary focus:ring-primary">
+                                            <span class="text-sm text-gray-700">Full Outer Join</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div id="key-column-mapping">
+                                    <label class="block text-sm font-medium text-dark mb-3">Key Columns</label>
+                                    <div class="space-y-3">
+                                        <div class="flex items-center space-x-2">
+                                            <select class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                                                <option>customer_id</option>
+                                                <option>product_id</option>
+                                                <option>order_id</option>
+                                                <option>date</option>
+                                            </select>
+                                            <i class="fa-solid fa-arrow-right text-gray-400"></i>
+                                            <select class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                                                <option>customer_id</option>
+                                                <option>client_id</option>
+                                                <option>user_id</option>
+                                            </select>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <select class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                                                <option>product_id</option>
+                                                <option>item_id</option>
+                                                <option>sku</option>
+                                            </select>
+                                            <i class="fa-solid fa-arrow-right text-gray-400"></i>
+                                            <select class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                                                <option>product_id</option>
+                                                <option>catalog_id</option>
+                                                <option>item_code</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="advanced-options" class="bg-white rounded-xl border border-gray-200 p-6">
+                            <h3 class="text-lg font-semibold text-dark mb-6">Advanced Options</h3>
+                            
+                            <div class="grid grid-cols-3 gap-6">
+                                <div id="duplicate-handling">
+                                    <label class="block text-sm font-medium text-dark mb-3">Handle Duplicates</label>
+                                    <select class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                                        <option>Keep All</option>
+                                        <option>Remove Duplicates</option>
+                                        <option>Keep First</option>
+                                        <option>Keep Last</option>
+                                    </select>
+                                </div>
+                                
+                                <div id="null-handling">
+                                    <label class="block text-sm font-medium text-dark mb-3">Handle Missing Values</label>
+                                    <select class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                                        <option>Keep as Null</option>
+                                        <option>Fill with Zero</option>
+                                        <option>Fill with Mean</option>
+                                        <option>Drop Rows</option>
+                                    </select>
+                                </div>
+                                
+                                <div id="output-format">
+                                    <label class="block text-sm font-medium text-dark mb-3">Output Format</label>
+                                    <select class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                                        <option>CSV</option>
+                                        <option>Excel (.xlsx)</option>
+                                        <option>JSON</option>
+                                        <option>Parquet</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="merge-actions" class="bg-white rounded-xl border border-gray-200 p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-dark">Execute Merge</h3>
+                                    <p class="text-sm text-gray-600 mt-1">Preview or execute the configured merge operation</p>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <button id="preview-btn" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2">
+                                        <i class="fa-solid fa-eye"></i>
+                                        <span>Preview</span>
+                                    </button>
+                                    <button id="execute-merge-btn" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors flex items-center space-x-2">
+                                        <i class="fa-solid fa-play"></i>
+                                        <span>Execute Merge</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="results-section" class="px-8 pb-8">
+                    <div id="merge-results" class="bg-white rounded-xl border border-gray-200">
+                        <div class="border-b border-gray-200 p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-dark">Merge Results</h3>
+                                    <p class="text-sm text-gray-600 mt-1">Successfully merged 3 files • 18,450 rows • 26 columns</p>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <button class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <i class="fa-solid fa-download"></i>
+                                        <span class="ml-2">Download</span>
+                                    </button>
+                                    <button class="px-4 py-2 bg-accent text-white rounded-lg hover:bg-green-600 transition-colors">
+                                        <i class="fa-solid fa-chart-bar"></i>
+                                        <span class="ml-2">Analyze</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="results-table" class="p-6">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr class="border-b border-gray-200">
+                                            <th class="text-left py-3 px-4 font-medium text-gray-700">customer_id</th>
+                                            <th class="text-left py-3 px-4 font-medium text-gray-700">customer_name</th>
+                                            <th class="text-left py-3 px-4 font-medium text-gray-700">product_id</th>
+                                            <th class="text-left py-3 px-4 font-medium text-gray-700">product_name</th>
+                                            <th class="text-left py-3 px-4 font-medium text-gray-700">order_date</th>
+                                            <th class="text-left py-3 px-4 font-medium text-gray-700">quantity</th>
+                                            <th class="text-left py-3 px-4 font-medium text-gray-700">revenue</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                            <td class="py-3 px-4 text-gray-600">CUST001</td>
+                                            <td class="py-3 px-4 text-gray-900">John Smith</td>
+                                            <td class="py-3 px-4 text-gray-600">PROD123</td>
+                                            <td class="py-3 px-4 text-gray-900">Wireless Headphones</td>
+                                            <td class="py-3 px-4 text-gray-600">2024-01-15</td>
+                                            <td class="py-3 px-4 text-gray-600">2</td>
+                                            <td class="py-3 px-4 text-gray-900 font-medium">$299.98</td>
+                                        </tr>
+                                        <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                            <td class="py-3 px-4 text-gray-600">CUST002</td>
+                                            <td class="py-3 px-4 text-gray-900">Sarah Johnson</td>
+                                            <td class="py-3 px-4 text-gray-600">PROD456</td>
+                                            <td class="py-3 px-4 text-gray-900">Smart Watch</td>
+                                            <td class="py-3 px-4 text-gray-600">2024-01-16</td>
+                                            <td class="py-3 px-4 text-gray-600">1</td>
+                                            <td class="py-3 px-4 text-gray-900 font-medium">$399.99</td>
+                                        </tr>
+                                        <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                            <td class="py-3 px-4 text-gray-600">CUST003</td>
+                                            <td class="py-3 px-4 text-gray-900">Michael Brown</td>
+                                            <td class="py-3 px-4 text-gray-600">PROD789</td>
+                                            <td class="py-3 px-4 text-gray-900">Laptop Stand</td>
+                                            <td class="py-3 px-4 text-gray-600">2024-01-17</td>
+                                            <td class="py-3 px-4 text-gray-600">3</td>
+                                            <td class="py-3 px-4 text-gray-900 font-medium">$179.97</td>
+                                        </tr>
+                                        <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                            <td class="py-3 px-4 text-gray-600">CUST004</td>
+                                            <td class="py-3 px-4 text-gray-900">Emily Davis</td>
+                                            <td class="py-3 px-4 text-gray-600">PROD101</td>
+                                            <td class="py-3 px-4 text-gray-900">Bluetooth Speaker</td>
+                                            <td class="py-3 px-4 text-gray-600">2024-01-18</td>
+                                            <td class="py-3 px-4 text-gray-600">1</td>
+                                            <td class="py-3 px-4 text-gray-900 font-medium">$129.99</td>
+                                        </tr>
+                                        <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                            <td class="py-3 px-4 text-gray-600">CUST005</td>
+                                            <td class="py-3 px-4 text-gray-900">David Wilson</td>
+                                            <td class="py-3 px-4 text-gray-600">PROD202</td>
+                                            <td class="py-3 px-4 text-gray-900">USB-C Cable</td>
+                                            <td class="py-3 px-4 text-gray-600">2024-01-19</td>
+                                            <td class="py-3 px-4 text-gray-600">5</td>
+                                            <td class="py-3 px-4 text-gray-900 font-medium">$74.95</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+                                <p class="text-sm text-gray-600">Showing 1-5 of 18,450 results</p>
+                                <div class="flex items-center space-x-2">
+                                    <button class="px-3 py-1 text-gray-500 hover:text-gray-700 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                                        <i class="fa-solid fa-chevron-left"></i>
+                                    </button>
+                                    <button class="px-3 py-1 bg-primary text-white rounded">1</button>
+                                    <button class="px-3 py-1 text-gray-500 hover:text-gray-700 border border-gray-300 rounded hover:bg-gray-50 transition-colors">2</button>
+                                    <button class="px-3 py-1 text-gray-500 hover:text-gray-700 border border-gray-300 rounded hover:bg-gray-50 transition-colors">3</button>
+                                    <button class="px-3 py-1 text-gray-500 hover:text-gray-700 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                                        <i class="fa-solid fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.getElementById('execute-merge-btn').addEventListener('click', function() {
+            this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span class="ml-2">Processing...</span>';
+            this.disabled = true;
+            
+            setTimeout(() => {
+                this.innerHTML = '<i class="fa-solid fa-check"></i><span class="ml-2">Completed</span>';
+                this.className = 'px-6 py-2 bg-accent text-white rounded-lg';
+                
+                setTimeout(() => {
+                    this.innerHTML = '<i class="fa-solid fa-play"></i><span class="ml-2">Execute Merge</span>';
+                    this.className = 'px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors flex items-center space-x-2';
+                    this.disabled = false;
+                }, 2000);
+            }, 3000);
+        });
+
+        document.getElementById('preview-btn').addEventListener('click', function() {
+            document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
+        });
+
+        document.getElementById('add-file-btn').addEventListener('click', function() {
+            alert('File selection dialog would open here');
+        });
+    </script>
+
+</body>
+</html>

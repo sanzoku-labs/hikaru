@@ -22,7 +22,8 @@ import {
   MessageSquare,
   Download,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Zap
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -35,6 +36,12 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
+  {
+    id: 'quick-analysis',
+    label: 'Quick Analysis',
+    icon: Zap,
+    href: '/quick-analysis',
+  },
   {
     id: 'projects',
     label: 'Projects',

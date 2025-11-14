@@ -69,10 +69,18 @@ async def create_project(
         db.refresh(new_project)
 
         # Return project with file_count = 0
-        response = ProjectResponse.model_validate(new_project)
-        response.file_count = 0
-
-        return response
+        project_dict = {
+            "id": new_project.id,
+            "name": new_project.name,
+            "description": new_project.description,
+            "user_id": new_project.user_id,
+            "created_at": new_project.created_at,
+            "updated_at": new_project.updated_at,
+            "is_archived": new_project.is_archived,
+            "file_count": 0,
+            "files": None
+        }
+        return ProjectResponse(**project_dict)
 
     except Exception as e:
         db.rollback()
@@ -110,8 +118,19 @@ async def list_projects(
         # Add file_count to each project
         project_responses = []
         for project in projects:
-            project_response = ProjectResponse.model_validate(project)
-            project_response.file_count = len(project.files)
+            # Convert to dict to avoid SQLAlchemy relationship loading issues
+            project_dict = {
+                "id": project.id,
+                "name": project.name,
+                "description": project.description,
+                "user_id": project.user_id,
+                "created_at": project.created_at,
+                "updated_at": project.updated_at,
+                "is_archived": project.is_archived,
+                "file_count": len(project.files) if project.files else 0,
+                "files": None  # Don't include files in list view
+            }
+            project_response = ProjectResponse(**project_dict)
             project_responses.append(project_response)
 
         return ProjectListResponse(
@@ -158,21 +177,37 @@ async def get_project(
                 detail=f"Project {project_id} not found"
             )
 
-        # Convert to response and include files
-        project_response = ProjectResponse.model_validate(project)
-        project_response.file_count = len(project.files)
-
         # Populate files with analysis status
         files_with_analysis = []
         for f in project.files:
-            file_dict = FileInProject.model_validate(f).model_dump()
-            file_dict['has_analysis'] = f.analysis_json is not None
-            file_dict['analyzed_at'] = f.analysis_timestamp
+            file_dict = {
+                "id": f.id,
+                "project_id": f.project_id,
+                "filename": f.filename,
+                "upload_id": f.upload_id,
+                "file_size": f.file_size,
+                "row_count": f.row_count,
+                "data_schema_json": f.schema_json,
+                "uploaded_at": f.uploaded_at,
+                "has_analysis": f.analysis_json is not None,
+                "analyzed_at": f.analysis_timestamp
+            }
             files_with_analysis.append(FileInProject(**file_dict))
 
-        project_response.files = files_with_analysis
+        # Build project response
+        project_dict = {
+            "id": project.id,
+            "name": project.name,
+            "description": project.description,
+            "user_id": project.user_id,
+            "created_at": project.created_at,
+            "updated_at": project.updated_at,
+            "is_archived": project.is_archived,
+            "file_count": len(project.files),
+            "files": files_with_analysis
+        }
 
-        return project_response
+        return ProjectResponse(**project_dict)
 
     except HTTPException:
         raise
@@ -228,10 +263,19 @@ async def update_project(
         db.commit()
         db.refresh(project)
 
-        project_response = ProjectResponse.model_validate(project)
-        project_response.file_count = len(project.files)
-
-        return project_response
+        # Build project response
+        project_dict = {
+            "id": project.id,
+            "name": project.name,
+            "description": project.description,
+            "user_id": project.user_id,
+            "created_at": project.created_at,
+            "updated_at": project.updated_at,
+            "is_archived": project.is_archived,
+            "file_count": len(project.files),
+            "files": None
+        }
+        return ProjectResponse(**project_dict)
 
     except HTTPException:
         raise
@@ -390,7 +434,7 @@ async def upload_file_to_project(
             filename=file.filename,
             file_size=new_file.file_size,
             row_count=new_file.row_count,
-            schema=schema,
+            data_schema=schema,
             uploaded_at=new_file.uploaded_at
         )
 
@@ -442,9 +486,18 @@ async def list_project_files(
         # Populate files with analysis status
         files_with_analysis = []
         for f in project.files:
-            file_dict = FileInProject.model_validate(f).model_dump()
-            file_dict['has_analysis'] = f.analysis_json is not None
-            file_dict['analyzed_at'] = f.analysis_timestamp
+            file_dict = {
+                "id": f.id,
+                "project_id": f.project_id,
+                "filename": f.filename,
+                "upload_id": f.upload_id,
+                "file_size": f.file_size,
+                "row_count": f.row_count,
+                "data_schema_json": f.schema_json,
+                "uploaded_at": f.uploaded_at,
+                "has_analysis": f.analysis_json is not None,
+                "analyzed_at": f.analysis_timestamp
+            }
             files_with_analysis.append(FileInProject(**file_dict))
 
         return files_with_analysis
@@ -586,22 +639,29 @@ async def analyze_project_file(
 
         # Generate charts
         chart_generator = ChartGenerator()
-        charts_data = chart_generator.generate_charts(df, schema, user_intent=request.user_intent)
+        charts_data_raw = chart_generator.generate_charts(df, schema, user_intent=request.user_intent)
 
         # Generate AI insights
         ai_service = AIService()
 
-        # Add insights to charts
-        for chart in charts_data:
-            insight = ai_service.generate_chart_insight(chart, schema)
-            chart.insight = insight
+        # Add insights to charts by creating new chart objects with insights
+        from app.models.schemas import ChartData
+        charts_with_insights = []
+        for chart_data in charts_data_raw:
+            # Generate insight for this chart
+            insight = ai_service.generate_chart_insight(chart_data, schema)
+
+            # Create new chart dict with insight
+            chart_dict = chart_data if isinstance(chart_data, dict) else chart_data.model_dump()
+            chart_dict['insight'] = insight
+            charts_with_insights.append(ChartData(**chart_dict))
 
         # Generate global summary
-        global_summary = ai_service.generate_global_summary(charts_data, schema, user_intent=request.user_intent)
+        global_summary = ai_service.generate_global_summary(charts_with_insights, schema, user_intent=request.user_intent)
 
         # Store analysis results in database
         analysis_json = {
-            "charts": [chart.model_dump() for chart in charts_data],
+            "charts": [chart.model_dump() for chart in charts_with_insights],
             "global_summary": global_summary,
             "schema": schema.model_dump()
         }
@@ -616,7 +676,7 @@ async def analyze_project_file(
         return FileAnalysisResponse(
             file_id=file.id,
             filename=file.filename,
-            charts=charts_data,
+            charts=charts_with_insights,
             global_summary=global_summary,
             user_intent=request.user_intent,
             analyzed_at=file.analysis_timestamp

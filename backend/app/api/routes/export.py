@@ -9,7 +9,8 @@ from app.models.schemas import (
 )
 from app.services.export_service import ExportService
 from app.storage import get_upload
-from app.api.dependencies import get_current_active_user, get_db
+from app.middleware.auth import get_current_active_user
+from app.database import get_db
 from app.models.database import User, Project, File as FileModel
 from datetime import datetime, timedelta
 import os
@@ -54,10 +55,16 @@ async def export_dashboard(request: ExportRequest):
     ai_service = AIService()
     if ai_service.enabled:
         try:
-            # Generate insight for each chart
+            # Generate insight for each chart by creating new chart objects
+            charts_with_insights = []
             for chart in charts:
                 insight = ai_service.generate_chart_insight(chart, schema)
-                chart.insight = insight
+                # Create new chart with insight
+                chart_dict = chart.model_dump()
+                chart_dict['insight'] = insight
+                charts_with_insights.append(ChartData(**chart_dict))
+
+            charts = charts_with_insights
 
             # Generate global summary
             global_summary = ai_service.generate_global_summary(charts, schema)
@@ -204,8 +211,13 @@ async def export_advanced(
             ai_service = AIService()
             if ai_service.enabled and request.include_insights:
                 try:
+                    charts_with_insights = []
                     for chart in charts:
-                        chart.insight = ai_service.generate_chart_insight(chart, schema)
+                        insight = ai_service.generate_chart_insight(chart, schema)
+                        chart_dict = chart.model_dump()
+                        chart_dict['insight'] = insight
+                        charts_with_insights.append(ChartData(**chart_dict))
+                    charts = charts_with_insights
                     global_summary = ai_service.generate_global_summary(charts, schema)
                 except Exception as e:
                     print(f"Warning: AI insights failed: {e}")
@@ -217,8 +229,12 @@ async def export_advanced(
 
         # Remove insights if not requested
         if not request.include_insights:
+            charts_without_insights = []
             for chart in charts:
-                chart.insight = None
+                chart_dict = chart.model_dump()
+                chart_dict['insight'] = None
+                charts_without_insights.append(ChartData(**chart_dict))
+            charts = charts_without_insights
             global_summary = None
 
         # Remove summary if not requested

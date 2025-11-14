@@ -91,7 +91,7 @@ async def upload_file(
         return UploadResponse(
             upload_id=upload_id,
             filename=file.filename,
-            schema=schema,
+            data_schema=schema,
             upload_timestamp=datetime.now()
         )
 

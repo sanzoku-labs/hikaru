@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.plot.ly/plotly-3.1.1.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { display: none;}
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': '#6366f1',
+                        'primary-dark': '#4f46e5',
+                        'secondary': '#f1f5f9',
+                        'accent': '#10b981',
+                        'dark': '#1e293b',
+                        'light-gray': '#f8fafc',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-light-gray font-inter">
+
+    <div id="main-container" class="flex h-screen">
+        
+        <aside id="sidebar" class="w-64 bg-white border-r border-gray-200 flex flex-col">
+            <div id="sidebar-header" class="p-6 border-b border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-chart-line text-white text-lg"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-dark">Hikaru</h1>
+                </div>
+            </div>
+            
+            <nav id="sidebar-nav" class="flex-1 p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+                            <i class="fa-solid fa-folder-open"></i>
+                            <span class="font-medium">Projects</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg bg-primary text-white">
+                            <i class="fa-solid fa-chart-bar"></i>
+                            <span class="font-medium">Analytics</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+                            <i class="fa-solid fa-code-compare"></i>
+                            <span class="font-medium">Comparisons</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+                            <i class="fa-solid fa-code-merge"></i>
+                            <span class="font-medium">Merging</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+                            <i class="fa-solid fa-comments"></i>
+                            <span class="font-medium">Q&A Chat</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+                            <i class="fa-solid fa-download"></i>
+                            <span class="font-medium">Exports</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div id="sidebar-footer" class="p-4 border-t border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-5.jpg" alt="Profile" class="w-10 h-10 rounded-full object-cover">
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-dark">Sarah Wilson</p>
+                        <p class="text-xs text-gray-500">Premium Plan</p>
+                    </div>
+                    <button class="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fa-solid fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <main id="main-content" class="flex-1 flex flex-col overflow-hidden">
+            
+            <header id="header" class="bg-white border-b border-gray-200 px-8 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-dark">Analytics Dashboard</h2>
+                        <p class="text-gray-600 mt-1">Auto-generated charts and insights from your data</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <select class="px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 focus:ring-2 focus:ring-primary focus:border-primary">
+                            <option>Sales Analytics Q4</option>
+                            <option>Customer Segmentation</option>
+                            <option>Risk Assessment</option>
+                            <option>ML Model Training</option>
+                        </select>
+                        <button class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
+                            <i class="fa-solid fa-refresh"></i>
+                        </button>
+                        <button class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors flex items-center space-x-2">
+                            <i class="fa-solid fa-download"></i>
+                            <span>Export</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <div id="content-area" class="flex-1 overflow-auto p-8">
+                
+                <div id="insights-overview" class="grid grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-xl p-6 border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm">Total Revenue</p>
+                                <p class="text-2xl font-bold text-dark mt-1">$2.4M</p>
+                                <p class="text-sm text-green-600 mt-1">
+                                    <i class="fa-solid fa-arrow-up"></i> +12.5%
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-dollar-sign text-blue-600 text-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-6 border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm">Conversion Rate</p>
+                                <p class="text-2xl font-bold text-dark mt-1">3.8%</p>
+                                <p class="text-sm text-green-600 mt-1">
+                                    <i class="fa-solid fa-arrow-up"></i> +0.4%
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-percentage text-green-600 text-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-6 border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm">Avg Order Value</p>
+                                <p class="text-2xl font-bold text-dark mt-1">$156</p>
+                                <p class="text-sm text-red-600 mt-1">
+                                    <i class="fa-solid fa-arrow-down"></i> -2.1%
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-shopping-cart text-purple-600 text-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-6 border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm">Customer Retention</p>
+                                <p class="text-2xl font-bold text-dark mt-1">84%</p>
+                                <p class="text-sm text-green-600 mt-1">
+                                    <i class="fa-solid fa-arrow-up"></i> +5.2%
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-users text-orange-600 text-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="charts-grid" class="grid grid-cols-2 gap-8 mb-8">
+                    
+                    <div id="revenue-chart-card" class="bg-white rounded-xl border border-gray-200 p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 class="text-lg font-semibold text-dark">Monthly Revenue Trend</h3>
+                                <p class="text-gray-600 text-sm">Revenue performance over the last 12 months</p>
+                            </div>
+                            <button class="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                                <i class="fa-solid fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                        <div id="revenue-chart" style="height: 300px;"></div>
+                    </div>
+
+                    <div id="conversion-chart-card" class="bg-white rounded-xl border border-gray-200 p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 class="text-lg font-semibold text-dark">Conversion Funnel</h3>
+                                <p class="text-gray-600 text-sm">Customer journey conversion rates</p>
+                            </div>
+                            <button class="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                                <i class="fa-solid fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                        <div id="conversion-chart" style="height: 300px;"></div>
+                    </div>
+
+                    <div id="segment-chart-card" class="bg-white rounded-xl border border-gray-200 p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 class="text-lg font-semibold text-dark">Customer Segments</h3>
+                                <p class="text-gray-600 text-sm">Revenue distribution by customer segments</p>
+                            </div>
+                            <button class="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                                <i class="fa-solid fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                        <div id="segment-chart" style="height: 300px;"></div>
+                    </div>
+
+                    <div id="performance-chart-card" class="bg-white rounded-xl border border-gray-200 p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 class="text-lg font-semibold text-dark">Product Performance</h3>
+                                <p class="text-gray-600 text-sm">Top performing products by revenue</p>
+                            </div>
+                            <button class="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                                <i class="fa-solid fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                        <div id="performance-chart" style="height: 300px;"></div>
+                    </div>
+                </div>
+
+                <div id="insights-section" class="grid grid-cols-3 gap-6 mb-8">
+                    <div id="insight-card-1" class="bg-white rounded-xl border border-gray-200 p-6">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-lightbulb text-blue-600 text-lg"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-lg font-semibold text-dark mb-2">Revenue Growth</h4>
+                                <p class="text-gray-600 text-sm mb-3">Q4 shows strong revenue growth of 12.5% compared to Q3, driven by increased customer acquisition and higher order values.</p>
+                                <span class="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">High Impact</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="insight-card-2" class="bg-white rounded-xl border border-gray-200 p-6">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-exclamation-triangle text-yellow-600 text-lg"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-lg font-semibold text-dark mb-2">Order Value Decline</h4>
+                                <p class="text-gray-600 text-sm mb-3">Average order value decreased by 2.1%. Consider implementing upselling strategies or bundling offers.</p>
+                                <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">Attention Needed</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="insight-card-3" class="bg-white rounded-xl border border-gray-200 p-6">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-chart-line text-green-600 text-lg"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-lg font-semibold text-dark mb-2">Retention Success</h4>
+                                <p class="text-gray-600 text-sm mb-3">Customer retention improved to 84%, indicating successful loyalty programs and customer satisfaction initiatives.</p>
+                                <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Positive Trend</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="recommendations-section" class="bg-white rounded-xl border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-dark mb-4">AI Recommendations</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start space-x-4 p-4 bg-blue-50 rounded-lg">
+                            <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                                <i class="fa-solid fa-robot text-white text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-medium text-dark mb-1">Optimize Product Mix</h4>
+                                <p class="text-gray-600 text-sm">Focus marketing efforts on high-performing products to maximize revenue potential. Consider phasing out underperforming items.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-4 p-4 bg-green-50 rounded-lg">
+                            <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                                <i class="fa-solid fa-target text-white text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-medium text-dark mb-1">Enhance Customer Segments</h4>
+                                <p class="text-gray-600 text-sm">Premium segment shows highest value. Develop targeted campaigns to convert mid-tier customers to premium tier.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-4 p-4 bg-purple-50 rounded-lg">
+                            <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                                <i class="fa-solid fa-chart-bar text-white text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-medium text-dark mb-1">Improve Conversion Rate</h4>
+                                <p class="text-gray-600 text-sm">Analyze drop-off points in the conversion funnel. A/B test checkout process improvements to boost conversions.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        window.addEventListener('load', function() {
+            try {
+                const revenueData = [{
+                    type: 'scatter',
+                    mode: 'lines',
+                    x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    y: [180, 195, 210, 185, 220, 240, 235, 250, 265, 280, 295, 310],
+                    line: { color: '#6366f1', width: 3 },
+                    fill: 'tozeroy',
+                    fillcolor: 'rgba(99, 102, 241, 0.1)'
+                }];
+
+                const revenueLayout = {
+                    margin: { t: 20, r: 20, b: 40, l: 60 },
+                    plot_bgcolor: 'transparent',
+                    paper_bgcolor: 'transparent',
+                    showlegend: false,
+                    xaxis: { showgrid: false },
+                    yaxis: { showgrid: true, gridcolor: '#f1f5f9' }
+                };
+
+                Plotly.newPlot('revenue-chart', revenueData, revenueLayout, {responsive: true, displayModeBar: false, displaylogo: false});
+
+                const conversionData = [{
+                    type: 'funnel',
+                    y: ['Visitors', 'Sign-ups', 'Trials', 'Purchases'],
+                    x: [10000, 2500, 1200, 380],
+                    marker: { color: ['#6366f1', '#8b5cf6', '#06b6d4', '#10b981'] }
+                }];
+
+                const conversionLayout = {
+                    margin: { t: 20, r: 20, b: 40, l: 120 },
+                    plot_bgcolor: 'transparent',
+                    paper_bgcolor: 'transparent',
+                    showlegend: false
+                };
+
+                Plotly.newPlot('conversion-chart', conversionData, conversionLayout, {responsive: true, displayModeBar: false, displaylogo: false});
+
+                const segmentData = [{
+                    type: 'pie',
+                    labels: ['Premium', 'Standard', 'Basic', 'Enterprise'],
+                    values: [35, 30, 25, 10],
+                    marker: { colors: ['#6366f1', '#8b5cf6', '#06b6d4', '#10b981'] }
+                }];
+
+                const segmentLayout = {
+                    margin: { t: 20, r: 20, b: 20, l: 20 },
+                    plot_bgcolor: 'transparent',
+                    paper_bgcolor: 'transparent',
+                    showlegend: true,
+                    legend: { orientation: 'h', y: -0.1 }
+                };
+
+                Plotly.newPlot('segment-chart', segmentData, segmentLayout, {responsive: true, displayModeBar: false, displaylogo: false});
+
+                const performanceData = [{
+                    type: 'bar',
+                    x: ['Product A', 'Product B', 'Product C', 'Product D', 'Product E'],
+                    y: [450, 380, 320, 280, 240],
+                    marker: { color: '#6366f1' }
+                }];
+
+                const performanceLayout = {
+                    margin: { t: 20, r: 20, b: 60, l: 60 },
+                    plot_bgcolor: 'transparent',
+                    paper_bgcolor: 'transparent',
+                    showlegend: false,
+                    xaxis: { showgrid: false },
+                    yaxis: { showgrid: true, gridcolor: '#f1f5f9' }
+                };
+
+                Plotly.newPlot('performance-chart', performanceData, performanceLayout, {responsive: true, displayModeBar: false, displaylogo: false});
+
+            } catch(e) {
+                console.error('Chart rendering failed:', e);
+            }
+        });
+    </script>
+
+</body>
+</html>

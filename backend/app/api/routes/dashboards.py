@@ -15,7 +15,8 @@ from app.models.schemas import (
     ErrorResponse
 )
 from app.models.database import User, Project, Dashboard
-from app.api.dependencies import get_current_active_user, get_db
+from app.middleware.auth import get_current_active_user
+from app.database import get_db
 
 router = APIRouter(prefix="/api/projects", tags=["dashboards"])
 

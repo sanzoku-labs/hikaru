@@ -1,304 +1,285 @@
-/**
- * Merging - File merging center (Mockup 5)
- *
- * Features:
- * - List of saved merges
- * - Start new merge wizard
- * - Merge result previews
- * - Download merged files
- */
+import { useState } from "react";
+import { Layout } from "@/components/Layout";
+import { MergeFileCard } from "@/components/merging/MergeFileCard";
+import { JoinConfigPanel } from "@/components/merging/JoinConfigPanel";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Plus } from "lucide-react";
 
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Layout } from '@/components/Layout'
-import { MergeWizard } from '@/components/merging/MergeWizard'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import {
-  GitMerge,
-  Plus,
-  Key,
-  Eye,
-  Download,
-  Trash2,
-  FileText,
-  Clock
-} from 'lucide-react'
+// Mock files for demonstration
+const mockFiles = [
+  {
+    id: 1,
+    name: "sales_data_q4.csv",
+    rows: 12450,
+    columns: 8,
+    size: "2.3 MB",
+  },
+  {
+    id: 2,
+    name: "customer_data.csv",
+    rows: 8743,
+    columns: 6,
+    size: "1.4 MB",
+  },
+  {
+    id: 3,
+    name: "product_catalog.csv",
+    rows: 1247,
+    columns: 5,
+    size: "0.8 MB",
+  },
+];
 
-interface Merge {
-  id: string
-  project_id: number
-  project_name: string
-  file_a_name: string
-  file_b_name: string
-  join_key: string
-  merge_type: 'inner' | 'left' | 'right' | 'outer'
-  result_row_count: number
-  created_at: string
-}
+const mockColumns = [
+  "customer_id",
+  "product_id",
+  "order_id",
+  "date",
+  "amount",
+  "quantity",
+  "region",
+  "category",
+];
 
-const mergeTypeLabels = {
-  inner: 'Inner Join',
-  left: 'Left Join',
-  right: 'Right Join',
-  outer: 'Full Outer Join'
-}
+// Mock merged data for results preview
+const generateMockMergedData = (count: number) => {
+  return Array.from({ length: count }, (_, i) => ({
+    customer_id: `C${1000 + i}`,
+    order_id: `O${2000 + i}`,
+    product_id: `P${300 + (i % 50)}`,
+    customer_name: `Customer ${i + 1}`,
+    product_name: `Product ${(i % 50) + 1}`,
+    amount: (Math.random() * 500 + 50).toFixed(2),
+    quantity: Math.floor(Math.random() * 10) + 1,
+    date: new Date(2024, 9, (i % 30) + 1).toLocaleDateString(),
+  }));
+};
 
 export function Merging() {
-  const navigate = useNavigate()
-  const [merges, setMerges] = useState<Merge[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [wizardOpen, setWizardOpen] = useState(false)
+  const [selectedFiles, setSelectedFiles] = useState([
+    mockFiles[0],
+    mockFiles[1],
+  ]);
+  const [joinType, setJoinType] = useState<
+    "inner" | "left" | "right" | "outer"
+  >("inner");
+  const [leftKey, setLeftKey] = useState("customer_id");
+  const [rightKey, setRightKey] = useState("customer_id");
+  const [duplicateHandling, setDuplicateHandling] = useState("keep_all");
+  const [missingValuesHandling, setMissingValuesHandling] =
+    useState("keep_null");
+  const [outputFormat, setOutputFormat] = useState("csv");
+  const [mergedData, setMergedData] = useState<any[] | null>(null);
+  const [showResults, setShowResults] = useState(false);
 
-  // Mock project files for wizard (in real app, fetch from selected project)
-  const mockFiles = [
-    {
-      id: 1,
-      filename: 'customers.csv',
-      file_size: 145678,
-      row_count: 850,
-      columns: ['customer_id', 'name', 'email', 'region'],
-      uploaded_at: new Date().toISOString()
-    },
-    {
-      id: 2,
-      filename: 'orders.csv',
-      file_size: 287432,
-      row_count: 2150,
-      columns: ['order_id', 'customer_id', 'amount', 'date'],
-      uploaded_at: new Date().toISOString()
-    }
-  ]
+  const handleAddFile = () => {
+    // TODO: Open file selector dialog
+    console.log("Add file");
+  };
 
-  useEffect(() => {
-    loadMerges()
-  }, [])
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
+  };
 
-  const loadMerges = async () => {
-    try {
-      setLoading(true)
-      setError(null)
+  const handlePreview = () => {
+    // Generate mock preview data
+    const mockData = generateMockMergedData(20);
+    setMergedData(mockData);
+    setShowResults(true);
+  };
 
-      // TODO: Replace with actual API call
-      // Simulating API response
-      await new Promise(resolve => setTimeout(resolve, 600))
+  const handleExecute = () => {
+    // TODO: Call merge API
+    const mockData = generateMockMergedData(100);
+    setMergedData(mockData);
+    setShowResults(true);
+    alert("Merge executed successfully!");
+  };
 
-      setMerges([])
-    } catch (err: any) {
-      setError(err.message || 'Failed to load merges')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const handleDownload = () => {
+    alert(`Downloading merged data as ${outputFormat.toUpperCase()}...`);
+  };
 
-  const handleStartMerge = async (
-    fileAId: number,
-    fileBId: number,
-    joinKey: string,
-    mergeType: string
-  ) => {
-    try {
-      // TODO: Call merge API
-      console.log('Starting merge:', { fileAId, fileBId, joinKey, mergeType })
+  const handleAnalyze = () => {
+    alert("Analyzing merged data...");
+  };
 
-      // Close wizard
-      setWizardOpen(false)
-
-      // TODO: Navigate to merge result page or add to list
-      // navigate(`/merging/${mergeId}`)
-    } catch (err) {
-      console.error('Failed to start merge:', err)
-    }
-  }
-
-  const handleViewMerge = (mergeId: string) => {
-    // TODO: Navigate to merge detail/preview page
-    navigate(`/merging/${mergeId}`)
-  }
-
-  const handleDownloadMerge = async (mergeId: string) => {
-    try {
-      // TODO: Call download API
-      console.log('Downloading merge:', mergeId)
-    } catch (err) {
-      console.error('Failed to download merge:', err)
-    }
-  }
-
-  const handleDeleteMerge = async (mergeId: string) => {
-    if (!confirm('Delete this merge? This action cannot be undone.')) return
-
-    try {
-      // TODO: Call delete API
-      setMerges(merges.filter(m => m.id !== mergeId))
-    } catch (err) {
-      console.error('Failed to delete merge:', err)
-    }
-  }
-
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffHours = Math.floor(diffMs / 3600000)
-    const diffDays = Math.floor(diffMs / 86400000)
-
-    if (diffHours < 24) return `${diffHours}h ago`
-    if (diffDays < 7) return `${diffDays}d ago`
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-  }
+  // Calculate total stats
+  const totalRows = selectedFiles.reduce((sum, file) => sum + file.rows, 0);
+  const totalSize = selectedFiles
+    .reduce((sum, file) => {
+      const sizeMB = parseFloat(file.size.replace(" MB", ""));
+      return sum + sizeMB;
+    }, 0)
+    .toFixed(2);
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8 space-y-8">
+      <div className="px-8 py-6 space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Merging</h1>
-            <p className="text-muted-foreground">
-              Combine multiple data files using SQL-like joins
-            </p>
-          </div>
-          <Button onClick={() => setWizardOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Merge
-          </Button>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">File Merge</h1>
+          <p className="text-sm text-gray-500">
+            Combine multiple data files using SQL-like joins
+          </p>
         </div>
 
-        {/* Error Alert */}
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+        {/* Main Grid Layout: 4 columns (file selection) + 8 columns (configuration) */}
+        <div className="grid grid-cols-12 gap-6">
+          {/* File Selection Panel - Left Sidebar (4 columns) */}
+          <div className="col-span-4">
+            <div className="bg-white rounded-xl border border-gray-200 p-6 sticky top-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Select Files
+                </h3>
+                <Button
+                  onClick={handleAddFile}
+                  size="sm"
+                  className="bg-primary text-white hover:bg-primary/90"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
 
-        {/* Loading State */}
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <Card key={i}>
-                <CardHeader>
-                  <Skeleton className="h-6 w-2/3 mb-2" />
-                  <Skeleton className="h-4 w-full" />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-4 w-1/2" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : merges.length === 0 ? (
-          <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
-            <div className="p-4 rounded-full bg-primary/10 mb-4">
-              <GitMerge className="h-12 w-12 text-primary" />
+              {/* File Cards */}
+              <div className="space-y-3 mb-6">
+                {selectedFiles.map((file, index) => (
+                  <MergeFileCard
+                    key={file.id}
+                    file={file}
+                    role={
+                      index === 0
+                        ? "primary"
+                        : index === 1
+                          ? "secondary"
+                          : "additional"
+                    }
+                    onRemove={
+                      selectedFiles.length > 2
+                        ? () => handleRemoveFile(index)
+                        : undefined
+                    }
+                  />
+                ))}
+              </div>
+
+              {/* Merge Stats */}
+              <div className="pt-6 border-t border-gray-200">
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Total Rows</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {totalRows.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Total Size</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {totalSize} MB
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <h2 className="text-2xl font-bold mb-2">No Merges Yet</h2>
-            <p className="text-muted-foreground mb-6 max-w-md">
-              Merge multiple files using joins to create enriched datasets for comprehensive analysis
-            </p>
-            <Button onClick={() => setWizardOpen(true)} size="lg">
-              <Plus className="h-5 w-5 mr-2" />
-              Create Your First Merge
-            </Button>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {merges.map((merge) => (
-              <Card
-                key={merge.id}
-                className="hover:shadow-card-hover transition-shadow group"
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <div className="flex-shrink-0 p-2.5 rounded-lg bg-primary/10">
-                      <GitMerge className="h-5 w-5 text-primary" />
-                    </div>
-                    <Badge variant="secondary" className="text-xs">
-                      {mergeTypeLabels[merge.merge_type]}
-                    </Badge>
-                  </div>
 
-                  <CardTitle className="text-base mb-2">
-                    {merge.project_name}
-                  </CardTitle>
+          {/* Configuration Panel - Right (8 columns) */}
+          <div className="col-span-8">
+            <JoinConfigPanel
+              joinType={joinType}
+              leftKey={leftKey}
+              rightKey={rightKey}
+              availableColumns={mockColumns}
+              duplicateHandling={duplicateHandling}
+              missingValuesHandling={missingValuesHandling}
+              outputFormat={outputFormat}
+              onJoinTypeChange={setJoinType}
+              onLeftKeyChange={setLeftKey}
+              onRightKeyChange={setRightKey}
+              onDuplicateHandlingChange={setDuplicateHandling}
+              onMissingValuesHandlingChange={setMissingValuesHandling}
+              onOutputFormatChange={setOutputFormat}
+              onPreview={handlePreview}
+              onExecute={handleExecute}
+            />
+          </div>
+        </div>
 
-                  <CardDescription className="space-y-1.5">
-                    <div className="flex items-center gap-1.5 text-xs">
-                      <FileText className="h-3 w-3" />
-                      <span className="truncate">{merge.file_a_name}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs">
-                      <GitMerge className="h-3 w-3" />
-                      <span className="truncate">{merge.file_b_name}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs text-primary">
-                      <Key className="h-3 w-3" />
-                      <span className="font-medium">Join: {merge.join_key}</span>
-                    </div>
-                  </CardDescription>
-                </CardHeader>
+        {/* Results Section - Full Width */}
+        {showResults && mergedData && (
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Merged Results
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  {mergedData.length} rows •{" "}
+                  {Object.keys(mergedData[0] || {}).length} columns
+                </p>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Button variant="outline" onClick={handleDownload}>
+                  Download
+                </Button>
+                <Button onClick={handleAnalyze}>Analyze</Button>
+              </div>
+            </div>
 
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      <span>{formatDate(merge.created_at)}</span>
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      {merge.result_row_count.toLocaleString()} rows
-                    </Badge>
-                  </div>
+            {/* Results Table */}
+            <div className="overflow-auto max-h-[400px] border border-gray-200 rounded-lg">
+              <table className="w-full">
+                <thead className="bg-gray-50 sticky top-0">
+                  <tr>
+                    {mergedData.length > 0 &&
+                      Object.keys(mergedData[0]).map((col) => (
+                        <th
+                          key={col}
+                          className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200"
+                        >
+                          {col}
+                        </th>
+                      ))}
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {mergedData.map((row, rowIndex) => (
+                    <tr key={rowIndex} className="hover:bg-gray-50">
+                      {Object.values(row).map((value: any, colIndex) => (
+                        <td
+                          key={colIndex}
+                          className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap"
+                        >
+                          {value}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-                  <div className="flex gap-2 pt-2 border-t">
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleViewMerge(merge.id)}
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      View
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDownloadMerge(merge.id)}
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteMerge(merge.id)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            {/* Pagination */}
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+              <p className="text-sm text-gray-600">
+                Showing 1 to {Math.min(20, mergedData.length)} of{" "}
+                {mergedData.length} rows
+              </p>
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" size="sm" disabled>
+                  Previous
+                </Button>
+                <Badge variant="secondary">1</Badge>
+                <Button variant="outline" size="sm">
+                  Next
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </div>
-
-      {/* Merge Wizard Dialog */}
-      <Dialog open={wizardOpen} onOpenChange={setWizardOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>New Merge</DialogTitle>
-          </DialogHeader>
-          <MergeWizard
-            files={mockFiles}
-            onComplete={handleStartMerge}
-            onCancel={() => setWizardOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
     </Layout>
-  )
+  );
 }

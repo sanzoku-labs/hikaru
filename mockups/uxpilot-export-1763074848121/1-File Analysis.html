@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.plot.ly/plotly-3.1.1.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { display: none;}
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': '#6366f1',
+                        'primary-dark': '#4f46e5',
+                        'secondary': '#f1f5f9',
+                        'accent': '#10b981',
+                        'dark': '#1e293b',
+                        'light-gray': '#f8fafc',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-light-gray font-inter">
+
+    <div id="main-container" class="flex h-screen">
+        
+        <aside id="sidebar" class="w-64 bg-white border-r border-gray-200 flex flex-col">
+            <div id="sidebar-header" class="p-6 border-b border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-chart-line text-white text-lg"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-dark">Hikaru</h1>
+                </div>
+            </div>
+            
+            <nav id="sidebar-nav" class="flex-1 p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+                            <i class="fa-solid fa-folder-open"></i>
+                            <span class="font-medium">Projects</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg bg-primary text-white">
+                            <i class="fa-solid fa-chart-bar"></i>
+                            <span class="font-medium">Analytics</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+                            <i class="fa-solid fa-code-compare"></i>
+                            <span class="font-medium">Comparisons</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+                            <i class="fa-solid fa-code-merge"></i>
+                            <span class="font-medium">Merging</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+                            <i class="fa-solid fa-comments"></i>
+                            <span class="font-medium">Q&A Chat</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+                            <i class="fa-solid fa-download"></i>
+                            <span class="font-medium">Exports</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div id="sidebar-footer" class="p-4 border-t border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-5.jpg" alt="Profile" class="w-10 h-10 rounded-full object-cover">
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-dark">Sarah Wilson</p>
+                        <p class="text-xs text-gray-500">Premium Plan</p>
+                    </div>
+                    <button class="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fa-solid fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <main id="main-content" class="flex-1 flex flex-col overflow-hidden">
+            
+            <header id="header" class="bg-white border-b border-gray-200 px-8 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <button class="p-2 text-gray-600 hover:text-gray-800 transition-colors">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <div>
+                            <h2 class="text-2xl font-bold text-dark">sales_data_q4.csv</h2>
+                            <p class="text-gray-600 mt-1">File analysis and insights • Sales Analytics Q4</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button class="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg transition-colors">
+                            <i class="fa-solid fa-download mr-2"></i>
+                            Export
+                        </button>
+                        <button class="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg transition-colors">
+                            <i class="fa-solid fa-share mr-2"></i>
+                            Share
+                        </button>
+                        <button class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
+                            <i class="fa-solid fa-comments mr-2"></i>
+                            Ask AI
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <div id="content-area" class="flex-1 overflow-auto">
+                
+                <div id="file-info-section" class="bg-white border-b border-gray-200 px-8 py-6">
+                    <div class="grid grid-cols-6 gap-6">
+                        <div class="text-center">
+                            <p class="text-gray-500 text-sm">File Size</p>
+                            <p class="text-lg font-semibold text-dark">2.4 MB</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-gray-500 text-sm">Rows</p>
+                            <p class="text-lg font-semibold text-dark">15,847</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-gray-500 text-sm">Columns</p>
+                            <p class="text-lg font-semibold text-dark">12</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-gray-500 text-sm">Data Quality</p>
+                            <p class="text-lg font-semibold text-accent">98.2%</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-gray-500 text-sm">Missing Values</p>
+                            <p class="text-lg font-semibold text-orange-600">284</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-gray-500 text-sm">Last Modified</p>
+                            <p class="text-lg font-semibold text-dark">2h ago</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-8 space-y-8">
+                    
+                    <div id="insights-section" class="bg-white rounded-xl border border-gray-200 p-6">
+                        <h3 class="text-xl font-semibold text-dark mb-6">AI-Generated Insights</h3>
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="space-y-4">
+                                <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                    <div class="flex items-start space-x-3">
+                                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <i class="fa-solid fa-lightbulb text-white text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-medium text-dark mb-1">Revenue Trend</h4>
+                                            <p class="text-sm text-gray-600">Sales show a 23% increase in Q4 compared to Q3, with peak performance in December.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="p-4 bg-green-50 rounded-lg border border-green-200">
+                                    <div class="flex items-start space-x-3">
+                                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <i class="fa-solid fa-chart-line text-white text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-medium text-dark mb-1">Top Product Category</h4>
+                                            <p class="text-sm text-gray-600">Electronics category dominates with 42% of total revenue, followed by Home & Garden at 28%.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                                    <div class="flex items-start space-x-3">
+                                        <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <i class="fa-solid fa-users text-white text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-medium text-dark mb-1">Customer Behavior</h4>
+                                            <p class="text-sm text-gray-600">Average order value increased by 15%, indicating successful upselling strategies.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="p-4 bg-orange-50 rounded-lg border border-orange-200">
+                                    <div class="flex items-start space-x-3">
+                                        <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <i class="fa-solid fa-exclamation-triangle text-white text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-medium text-dark mb-1">Data Quality Alert</h4>
+                                            <p class="text-sm text-gray-600">284 missing values detected in customer_age and region columns. Consider data cleaning.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="charts-section" class="grid grid-cols-2 gap-6">
+                        
+                        <div id="revenue-chart-card" class="bg-white rounded-xl border border-gray-200 p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-dark">Monthly Revenue Trend</h3>
+                                <button class="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                                    <i class="fa-solid fa-expand"></i>
+                                </button>
+                            </div>
+                            <div id="revenue-chart" style="height: 300px"></div>
+                        </div>
+
+                        <div id="category-chart-card" class="bg-white rounded-xl border border-gray-200 p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-dark">Sales by Category</h3>
+                                <button class="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                                    <i class="fa-solid fa-expand"></i>
+                                </button>
+                            </div>
+                            <div id="category-chart" style="height: 300px"></div>
+                        </div>
+
+                        <div id="regional-chart-card" class="bg-white rounded-xl border border-gray-200 p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-dark">Regional Performance</h3>
+                                <button class="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                                    <i class="fa-solid fa-expand"></i>
+                                </button>
+                            </div>
+                            <div id="regional-chart" style="height: 300px"></div>
+                        </div>
+
+                        <div id="customer-chart-card" class="bg-white rounded-xl border border-gray-200 p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-dark">Customer Age Distribution</h3>
+                                <button class="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                                    <i class="fa-solid fa-expand"></i>
+                                </button>
+                            </div>
+                            <div id="customer-chart" style="height: 300px"></div>
+                        </div>
+                    </div>
+
+                    <div id="statistics-section" class="bg-white rounded-xl border border-gray-200 p-6">
+                        <h3 class="text-xl font-semibold text-dark mb-6">Statistical Summary</h3>
+                        <div class="grid grid-cols-3 gap-8">
+                            <div>
+                                <h4 class="font-medium text-dark mb-4">Revenue Metrics</h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Total Revenue</span>
+                                        <span class="font-medium">$2,847,392</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Average Order Value</span>
+                                        <span class="font-medium">$179.64</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Median Order Value</span>
+                                        <span class="font-medium">$142.30</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Standard Deviation</span>
+                                        <span class="font-medium">$87.21</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-dark mb-4">Customer Metrics</h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Total Customers</span>
+                                        <span class="font-medium">8,743</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">New Customers</span>
+                                        <span class="font-medium">2,156</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Returning Customers</span>
+                                        <span class="font-medium">6,587</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Average Age</span>
+                                        <span class="font-medium">42.3 years</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-dark mb-4">Product Metrics</h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Total Orders</span>
+                                        <span class="font-medium">15,847</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Unique Products</span>
+                                        <span class="font-medium">1,247</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Top Selling Product</span>
+                                        <span class="font-medium">iPhone 14 Pro</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Average Quantity</span>
+                                        <span class="font-medium">2.1 items</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="data-quality-section" class="bg-white rounded-xl border border-gray-200 p-6">
+                        <h3 class="text-xl font-semibold text-dark mb-6">Data Quality Report</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                    <span class="font-medium">customer_id</span>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <span class="text-sm text-gray-600">100% complete</span>
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">Excellent</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                    <span class="font-medium">order_date</span>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <span class="text-sm text-gray-600">100% complete</span>
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">Excellent</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                    <span class="font-medium">customer_age</span>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <span class="text-sm text-gray-600">96.8% complete</span>
+                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">Good</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-3 h-3 bg-orange-500 rounded-full"></div>
+                                    <span class="font-medium">region</span>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <span class="text-sm text-gray-600">94.2% complete</span>
+                                    <span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded">Fair</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        window.addEventListener('load', function() {
+            try {
+                var revenueData = [{
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    x: ['Oct', 'Nov', 'Dec'],
+                    y: [785000, 892000, 1170000],
+                    line: { color: '#6366f1', width: 3 },
+                    marker: { color: '#6366f1', size: 8 }
+                }];
+                
+                var revenueLayout = {
+                    title: '',
+                    xaxis: { title: 'Month' },
+                    yaxis: { title: 'Revenue ($)' },
+                    margin: { t: 20, r: 20, b: 60, l: 80 },
+                    plot_bgcolor: '#ffffff',
+                    paper_bgcolor: '#ffffff',
+                    showlegend: false
+                };
+                
+                Plotly.newPlot('revenue-chart', revenueData, revenueLayout, {responsive: true, displayModeBar: false, displaylogo: false});
+
+                var categoryData = [{
+                    type: 'pie',
+                    labels: ['Electronics', 'Home & Garden', 'Clothing', 'Sports', 'Books'],
+                    values: [42, 28, 15, 10, 5],
+                    marker: { colors: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'] }
+                }];
+                
+                var categoryLayout = {
+                    title: '',
+                    margin: { t: 20, r: 20, b: 20, l: 20 },
+                    plot_bgcolor: '#ffffff',
+                    paper_bgcolor: '#ffffff',
+                    showlegend: true,
+                    legend: { orientation: 'v', x: 1, y: 0.5 }
+                };
+                
+                Plotly.newPlot('category-chart', categoryData, categoryLayout, {responsive: true, displayModeBar: false, displaylogo: false});
+
+                var regionalData = [{
+                    type: 'bar',
+                    x: ['North', 'South', 'East', 'West'],
+                    y: [680000, 720000, 890000, 557000],
+                    marker: { color: ['#6366f1', '#10b981', '#f59e0b', '#ef4444'] }
+                }];
+                
+                var regionalLayout = {
+                    title: '',
+                    xaxis: { title: 'Region' },
+                    yaxis: { title: 'Sales ($)' },
+                    margin: { t: 20, r: 20, b: 60, l: 80 },
+                    plot_bgcolor: '#ffffff',
+                    paper_bgcolor: '#ffffff',
+                    showlegend: false
+                };
+                
+                Plotly.newPlot('regional-chart', regionalData, regionalLayout, {responsive: true, displayModeBar: false, displaylogo: false});
+
+                var customerData = [{
+                    type: 'histogram',
+                    x: [25, 28, 32, 35, 38, 42, 45, 48, 52, 55, 58, 62, 65, 68, 72],
+                    marker: { color: '#6366f1' },
+                    nbinsx: 8
+                }];
+                
+                var customerLayout = {
+                    title: '',
+                    xaxis: { title: 'Age' },
+                    yaxis: { title: 'Count' },
+                    margin: { t: 20, r: 20, b: 60, l: 60 },
+                    plot_bgcolor: '#ffffff',
+                    paper_bgcolor: '#ffffff',
+                    showlegend: false
+                };
+                
+                Plotly.newPlot('customer-chart', customerData, customerLayout, {responsive: true, displayModeBar: false, displaylogo: false});
+
+            } catch(e) {
+                console.error('Chart rendering failed:', e);
+            }
+        });
+    </script>
+
+</body>
+</html>

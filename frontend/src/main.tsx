@@ -26,6 +26,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             path="/"
             element={
               <ProtectedRoute>
+                <Navigate to="/projects" replace />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/quick-analysis"
+            element={
+              <ProtectedRoute>
                 <App />
               </ProtectedRoute>
             }

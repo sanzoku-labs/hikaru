@@ -313,27 +313,32 @@ async def analyze_merged_data(
 
         # Generate charts from merged data
         chart_generator = ChartGenerator()
-        charts = chart_generator.generate_charts(merged_df, merged_schema)
+        charts_data = chart_generator.generate_charts(merged_df, merged_schema)
 
         # Generate AI insights
         ai_service = AIService()
 
-        for chart in charts:
-            insight = ai_service.generate_chart_insight(chart, merged_schema)
-            chart.insight = insight
+        # Add insights to charts by creating new chart objects
+        from app.models.schemas import ChartData
+        charts_with_insights = []
+        for chart_data in charts_data:
+            insight = ai_service.generate_chart_insight(chart_data, merged_schema)
+            chart_dict = chart_data if isinstance(chart_data, dict) else chart_data.model_dump()
+            chart_dict['insight'] = insight
+            charts_with_insights.append(ChartData(**chart_dict))
 
         # Generate global summary
         global_summary = ai_service.generate_global_summary(
             filename=f"Merged: {file_a.filename} + {file_b.filename}",
             schema=merged_schema,
-            charts=charts
+            charts=charts_with_insights
         )
 
         return MergeAnalyzeResponse(
             relationship_id=relationship.id,
             merged_row_count=len(merged_df),
             merged_schema=merged_schema,
-            charts=charts,
+            charts=charts_with_insights,
             global_summary=global_summary
         )
 

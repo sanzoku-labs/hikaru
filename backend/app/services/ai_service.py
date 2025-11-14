@@ -2,7 +2,7 @@ import json
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from anthropic import Anthropic
 
@@ -20,7 +20,7 @@ _conversations: Dict[str, Dict[str, List[ConversationMessage]]] = {}
 class AIService:
     """Service for generating AI insights using Claude Sonnet 4"""
 
-    def __init__(self, cache_service: Optional[CacheService] = None):
+    def __init__(self, cache_service: Optional[CacheService] = None) -> None:
         """
         Initialize AIService with optional cache.
 
@@ -260,7 +260,7 @@ Be concise and actionable."""
         question: str,
         schema: DataSchema,
         conversation_id: Optional[str] = None,
-    ) -> tuple[str, str, Optional[Dict]]:
+    ) -> tuple[str, str, Optional[Dict[str, Any]]]:
         """
         Generate response to user's natural language question about the data.
 
@@ -391,7 +391,7 @@ Provide a clear, concise answer based on the data. If you need specific data val
             return []
         return _conversations[upload_id][conversation_id]
 
-    def _store_conversation(self, upload_id: str, conversation_id: str, question: str, answer: str):
+    def _store_conversation(self, upload_id: str, conversation_id: str, question: str, answer: str) -> None:
         """Store question and answer in conversation history"""
         if upload_id not in _conversations:
             _conversations[upload_id] = {}
@@ -714,13 +714,13 @@ Focus on the most notable difference or trend visible in this specific chart."""
             return None
 
     @staticmethod
-    def clear_cache():
+    def clear_cache() -> None:
         """Clear the insight cache (useful for testing)"""
         global _insight_cache
         _insight_cache.clear()
 
     @staticmethod
-    def clear_conversations():
+    def clear_conversations() -> None:
         """Clear all conversations (useful for testing)"""
         global _conversations
         _conversations.clear()

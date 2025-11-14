@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -97,7 +97,7 @@ class DataProcessor:
         return "categorical"
 
     @staticmethod
-    def _sanitize_value(value):
+    def _sanitize_value(value: Any) -> Any:
         """Convert NaN/Inf values to None for JSON serialization"""
         # Check for NaN first (works on all types)
         if pd.isna(value):

@@ -259,8 +259,8 @@ class ChartGenerator:
             return None
 
     def generate_charts_from_suggestions(
-        self, df: pd.DataFrame, schema: DataSchema, suggestions: List[Dict]
-    ) -> List[Dict]:
+        self, df: pd.DataFrame, schema: DataSchema, suggestions: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """
         Generate charts based on AI suggestions.
 
@@ -309,7 +309,7 @@ class ChartGenerator:
         return charts
 
     def _create_line_chart_from_suggestion(
-        self, df: pd.DataFrame, suggestion: Dict
+        self, df: pd.DataFrame, suggestion: Dict[str, Any]
     ) -> Optional[ChartConfig]:
         """Create line chart from AI suggestion"""
         x_col = suggestion.get("x_column")
@@ -322,7 +322,7 @@ class ChartGenerator:
         return self._create_line_chart(df, x_col, y_col, priority=1)
 
     def _create_bar_chart_from_suggestion(
-        self, df: pd.DataFrame, suggestion: Dict
+        self, df: pd.DataFrame, suggestion: Dict[str, Any]
     ) -> Optional[ChartConfig]:
         """Create bar chart from AI suggestion"""
         x_col = suggestion.get("x_column")
@@ -335,7 +335,7 @@ class ChartGenerator:
         return self._create_bar_chart(df, x_col, y_col, priority=2)
 
     def _create_pie_chart_from_suggestion(
-        self, df: pd.DataFrame, suggestion: Dict
+        self, df: pd.DataFrame, suggestion: Dict[str, Any]
     ) -> Optional[ChartConfig]:
         """Create pie chart from AI suggestion"""
         category_col = suggestion.get("category_column")
@@ -353,7 +353,7 @@ class ChartGenerator:
         return self._create_pie_chart(df, category_col, value_col, priority=3)
 
     def _create_scatter_chart_from_suggestion(
-        self, df: pd.DataFrame, suggestion: Dict
+        self, df: pd.DataFrame, suggestion: Dict[str, Any]
     ) -> Optional[ChartConfig]:
         """Create scatter chart from AI suggestion"""
         x_col = suggestion.get("x_column")

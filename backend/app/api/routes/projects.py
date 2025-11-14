@@ -619,11 +619,17 @@ async def analyze_project_file(
         charts_with_insights = []
         for chart_data in charts_data_raw:
             try:
+                # Convert to ChartData if it's a dict
+                if isinstance(chart_data, dict):
+                    chart_obj = ChartData(**chart_data)
+                else:
+                    chart_obj = chart_data
+
                 # Generate insight for this chart
-                insight = ai_service.generate_chart_insight(chart_data, schema)
+                insight = ai_service.generate_chart_insight(chart_obj, schema)
 
                 # Create new chart dict with insight
-                chart_dict = chart_data if isinstance(chart_data, dict) else chart_data.model_dump()
+                chart_dict = chart_obj.model_dump()
                 chart_dict["insight"] = insight
                 charts_with_insights.append(ChartData(**chart_dict))
             except Exception as e:

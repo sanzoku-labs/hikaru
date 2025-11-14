@@ -7,7 +7,7 @@ import json
 import os
 import shutil
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import List
 
@@ -401,7 +401,7 @@ async def upload_file_to_project(
         db.refresh(new_file)
 
         # Update project's updated_at
-        project.updated_at = datetime.utcnow()
+        project.updated_at = datetime.now(timezone.utc)
         db.commit()
 
         return ProjectFileUploadResponse(
@@ -529,7 +529,7 @@ async def delete_project_file(
         db.commit()
 
         # Update project timestamp
-        project.updated_at = datetime.utcnow()
+        project.updated_at = datetime.now(timezone.utc)
         db.commit()
 
     except HTTPException:
@@ -630,7 +630,7 @@ async def analyze_project_file(
         }
 
         file.analysis_json = json.dumps(analysis_json)
-        file.analysis_timestamp = datetime.utcnow()
+        file.analysis_timestamp = datetime.now(timezone.utc)
         file.user_intent = request.user_intent
 
         db.commit()

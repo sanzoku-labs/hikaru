@@ -1,13 +1,17 @@
 """
 Database models for user authentication and session management.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
+
+
+def utc_now():
+    """Return current UTC time - replaces deprecated datetime.utcnow()."""
+    return datetime.now(timezone.utc)
 
 
 class User(Base):
@@ -22,8 +26,8 @@ class User(Base):
     full_name = Column(String(255), nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
     is_superuser = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
 
     # Relationships
     sessions = relationship("Session", back_populates="user", cascade="all, delete-orphan")
@@ -44,9 +48,9 @@ class Session(Base):
     token_jti = Column(
         String(255), unique=True, index=True, nullable=False
     )  # JWT ID for token tracking
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
     expires_at = Column(DateTime, nullable=False)
-    last_activity = Column(DateTime, default=datetime.utcnow, nullable=False)
+    last_activity = Column(DateTime, default=utc_now, nullable=False)
     ip_address = Column(String(45), nullable=True)  # IPv6 can be up to 45 chars
     user_agent = Column(Text, nullable=True)
     is_revoked = Column(Boolean, default=False, nullable=False)
@@ -67,16 +71,24 @@ class Upload(Base):
     upload_id = Column(
         String(255), unique=True, index=True, nullable=False
     )  # UUID from existing system
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # Made nullable for backward compatibility
+    user_id = Column(
+        Integer, ForeignKey("users.id"), nullable=True
+    )  # Made nullable for backward compatibility
     filename = Column(String(255), nullable=False)
-    file_size = Column(Integer, nullable=True)  # Size in bytes - nullable for backward compatibility
-    uploaded_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    expires_at = Column(DateTime, nullable=True)  # Auto-cleanup after 1 hour - nullable for backward compatibility
+    file_size = Column(
+        Integer, nullable=True
+    )  # Size in bytes - nullable for backward compatibility
+    uploaded_at = Column(DateTime, default=utc_now, nullable=False)
+    expires_at = Column(
+        DateTime, nullable=True
+    )  # Auto-cleanup after 1 hour - nullable for backward compatibility
 
     # Data storage fields (replaces in-memory storage.py)
     schema_json = Column(Text, nullable=True)  # JSON string of DataSchema
     data_csv = Column(Text, nullable=True)  # CSV string of DataFrame
-    upload_date = Column(DateTime, default=datetime.utcnow, nullable=False)  # Duplicate of uploaded_at for compatibility
+    upload_date = Column(
+        DateTime, default=utc_now, nullable=False
+    )  # Duplicate of uploaded_at for compatibility
 
     # Relationships
     user = relationship("User", back_populates="uploads")
@@ -94,8 +106,8 @@ class Project(Base):
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
     is_archived = Column(Boolean, default=False, nullable=False)
 
     # Relationships
@@ -125,7 +137,7 @@ class File(Base):
     file_size = Column(Integer, nullable=False)  # Size in bytes
     row_count = Column(Integer, nullable=True)  # Number of rows in dataset
     schema_json = Column(Text, nullable=True)  # JSON string of column schema
-    uploaded_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    uploaded_at = Column(DateTime, default=utc_now, nullable=False)
 
     # Analysis fields (for persistent analysis results)
     analysis_json = Column(
@@ -152,7 +164,7 @@ class FileRelationship(Base):
     file_b_id = Column(Integer, ForeignKey("files.id"), nullable=False)
     relationship_type = Column(String(50), nullable=False)  # 'comparison' or 'merge'
     config_json = Column(Text, nullable=True)  # JSON config: join_type, keys, suffixes, etc.
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
 
     # Relationships
     project = relationship("Project", back_populates="relationships")
@@ -174,8 +186,8 @@ class Dashboard(Base):
     dashboard_type = Column(String(50), nullable=False)  # 'single_file', 'comparison', 'merged'
     config_json = Column(Text, nullable=False)  # JSON containing chart configs, file IDs, etc.
     chart_data = Column(Text, nullable=True)  # Cached chart data JSON
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
 
     # Relationships
     project = relationship("Project", back_populates="dashboards")

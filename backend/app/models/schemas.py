@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 # ===== Phase 8: Authentication Schemas =====
 
@@ -50,8 +50,7 @@ class UserResponse(BaseModel):
     is_superuser: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True  # Pydantic v2 (previously orm_mode = True)
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TokenResponse(BaseModel):
@@ -229,8 +228,7 @@ class FileInProject(BaseModel):
     has_analysis: bool = False  # Whether analysis has been performed
     analyzed_at: Optional[datetime] = None  # When analysis was last run
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProjectResponse(BaseModel):
@@ -246,8 +244,7 @@ class ProjectResponse(BaseModel):
     file_count: Optional[int] = None  # Optional computed field
     files: Optional[List[FileInProject]] = None  # Optional when listing
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProjectListResponse(BaseModel):
@@ -328,8 +325,7 @@ class RelationshipResponse(BaseModel):
     config_json: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MergeAnalyzeRequest(BaseModel):
@@ -377,8 +373,7 @@ class DashboardResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class DashboardListResponse(BaseModel):

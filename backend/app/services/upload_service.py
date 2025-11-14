@@ -2,7 +2,7 @@
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from io import StringIO
 from typing import Any, Dict
 
@@ -52,7 +52,7 @@ class UploadService:
             filename=filename,
             schema_json=schema_json,
             data_csv=data_csv,
-            upload_date=datetime.utcnow(),
+            upload_date=datetime.now(timezone.utc),
         )
 
         self.db.add(upload)

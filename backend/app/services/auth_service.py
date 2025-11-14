@@ -2,7 +2,7 @@
 Authentication service for user registration, login, and JWT token management.
 """
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import bcrypt
@@ -63,15 +63,15 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     to_encode = data.copy()
 
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(days=settings.access_token_expire_days)
+        expire = datetime.now(timezone.utc) + timedelta(days=settings.access_token_expire_days)
 
     # Add expiration and issued-at claims
     to_encode.update(
         {
             "exp": expire,
-            "iat": datetime.utcnow(),
+            "iat": datetime.now(timezone.utc),
             "jti": secrets.token_urlsafe(32),  # Unique token ID for tracking
         }
     )

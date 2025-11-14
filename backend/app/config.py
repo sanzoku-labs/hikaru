@@ -1,10 +1,11 @@
 from typing import List
 
-from pydantic import field_validator
+from pydantic import ConfigDict, field_validator
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    model_config = ConfigDict(env_file=".env")
     # Server
     host: str = "0.0.0.0"
     port: int = 8000
@@ -41,9 +42,6 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return [ext.strip() for ext in v.split(",")]
         return v
-
-    class Config:
-        env_file = ".env"
 
 
 settings = Settings()

@@ -63,6 +63,95 @@ function getAuthHeaders(): HeadersInit {
 }
 
 export const api = {
+  // ===== Authentication API =====
+
+  async register(data: UserRegister): Promise<TokenResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new ApiError(
+        error.detail || "Registration failed",
+        response.status,
+        error.detail,
+      );
+    }
+
+    const result = await response.json();
+    // Store token in localStorage
+    localStorage.setItem("auth_token", result.access_token);
+    return result;
+  },
+
+  async login(data: UserLogin): Promise<TokenResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new ApiError(
+        error.detail || "Login failed",
+        response.status,
+        error.detail,
+      );
+    }
+
+    const result = await response.json();
+    // Store token in localStorage
+    localStorage.setItem("auth_token", result.access_token);
+    return result;
+  },
+
+  async getCurrentUser(): Promise<UserResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new ApiError(
+        error.detail || "Failed to get user info",
+        response.status,
+        error.detail,
+      );
+    }
+
+    return response.json();
+  },
+
+  async logout(): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new ApiError(
+        error.detail || "Logout failed",
+        response.status,
+        error.detail,
+      );
+    }
+
+    // Clear token from localStorage
+    localStorage.removeItem("auth_token");
+  },
+
+  // ===== Upload API =====
+
   async uploadFile(file: File): Promise<UploadResponse> {
     const formData = new FormData();
     formData.append("file", file);
@@ -531,5 +620,178 @@ export const api = {
     }
 
     return response.json();
+  },
+
+  async getAnalysisHistory(
+    projectId: number,
+    fileId: number,
+  ): Promise<AnalysisHistoryResponse> {
+    const response = await fetch(
+      `${API_BASE_URL}/api/projects/${projectId}/files/${fileId}/analysis-history`,
+      {
+        method: "GET",
+        headers: getAuthHeaders(),
+      },
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new ApiError(
+        error.detail || "Failed to get analysis history",
+        response.status,
+        error.detail,
+      );
+    }
+
+    return response.json();
+  },
+
+  // ===== Advanced Export API =====
+
+  async exportAdvanced(
+    request: AdvancedExportRequest,
+  ): Promise<AdvancedExportResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/export-advanced`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new ApiError(
+        error.detail || "Advanced export failed",
+        response.status,
+        error.detail,
+      );
+    }
+
+    return response.json();
+  },
+
+  // ===== Dashboard CRUD API =====
+
+  async createDashboard(
+    projectId: number,
+    data: DashboardCreate,
+  ): Promise<DashboardResponse> {
+    const response = await fetch(
+      `${API_BASE_URL}/api/projects/${projectId}/dashboards`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify(data),
+      },
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new ApiError(
+        error.detail || "Create dashboard failed",
+        response.status,
+        error.detail,
+      );
+    }
+
+    return response.json();
+  },
+
+  async listDashboards(projectId: number): Promise<DashboardListResponse> {
+    const response = await fetch(
+      `${API_BASE_URL}/api/projects/${projectId}/dashboards`,
+      {
+        method: "GET",
+        headers: getAuthHeaders(),
+      },
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new ApiError(
+        error.detail || "List dashboards failed",
+        response.status,
+        error.detail,
+      );
+    }
+
+    return response.json();
+  },
+
+  async getDashboard(
+    projectId: number,
+    dashboardId: number,
+  ): Promise<DashboardResponse> {
+    const response = await fetch(
+      `${API_BASE_URL}/api/projects/${projectId}/dashboards/${dashboardId}`,
+      {
+        method: "GET",
+        headers: getAuthHeaders(),
+      },
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new ApiError(
+        error.detail || "Get dashboard failed",
+        response.status,
+        error.detail,
+      );
+    }
+
+    return response.json();
+  },
+
+  async updateDashboard(
+    projectId: number,
+    dashboardId: number,
+    data: DashboardUpdate,
+  ): Promise<DashboardResponse> {
+    const response = await fetch(
+      `${API_BASE_URL}/api/projects/${projectId}/dashboards/${dashboardId}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify(data),
+      },
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new ApiError(
+        error.detail || "Update dashboard failed",
+        response.status,
+        error.detail,
+      );
+    }
+
+    return response.json();
+  },
+
+  async deleteDashboard(projectId: number, dashboardId: number): Promise<void> {
+    const response = await fetch(
+      `${API_BASE_URL}/api/projects/${projectId}/dashboards/${dashboardId}`,
+      {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      },
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new ApiError(
+        error.detail || "Delete dashboard failed",
+        response.status,
+        error.detail,
+      );
+    }
   },
 };

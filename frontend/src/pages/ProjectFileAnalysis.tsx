@@ -139,7 +139,7 @@ export default function ProjectFileAnalysis() {
           ...baseOption,
           xAxis: {
             type: "category" as const,
-            data: chart.data.map((d: any) => d[chart.x_column]),
+            data: chart.data.map((d: any) => d.x),
             name: chart.x_column,
           },
           yAxis: {
@@ -148,7 +148,7 @@ export default function ProjectFileAnalysis() {
           },
           series: [
             {
-              data: chart.data.map((d: any) => d[chart.y_column]),
+              data: chart.data.map((d: any) => d.y),
               type: "line" as const,
               smooth: true,
               lineStyle: {
@@ -167,23 +167,19 @@ export default function ProjectFileAnalysis() {
           ...baseOption,
           xAxis: {
             type: "category" as const,
-            data: chart.data.map(
-              (d: any) => d[chart.x_column || chart.category_column],
-            ),
-            name: chart.x_column || chart.category_column,
+            data: chart.data.map((d: any) => d.category),
+            name: chart.category_column,
             axisLabel: {
               rotate: 45,
             },
           },
           yAxis: {
             type: "value" as const,
-            name: chart.y_column || chart.value_column,
+            name: chart.value_column,
           },
           series: [
             {
-              data: chart.data.map(
-                (d: any) => d[chart.y_column || chart.value_column],
-              ),
+              data: chart.data.map((d: any) => d.value),
               type: "bar" as const,
               itemStyle: {
                 color: "#6366f1",
@@ -208,8 +204,8 @@ export default function ProjectFileAnalysis() {
               type: "pie" as const,
               radius: "50%",
               data: chart.data.map((d: any) => ({
-                name: d[chart.category_column],
-                value: d[chart.value_column],
+                name: d.name,
+                value: d.value,
               })),
               emphasis: {
                 itemStyle: {
@@ -235,10 +231,7 @@ export default function ProjectFileAnalysis() {
           },
           series: [
             {
-              data: chart.data.map((d: any) => [
-                d[chart.x_column],
-                d[chart.y_column],
-              ]),
+              data: chart.data.map((d: any) => [d.x, d.y]),
               type: "scatter" as const,
               itemStyle: {
                 color: "#6366f1",

@@ -545,6 +545,73 @@ async def delete_project_file(
         )
 
 
+@router.get("/{project_id}/files/{file_id}/download")
+async def download_project_file(
+    project_id: int,
+    file_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Download the original uploaded file (CSV/XLSX).
+
+    Args:
+        project_id: Project ID
+        file_id: File ID
+        current_user: Authenticated user
+        db: Database session
+
+    Returns:
+        FileResponse with original file
+
+    Raises:
+        HTTP 404: If project or file not found
+        HTTP 404: If file not found on disk
+    """
+    from fastapi.responses import FileResponse
+
+    try:
+        project_service = ProjectService(db)
+
+        # Verify project exists and user owns it
+        project = project_service.get_project(project_id=project_id, user_id=current_user.id)
+
+        # Find file
+        file = (
+            db.query(FileModel)
+            .filter(FileModel.id == file_id, FileModel.project_id == project_id)
+            .first()
+        )
+
+        if not file:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"File {file_id} not found in project {project_id}",
+            )
+
+        # Check if file exists on disk
+        if not os.path.exists(file.file_path):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"File not found on disk: {file.filename}",
+            )
+
+        # Return file with proper headers for download
+        return FileResponse(
+            path=file.file_path,
+            filename=file.filename,
+            media_type="application/octet-stream",
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to download file: {str(e)}",
+        )
+
+
 @router.post("/{project_id}/files/{file_id}/analyze", response_model=FileAnalysisResponse)
 async def analyze_project_file(
     project_id: int,

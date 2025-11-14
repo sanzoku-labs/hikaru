@@ -5,6 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routes import (
     analyze,
+    analytics,
     auth,
     compare,
     dashboards,
@@ -54,6 +55,7 @@ app.include_router(projects.router)  # Phase 7A: Project management
 app.include_router(compare.router)  # Phase 7B: File comparison
 app.include_router(merge.router)  # Phase 7C: File merging
 app.include_router(dashboards.router)  # Phase 7E: Dashboard management
+app.include_router(analytics.router)  # Analytics dashboard
 
 
 @app.get("/health")

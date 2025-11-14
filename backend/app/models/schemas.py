@@ -423,3 +423,48 @@ class FileAnalysisResponse(BaseModel):
     global_summary: Optional[str] = None
     user_intent: Optional[str] = None
     analyzed_at: datetime
+
+
+# Analytics Dashboard Schemas
+class RecentAnalysis(BaseModel):
+    """Schema for recent analysis item in analytics."""
+
+    file_id: int
+    filename: str
+    project_id: int
+    project_name: str
+    analyzed_at: datetime
+    charts_count: int
+
+
+class ChartDistribution(BaseModel):
+    """Schema for chart type distribution."""
+
+    line: int = 0
+    bar: int = 0
+    pie: int = 0
+    scatter: int = 0
+
+
+class TopInsight(BaseModel):
+    """Schema for top insight."""
+
+    file_id: int
+    filename: str
+    project_name: str
+    insight: str
+    analyzed_at: datetime
+
+
+class AnalyticsResponse(BaseModel):
+    """Response schema for analytics dashboard."""
+
+    total_projects: int
+    total_files: int
+    total_analyses: int
+    projects_trend: float  # Percentage change from previous period
+    files_trend: float
+    analyses_trend: float
+    recent_analyses: List[RecentAnalysis]
+    chart_type_distribution: ChartDistribution
+    top_insights: List[TopInsight]

@@ -28,23 +28,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load token and user from localStorage on mount
+  // Load token and user from localStorage on mount, then validate token
   useEffect(() => {
-    const storedToken = localStorage.getItem("auth_token");
-    const storedUser = localStorage.getItem("auth_user");
+    const validateToken = async () => {
+      const storedToken = localStorage.getItem("auth_token");
+      const storedUser = localStorage.getItem("auth_user");
 
-    if (storedToken && storedUser) {
-      try {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error("Failed to parse stored user data:", error);
-        localStorage.removeItem("auth_token");
-        localStorage.removeItem("auth_user");
+      if (storedToken && storedUser) {
+        try {
+          setToken(storedToken);
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+
+          // Validate token with backend
+          const { api } = await import("@/services/api");
+          try {
+            const currentUser = await api.getCurrentUser();
+            // Update user data if backend returns updated info
+            setUser(currentUser);
+            localStorage.setItem("auth_user", JSON.stringify(currentUser));
+          } catch (error) {
+            // Token is invalid or expired, clear auth state
+            console.error("Token validation failed:", error);
+            setToken(null);
+            setUser(null);
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("auth_user");
+          }
+        } catch (error) {
+          console.error("Failed to parse stored user data:", error);
+          localStorage.removeItem("auth_token");
+          localStorage.removeItem("auth_user");
+        }
       }
-    }
 
-    setIsLoading(false);
+      setIsLoading(false);
+    };
+
+    validateToken();
   }, []);
 
   const login = (newToken: string, newUser: User) => {

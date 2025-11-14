@@ -165,7 +165,7 @@ export const api = {
     if (!response.ok) {
       const error = await response.json();
       throw new ApiError(
-        error.error || "Upload failed",
+        error.detail || "Upload failed",
         response.status,
         error.detail,
       );
@@ -191,7 +191,7 @@ export const api = {
     if (!response.ok) {
       const error = await response.json();
       throw new ApiError(
-        error.error || "Analysis failed",
+        error.detail || "Analysis failed",
         response.status,
         error.detail,
       );
@@ -213,7 +213,7 @@ export const api = {
     if (!response.ok) {
       const error = await response.json();
       throw new ApiError(
-        error.error || "Query failed",
+        error.detail || "Query failed",
         response.status,
         error.detail,
       );
@@ -235,7 +235,7 @@ export const api = {
     if (!response.ok) {
       const error = await response.json();
       throw new ApiError(
-        error.error || "Export failed",
+        error.detail || "Export failed",
         response.status,
         error.detail,
       );
@@ -253,7 +253,7 @@ export const api = {
     if (!response.ok) {
       const error = await response.json();
       throw new ApiError(
-        error.error || "Download failed",
+        error.detail || "Download failed",
         response.status,
         error.detail,
       );
@@ -277,7 +277,7 @@ export const api = {
     if (!response.ok) {
       const error = await response.json();
       throw new ApiError(
-        error.error || "Create project failed",
+        error.detail || "Create project failed",
         response.status,
         error.detail,
       );
@@ -300,7 +300,7 @@ export const api = {
     if (!response.ok) {
       const error = await response.json();
       throw new ApiError(
-        error.error || "List projects failed",
+        error.detail || "List projects failed",
         response.status,
         error.detail,
       );
@@ -318,7 +318,7 @@ export const api = {
     if (!response.ok) {
       const error = await response.json();
       throw new ApiError(
-        error.error || "Get project failed",
+        error.detail || "Get project failed",
         response.status,
         error.detail,
       );
@@ -343,7 +343,7 @@ export const api = {
     if (!response.ok) {
       const error = await response.json();
       throw new ApiError(
-        error.error || "Update project failed",
+        error.detail || "Update project failed",
         response.status,
         error.detail,
       );
@@ -361,7 +361,7 @@ export const api = {
     if (!response.ok) {
       const error = await response.json();
       throw new ApiError(
-        error.error || "Delete project failed",
+        error.detail || "Delete project failed",
         response.status,
         error.detail,
       );
@@ -387,7 +387,7 @@ export const api = {
     if (!response.ok) {
       const error = await response.json();
       throw new ApiError(
-        error.error || "Upload file failed",
+        error.detail || "Upload file failed",
         response.status,
         error.detail,
       );
@@ -408,7 +408,7 @@ export const api = {
     if (!response.ok) {
       const error = await response.json();
       throw new ApiError(
-        error.error || "List files failed",
+        error.detail || "List files failed",
         response.status,
         error.detail,
       );
@@ -429,7 +429,7 @@ export const api = {
     if (!response.ok) {
       const error = await response.json();
       throw new ApiError(
-        error.error || "Delete file failed",
+        error.detail || "Delete file failed",
         response.status,
         error.detail,
       );
@@ -457,7 +457,7 @@ export const api = {
     if (!response.ok) {
       const error = await response.json();
       throw new ApiError(
-        error.error || "Compare files failed",
+        error.detail || "Compare files failed",
         response.status,
         error.detail,
       );
@@ -487,7 +487,7 @@ export const api = {
     if (!response.ok) {
       const error = await response.json();
       throw new ApiError(
-        error.error || "Create relationship failed",
+        error.detail || "Create relationship failed",
         response.status,
         error.detail,
       );
@@ -508,7 +508,7 @@ export const api = {
     if (!response.ok) {
       const error = await response.json();
       throw new ApiError(
-        error.error || "List relationships failed",
+        error.detail || "List relationships failed",
         response.status,
         error.detail,
       );
@@ -532,7 +532,7 @@ export const api = {
     if (!response.ok) {
       const error = await response.json();
       throw new ApiError(
-        error.error || "Delete relationship failed",
+        error.detail || "Delete relationship failed",
         response.status,
         error.detail,
       );
@@ -558,7 +558,7 @@ export const api = {
     if (!response.ok) {
       const error = await response.json();
       throw new ApiError(
-        error.error || "Merge analysis failed",
+        error.detail || "Merge analysis failed",
         response.status,
         error.detail,
       );
@@ -588,7 +588,7 @@ export const api = {
     if (!response.ok) {
       const error = await response.json();
       throw new ApiError(
-        error.error || "File analysis failed",
+        error.detail || "File analysis failed",
         response.status,
         error.detail,
       );

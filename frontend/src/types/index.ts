@@ -52,6 +52,7 @@ export interface UploadResponse {
   upload_id: string;
   filename: string;
   data_schema: DataSchema;
+  /** ISO 8601 datetime string */
   upload_timestamp: string;
 }
 

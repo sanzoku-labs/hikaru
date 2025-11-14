@@ -618,9 +618,7 @@ async def analyze_project_file(
             charts_with_insights.append(ChartData(**chart_dict))
 
         # Generate global summary
-        global_summary = ai_service.generate_global_summary(
-            charts_with_insights, schema, user_intent=request.user_intent
-        )
+        global_summary = ai_service.generate_global_summary(charts_with_insights, schema)
 
         # Store analysis results in database
         analysis_json = {

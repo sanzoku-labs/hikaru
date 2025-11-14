@@ -67,11 +67,13 @@ DOCUMENTATION_INDEX.md       ← This file
 ### Backend Documentation
 ```
 backend/
-├── README.md                ← Backend-specific guide
+├── README.md                ← Backend-specific guide (UPDATED)
 ├── REFACTORING_ROADMAP.md   ← 5-week refactoring plan
-├── PHASE_1_COMPLETE.md      ← Historical
-├── PHASE_2_PROGRESS.md      ← Historical
-└── NEXT_STEPS.md            ← Historical
+└── docs/
+    └── archive/             ← Old phase documents (archived)
+        ├── PHASE_1_COMPLETE.md
+        ├── PHASE_2_PROGRESS.md
+        └── NEXT_STEPS.md
 ```
 
 ### Organized Documentation
@@ -188,16 +190,17 @@ Every doc should have:
 
 | Category | Count | Status |
 |----------|-------|--------|
-| Root-level guides | 4 | ✅ Good |
+| Root-level guides | 5 | ✅ Good |
 | Completion docs | 4 | ✅ Good |
 | Feature guides | 2 | ✅ Good |
 | Archive docs | 5 | ✅ Archived |
-| Backend docs | 4 | ⚠️ Some outdated |
+| Backend docs | 2 | ✅ Clean |
 
-**Outdated docs to remove/update:**
-- `backend/NEXT_STEPS.md` - Superseded by `backend/REFACTORING_ROADMAP.md`
-- `backend/PHASE_1_COMPLETE.md` - Move to `docs/completed/` or remove
-- `backend/PHASE_2_PROGRESS.md` - Move to `docs/completed/` or remove
+**Recent Cleanup (Nov 14, 2025):**
+- ✅ Created `DOCUMENTATION_INDEX.md` - Single source of truth
+- ✅ Updated `backend/README.md` - Now comprehensive and current
+- ✅ Archived old backend docs to `backend/docs/archive/`
+- ✅ Simplified `README.md` to point to documentation index
 
 ---
 

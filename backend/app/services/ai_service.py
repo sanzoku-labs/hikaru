@@ -8,20 +8,25 @@ from anthropic import Anthropic
 
 from app.config import settings
 from app.models.schemas import ChartData, ConversationMessage, DataSchema
+from app.services.cache_service import CacheService
 
 logger = logging.getLogger(__name__)
 
-# Simple in-memory cache for MVP (24-hour TTL)
-_insight_cache: Dict[str, tuple[str, datetime]] = {}
-
 # Conversation storage (upload_id -> {conversation_id -> messages})
+# TODO: Move to Redis in future phase
 _conversations: Dict[str, Dict[str, List[ConversationMessage]]] = {}
 
 
 class AIService:
     """Service for generating AI insights using Claude Sonnet 4"""
 
-    def __init__(self):
+    def __init__(self, cache_service: Optional[CacheService] = None):
+        """
+        Initialize AIService with optional cache.
+
+        Args:
+            cache_service: Optional CacheService for caching insights
+        """
         if settings.anthropic_api_key:
             self.client = Anthropic(api_key=settings.anthropic_api_key)
             self.enabled = True
@@ -30,16 +35,20 @@ class AIService:
             self.enabled = False
             logger.warning("ANTHROPIC_API_KEY not set. AI insights will be disabled.")
 
+        self.cache = cache_service
+
     def generate_chart_insight(self, chart: ChartData, schema: DataSchema) -> Optional[str]:
         """Generate insight for a single chart"""
         if not self.enabled:
             return None
 
-        # Check cache
-        cache_key = f"chart_{chart.chart_type}_{chart.title}"
-        if cache_key in _insight_cache:
-            cached_insight, cached_time = _insight_cache[cache_key]
-            if datetime.now() - cached_time < timedelta(hours=24):
+        # Check cache if available
+        cache_key = None
+        if self.cache:
+            cache_key = self.cache.chart_insight_key(chart.chart_type, chart.title)
+            cached_insight = self.cache.get(cache_key)
+            if cached_insight:
+                logger.debug(f"Cache hit for chart insight: {cache_key}")
                 return cached_insight
 
         try:
@@ -53,8 +62,9 @@ class AIService:
 
             insight = message.content[0].text.strip()
 
-            # Cache the result
-            _insight_cache[cache_key] = (insight, datetime.now())
+            # Cache the result if cache available
+            if self.cache and cache_key:
+                self.cache.set(cache_key, insight, ttl_hours=24)
 
             return insight
 
@@ -67,11 +77,13 @@ class AIService:
         if not self.enabled:
             return None
 
-        # Check cache
-        cache_key = f"summary_{len(charts)}_{schema.row_count}"
-        if cache_key in _insight_cache:
-            cached_summary, cached_time = _insight_cache[cache_key]
-            if datetime.now() - cached_time < timedelta(hours=24):
+        # Check cache if available
+        cache_key = None
+        if self.cache:
+            cache_key = self.cache.global_summary_key(len(charts), schema.row_count)
+            cached_summary = self.cache.get(cache_key)
+            if cached_summary:
+                logger.debug(f"Cache hit for global summary: {cache_key}")
                 return cached_summary
 
         try:
@@ -85,8 +97,9 @@ class AIService:
 
             summary = message.content[0].text.strip()
 
-            # Cache the result
-            _insight_cache[cache_key] = (summary, datetime.now())
+            # Cache the result if cache available
+            if self.cache and cache_key:
+                self.cache.set(cache_key, summary, ttl_hours=24)
 
             return summary
 

@@ -104,12 +104,25 @@ export default function ProjectFileAnalysis() {
     }
   };
 
-  const handleExport = async (_options: ExportOptions) => {
+  const handleExport = async (options: ExportOptions) => {
+    if (!analysis) return;
+
     try {
-      // TODO: Implement actual export API call
-      alert(
-        "Export functionality will be implemented with backend integration",
-      );
+      setError(null);
+
+      // Call advanced export API
+      const response = await api.exportAdvanced({
+        file_id: analysis.file_id,
+        export_format: options.format as "pdf" | "png" | "excel",
+        include_charts: options.includeCharts,
+        include_insights: options.includeInsights,
+        include_raw_data: options.includeData,
+        include_summary: true,
+      });
+
+      // Download the file
+      window.open(response.download_url, "_blank");
+
       setExportModalOpen(false);
     } catch (err: any) {
       setError(err.message || "Export failed");
@@ -310,16 +323,6 @@ export default function ProjectFileAnalysis() {
     return insights;
   };
 
-  // Mock file stats (in real app, get from API)
-  const fileStats = {
-    fileSize: "2.4 MB",
-    rows: analysis?.charts?.[0]?.data?.length || "15,847",
-    columns: "12",
-    dataQuality: "98.2%",
-    missingValues: "284",
-    lastModified: "2h ago",
-  };
-
   if (loading) {
     return (
       <Layout>
@@ -517,147 +520,6 @@ export default function ProjectFileAnalysis() {
             ))}
           </div>
         )}
-
-        {/* Statistical Summary Section - 3 columns */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="text-xl font-semibold text-gray-900 mb-6">
-            Statistical Summary
-          </h3>
-          <div className="grid grid-cols-3 gap-8">
-            {/* Column 1: Revenue Metrics */}
-            <div className="space-y-3">
-              <h4 className="font-semibold text-gray-900 mb-4">
-                Revenue Metrics
-              </h4>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Total Revenue</span>
-                <span className="font-medium text-gray-900">$2,847,392</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Average Order Value</span>
-                <span className="font-medium text-gray-900">$179.64</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Median Order Value</span>
-                <span className="font-medium text-gray-900">$142.30</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Standard Deviation</span>
-                <span className="font-medium text-gray-900">$87.21</span>
-              </div>
-            </div>
-
-            {/* Column 2: Customer Metrics */}
-            <div className="space-y-3">
-              <h4 className="font-semibold text-gray-900 mb-4">
-                Customer Metrics
-              </h4>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Total Customers</span>
-                <span className="font-medium text-gray-900">8,743</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">New Customers</span>
-                <span className="font-medium text-gray-900">2,156</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Returning Customers</span>
-                <span className="font-medium text-gray-900">6,587</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Average Age</span>
-                <span className="font-medium text-gray-900">42.3 years</span>
-              </div>
-            </div>
-
-            {/* Column 3: Product Metrics */}
-            <div className="space-y-3">
-              <h4 className="font-semibold text-gray-900 mb-4">
-                Product Metrics
-              </h4>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Total Orders</span>
-                <span className="font-medium text-gray-900">15,847</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Unique Products</span>
-                <span className="font-medium text-gray-900">1,247</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Top Selling Product</span>
-                <span className="font-medium text-gray-900">iPhone 14 Pro</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Average Quantity</span>
-                <span className="font-medium text-gray-900">2.1 items</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Data Quality Report Section */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="text-xl font-semibold text-gray-900 mb-6">
-            Data Quality Report
-          </h3>
-          <div className="space-y-4">
-            {/* Quality Row - Excellent */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="font-medium text-gray-900">customer_id</span>
-              </div>
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600">100% complete</span>
-                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
-                  Excellent
-                </span>
-              </div>
-            </div>
-
-            {/* Quality Row - Good */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="font-medium text-gray-900">order_date</span>
-              </div>
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600">100% complete</span>
-                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
-                  Excellent
-                </span>
-              </div>
-            </div>
-
-            {/* Quality Row - Fair */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                <span className="font-medium text-gray-900">customer_age</span>
-              </div>
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600">96.8% complete</span>
-                <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
-                  Good
-                </span>
-              </div>
-            </div>
-
-            {/* Quality Row - Needs Attention */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                <span className="font-medium text-gray-900">region</span>
-              </div>
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600">94.2% complete</span>
-                <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded">
-                  Fair
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* No Charts Placeholder */}
         {(!analysis?.charts || analysis.charts.length === 0) && (

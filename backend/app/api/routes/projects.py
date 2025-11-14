@@ -14,6 +14,7 @@ from typing import List
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import ProjectNotFoundError, ValidationError
 from app.database import get_db
 from app.middleware.auth import get_current_active_user
 from app.models.database import File as FileModel
@@ -34,6 +35,7 @@ from app.models.schemas import (
 from app.services.ai_service import AIService
 from app.services.chart_generator import ChartGenerator
 from app.services.data_processor import DataProcessor
+from app.services.project_service import ProjectService
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 
@@ -60,14 +62,12 @@ async def create_project(
         HTTP 500: If project creation fails
     """
     try:
-        # Create new project
-        new_project = Project(
-            name=project_data.name, description=project_data.description, user_id=current_user.id
+        project_service = ProjectService(db)
+        new_project = project_service.create_project(
+            user_id=current_user.id,
+            name=project_data.name,
+            description=project_data.description,
         )
-
-        db.add(new_project)
-        db.commit()
-        db.refresh(new_project)
 
         # Return project with file_count = 0
         project_dict = {
@@ -83,6 +83,8 @@ async def create_project(
         }
         return ProjectResponse(**project_dict)
 
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e.detail))
     except Exception as e:
         db.rollback()
         raise HTTPException(
@@ -109,12 +111,10 @@ async def list_projects(
         ProjectListResponse with list of projects and total count
     """
     try:
-        query = db.query(Project).filter(Project.user_id == current_user.id)
-
-        if not include_archived:
-            query = query.filter(Project.is_archived == False)
-
-        projects = query.order_by(Project.updated_at.desc()).all()
+        project_service = ProjectService(db)
+        projects = project_service.list_user_projects(
+            user_id=current_user.id, include_archived=include_archived
+        )
 
         # Add file_count to each project
         project_responses = []
@@ -164,16 +164,8 @@ async def get_project(
         HTTP 404: If project not found or not owned by user
     """
     try:
-        project = (
-            db.query(Project)
-            .filter(Project.id == project_id, Project.user_id == current_user.id)
-            .first()
-        )
-
-        if not project:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
-            )
+        project_service = ProjectService(db)
+        project = project_service.get_project(project_id=project_id, user_id=current_user.id)
 
         # Populate files with analysis status
         files_with_analysis = []
@@ -207,6 +199,8 @@ async def get_project(
 
         return ProjectResponse(**project_dict)
 
+    except ProjectNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e.detail))
     except HTTPException:
         raise
     except Exception as e:
@@ -237,29 +231,17 @@ async def update_project(
 
     Raises:
         HTTP 404: If project not found or not owned by user
+        HTTP 400: If update data is invalid
         HTTP 500: If update fails
     """
     try:
-        project = (
-            db.query(Project)
-            .filter(Project.id == project_id, Project.user_id == current_user.id)
-            .first()
-        )
-
-        if not project:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
-            )
+        project_service = ProjectService(db)
 
         # Update fields if provided
         update_data = project_data.model_dump(exclude_unset=True)
-        for field, value in update_data.items():
-            setattr(project, field, value)
-
-        project.updated_at = datetime.utcnow()
-
-        db.commit()
-        db.refresh(project)
+        project = project_service.update_project(
+            project_id=project_id, user_id=current_user.id, **update_data
+        )
 
         # Build project response
         project_dict = {
@@ -275,6 +257,10 @@ async def update_project(
         }
         return ProjectResponse(**project_dict)
 
+    except ProjectNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e.detail))
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e.detail))
     except HTTPException:
         raise
     except Exception as e:
@@ -304,16 +290,10 @@ async def delete_project(
         HTTP 500: If deletion fails
     """
     try:
-        project = (
-            db.query(Project)
-            .filter(Project.id == project_id, Project.user_id == current_user.id)
-            .first()
-        )
+        project_service = ProjectService(db)
 
-        if not project:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
-            )
+        # Get project first to access files for cleanup
+        project = project_service.get_project(project_id=project_id, user_id=current_user.id)
 
         # Delete files from storage
         for file in project.files:
@@ -321,9 +301,10 @@ async def delete_project(
                 os.remove(file.file_path)
 
         # Delete project (cascade will delete files, relationships, dashboards)
-        db.delete(project)
-        db.commit()
+        project_service.delete_project(project_id=project_id, user_id=current_user.id)
 
+    except ProjectNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e.detail))
     except HTTPException:
         raise
     except Exception as e:
@@ -363,17 +344,10 @@ async def upload_file_to_project(
         HTTP 500: If upload fails
     """
     try:
-        # Verify project exists and user owns it
-        project = (
-            db.query(Project)
-            .filter(Project.id == project_id, Project.user_id == current_user.id)
-            .first()
-        )
+        project_service = ProjectService(db)
 
-        if not project:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
-            )
+        # Verify project exists and user owns it
+        project = project_service.get_project(project_id=project_id, user_id=current_user.id)
 
         # Validate file type
         if not file.filename.endswith((".csv", ".xlsx")):
@@ -474,16 +448,8 @@ async def list_project_files(
         HTTP 404: If project not found
     """
     try:
-        project = (
-            db.query(Project)
-            .filter(Project.id == project_id, Project.user_id == current_user.id)
-            .first()
-        )
-
-        if not project:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
-            )
+        project_service = ProjectService(db)
+        project = project_service.get_project(project_id=project_id, user_id=current_user.id)
 
         # Populate files with analysis status
         files_with_analysis = []
@@ -504,6 +470,8 @@ async def list_project_files(
 
         return files_with_analysis
 
+    except ProjectNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e.detail))
     except HTTPException:
         raise
     except Exception as e:
@@ -534,17 +502,10 @@ async def delete_project_file(
         HTTP 500: If deletion fails
     """
     try:
-        # Verify project exists
-        project = (
-            db.query(Project)
-            .filter(Project.id == project_id, Project.user_id == current_user.id)
-            .first()
-        )
+        project_service = ProjectService(db)
 
-        if not project:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
-            )
+        # Verify project exists
+        project = project_service.get_project(project_id=project_id, user_id=current_user.id)
 
         # Find file
         file = (
@@ -608,17 +569,10 @@ async def analyze_project_file(
         HTTP 500: If analysis fails
     """
     try:
-        # Verify project exists and user owns it
-        project = (
-            db.query(Project)
-            .filter(Project.id == project_id, Project.user_id == current_user.id)
-            .first()
-        )
+        project_service = ProjectService(db)
 
-        if not project:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
-            )
+        # Verify project exists and user owns it
+        project = project_service.get_project(project_id=project_id, user_id=current_user.id)
 
         # Find file
         file = (
@@ -724,17 +678,10 @@ async def get_project_file_analysis(
         HTTP 404: If project, file, or analysis not found
     """
     try:
-        # Verify project exists and user owns it
-        project = (
-            db.query(Project)
-            .filter(Project.id == project_id, Project.user_id == current_user.id)
-            .first()
-        )
+        project_service = ProjectService(db)
 
-        if not project:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
-            )
+        # Verify project exists and user owns it
+        project = project_service.get_project(project_id=project_id, user_id=current_user.id)
 
         # Find file
         file = (
@@ -810,17 +757,10 @@ async def get_analysis_history(
         HTTP 404: If project or file not found
     """
     try:
-        # Verify project exists and user owns it
-        project = (
-            db.query(Project)
-            .filter(Project.id == project_id, Project.user_id == current_user.id)
-            .first()
-        )
+        project_service = ProjectService(db)
 
-        if not project:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
-            )
+        # Verify project exists and user owns it
+        project = project_service.get_project(project_id=project_id, user_id=current_user.id)
 
         # Find file
         file = (

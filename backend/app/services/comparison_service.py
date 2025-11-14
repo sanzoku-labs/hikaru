@@ -4,11 +4,13 @@ Comparison service for Phase 7B - File Comparison.
 Handles comparing two files side-by-side, generating overlay charts,
 and calculating difference metrics.
 """
-import pandas as pd
 import json
-from typing import List, Dict, Any, Tuple
 from pathlib import Path
-from app.models.schemas import OverlayChartData, DataSchema
+from typing import Any, Dict, List, Tuple
+
+import pandas as pd
+
+from app.models.schemas import DataSchema, OverlayChartData
 
 
 class ComparisonService:
@@ -26,17 +28,15 @@ class ComparisonService:
         """
         file_path = Path(file_path)
 
-        if file_path.suffix == '.csv':
+        if file_path.suffix == ".csv":
             return pd.read_csv(file_path)
-        elif file_path.suffix == '.xlsx':
+        elif file_path.suffix == ".xlsx":
             return pd.read_excel(file_path)
         else:
             raise ValueError(f"Unsupported file type: {file_path.suffix}")
 
     def find_common_columns(
-        self,
-        df_a: pd.DataFrame,
-        df_b: pd.DataFrame
+        self, df_a: pd.DataFrame, df_b: pd.DataFrame
     ) -> Tuple[List[str], List[str], List[str]]:
         """
         Find common columns between two DataFrames.
@@ -56,10 +56,14 @@ class ComparisonService:
 
         for col in common_cols:
             # Check if numeric in both
-            if pd.api.types.is_numeric_dtype(df_a[col]) and pd.api.types.is_numeric_dtype(df_b[col]):
+            if pd.api.types.is_numeric_dtype(df_a[col]) and pd.api.types.is_numeric_dtype(
+                df_b[col]
+            ):
                 common_numeric.append(col)
             # Check if datetime in both
-            elif pd.api.types.is_datetime64_any_dtype(df_a[col]) or pd.api.types.is_datetime64_any_dtype(df_b[col]):
+            elif pd.api.types.is_datetime64_any_dtype(
+                df_a[col]
+            ) or pd.api.types.is_datetime64_any_dtype(df_b[col]):
                 common_datetime.append(col)
             else:
                 common_categorical.append(col)
@@ -72,7 +76,7 @@ class ComparisonService:
         df_b: pd.DataFrame,
         file_a_name: str,
         file_b_name: str,
-        comparison_type: str = "side_by_side"
+        comparison_type: str = "side_by_side",
     ) -> List[OverlayChartData]:
         """
         Generate overlay charts comparing two datasets.
@@ -95,8 +99,7 @@ class ComparisonService:
             for datetime_col in datetime_cols[:1]:  # Use first datetime column
                 for numeric_col in numeric_cols[:2]:  # Use first 2 numeric columns
                     chart = self._create_time_series_overlay(
-                        df_a, df_b, datetime_col, numeric_col,
-                        file_a_name, file_b_name
+                        df_a, df_b, datetime_col, numeric_col, file_a_name, file_b_name
                     )
                     if chart:
                         charts.append(chart)
@@ -108,8 +111,7 @@ class ComparisonService:
                     if len(charts) >= 3:
                         break
                     chart = self._create_categorical_overlay(
-                        df_a, df_b, cat_col, num_col,
-                        file_a_name, file_b_name
+                        df_a, df_b, cat_col, num_col, file_a_name, file_b_name
                     )
                     if chart:
                         charts.append(chart)
@@ -117,8 +119,7 @@ class ComparisonService:
         # Priority 3: Numeric scatter comparison
         if len(numeric_cols) >= 2 and len(charts) < 3:
             chart = self._create_scatter_overlay(
-                df_a, df_b, numeric_cols[0], numeric_cols[1],
-                file_a_name, file_b_name
+                df_a, df_b, numeric_cols[0], numeric_cols[1], file_a_name, file_b_name
             )
             if chart:
                 charts.append(chart)
@@ -132,20 +133,20 @@ class ComparisonService:
         datetime_col: str,
         numeric_col: str,
         file_a_name: str,
-        file_b_name: str
+        file_b_name: str,
     ) -> OverlayChartData:
         """Create overlay line chart for time series data."""
         try:
             # Prepare data for file A
             df_a_sorted = df_a[[datetime_col, numeric_col]].copy()
-            df_a_sorted[datetime_col] = pd.to_datetime(df_a_sorted[datetime_col], errors='coerce')
+            df_a_sorted[datetime_col] = pd.to_datetime(df_a_sorted[datetime_col], errors="coerce")
             df_a_sorted = df_a_sorted.dropna()
             df_a_sorted = df_a_sorted.sort_values(datetime_col)
             df_a_sorted = df_a_sorted.groupby(datetime_col)[numeric_col].mean().reset_index()
 
             # Prepare data for file B
             df_b_sorted = df_b[[datetime_col, numeric_col]].copy()
-            df_b_sorted[datetime_col] = pd.to_datetime(df_b_sorted[datetime_col], errors='coerce')
+            df_b_sorted[datetime_col] = pd.to_datetime(df_b_sorted[datetime_col], errors="coerce")
             df_b_sorted = df_b_sorted.dropna()
             df_b_sorted = df_b_sorted.sort_values(datetime_col)
             df_b_sorted = df_b_sorted.groupby(datetime_col)[numeric_col].mean().reset_index()
@@ -160,8 +161,8 @@ class ComparisonService:
                 file_b_name=file_b_name,
                 x_column=datetime_col,
                 y_column=numeric_col,
-                file_a_data=df_a_sorted.to_dict('records'),
-                file_b_data=df_b_sorted.to_dict('records')
+                file_a_data=df_a_sorted.to_dict("records"),
+                file_b_data=df_b_sorted.to_dict("records"),
             )
 
         except Exception:
@@ -174,7 +175,7 @@ class ComparisonService:
         cat_col: str,
         num_col: str,
         file_a_name: str,
-        file_b_name: str
+        file_b_name: str,
     ) -> OverlayChartData:
         """Create overlay bar chart for categorical data."""
         try:
@@ -196,8 +197,8 @@ class ComparisonService:
                 file_b_name=file_b_name,
                 x_column=cat_col,
                 y_column=num_col,
-                file_a_data=df_a_agg.to_dict('records'),
-                file_b_data=df_b_agg.to_dict('records')
+                file_a_data=df_a_agg.to_dict("records"),
+                file_b_data=df_b_agg.to_dict("records"),
             )
 
         except Exception:
@@ -210,7 +211,7 @@ class ComparisonService:
         x_col: str,
         y_col: str,
         file_a_name: str,
-        file_b_name: str
+        file_b_name: str,
     ) -> OverlayChartData:
         """Create overlay scatter plot."""
         try:
@@ -234,18 +235,14 @@ class ComparisonService:
                 file_b_name=file_b_name,
                 x_column=x_col,
                 y_column=y_col,
-                file_a_data=df_a_sample.to_dict('records'),
-                file_b_data=df_b_sample.to_dict('records')
+                file_a_data=df_a_sample.to_dict("records"),
+                file_b_data=df_b_sample.to_dict("records"),
             )
 
         except Exception:
             return None
 
-    def calculate_metrics(
-        self,
-        df_a: pd.DataFrame,
-        df_b: pd.DataFrame
-    ) -> Dict[str, Any]:
+    def calculate_metrics(self, df_a: pd.DataFrame, df_b: pd.DataFrame) -> Dict[str, Any]:
         """
         Calculate comparison metrics between two datasets.
 
@@ -262,8 +259,10 @@ class ComparisonService:
             "row_count_a": len(df_a),
             "row_count_b": len(df_b),
             "row_count_diff": len(df_b) - len(df_a),
-            "row_count_pct_change": ((len(df_b) - len(df_a)) / len(df_a) * 100) if len(df_a) > 0 else 0,
-            "numeric_columns": {}
+            "row_count_pct_change": ((len(df_b) - len(df_a)) / len(df_a) * 100)
+            if len(df_a) > 0
+            else 0,
+            "numeric_columns": {},
         }
 
         # Calculate metrics for each numeric column
@@ -276,12 +275,18 @@ class ComparisonService:
             metrics["numeric_columns"][col] = {
                 "mean_a": float(mean_a) if pd.notna(mean_a) else None,
                 "mean_b": float(mean_b) if pd.notna(mean_b) else None,
-                "mean_diff": float(mean_b - mean_a) if pd.notna(mean_a) and pd.notna(mean_b) else None,
-                "mean_pct_change": float((mean_b - mean_a) / mean_a * 100) if mean_a != 0 and pd.notna(mean_a) and pd.notna(mean_b) else None,
+                "mean_diff": float(mean_b - mean_a)
+                if pd.notna(mean_a) and pd.notna(mean_b)
+                else None,
+                "mean_pct_change": float((mean_b - mean_a) / mean_a * 100)
+                if mean_a != 0 and pd.notna(mean_a) and pd.notna(mean_b)
+                else None,
                 "sum_a": float(sum_a) if pd.notna(sum_a) else None,
                 "sum_b": float(sum_b) if pd.notna(sum_b) else None,
                 "sum_diff": float(sum_b - sum_a) if pd.notna(sum_a) and pd.notna(sum_b) else None,
-                "sum_pct_change": float((sum_b - sum_a) / sum_a * 100) if sum_a != 0 and pd.notna(sum_a) and pd.notna(sum_b) else None,
+                "sum_pct_change": float((sum_b - sum_a) / sum_a * 100)
+                if sum_a != 0 and pd.notna(sum_a) and pd.notna(sum_b)
+                else None,
             }
 
         return metrics

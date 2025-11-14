@@ -18,7 +18,7 @@ from app.models.schemas import (
     ExportResponse,
 )
 from app.services.export_service import ExportService
-from app.storage import get_upload
+from app.services.upload_service import UploadService
 
 logger = logging.getLogger(__name__)
 
@@ -26,16 +26,15 @@ router = APIRouter(prefix="/api", tags=["export"])
 
 
 @router.post("/export", response_model=ExportResponse)
-async def export_dashboard(request: ExportRequest):
+async def export_dashboard(request: ExportRequest, db: Session = Depends(get_db)):
     """
     Generate PDF export of dashboard (data preview, charts, AI insights).
 
     Returns export_id and download URL.
     """
-    # Validate upload_id exists
-    upload_data = get_upload(request.upload_id)
-    if not upload_data:
-        raise HTTPException(status_code=404, detail=f"Upload ID {request.upload_id} not found")
+    # Get upload data from database using UploadService
+    upload_service = UploadService(db)
+    upload_data = upload_service.get_upload(request.upload_id)
 
     # Get data from upload (need to re-generate charts for export)
     from app.services.ai_service import AIService
@@ -187,9 +186,8 @@ async def export_advanced(
 
         elif request.upload_id:
             # Legacy support for upload_id
-            upload_data = get_upload(request.upload_id)
-            if not upload_data:
-                raise HTTPException(status_code=404, detail="Upload not found")
+            upload_service = UploadService(db)
+            upload_data = upload_service.get_upload(request.upload_id)
 
             filename = upload_data["filename"]
             schema = upload_data["schema"]

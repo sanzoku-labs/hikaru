@@ -1,6 +1,8 @@
-from pydantic_settings import BaseSettings
-from pydantic import field_validator
 from typing import List
+
+from pydantic import field_validator
+from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
     # Server
@@ -26,21 +28,22 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_days: int = 7
 
-    @field_validator('cors_origins', mode='before')
+    @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v):
         if isinstance(v, str):
-            return [origin.strip() for origin in v.split(',')]
+            return [origin.strip() for origin in v.split(",")]
         return v
 
-    @field_validator('allowed_extensions', mode='before')
+    @field_validator("allowed_extensions", mode="before")
     @classmethod
     def parse_allowed_extensions(cls, v):
         if isinstance(v, str):
-            return [ext.strip() for ext in v.split(',')]
+            return [ext.strip() for ext in v.split(",")]
         return v
 
     class Config:
         env_file = ".env"
+
 
 settings = Settings()

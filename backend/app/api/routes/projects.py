@@ -3,34 +3,37 @@ Project management API endpoints for Phase 7.
 
 Handles CRUD operations for projects and project files.
 """
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
-from sqlalchemy.orm import Session
-from typing import List
-from datetime import datetime
-from app.database import get_db
-from app.middleware.auth import get_current_active_user
-from app.models.schemas import (
-    ProjectCreate,
-    ProjectUpdate,
-    ProjectResponse,
-    ProjectListResponse,
-    ProjectFileUploadResponse,
-    FileInProject,
-    ErrorResponse,
-    FileAnalyzeRequest,
-    FileAnalysisResponse,
-    AnalysisHistoryResponse,
-    AnalysisHistoryItem
-)
-from app.models.database import User, Project, File as FileModel
-from app.services.data_processor import DataProcessor
-from app.services.chart_generator import ChartGenerator
-from app.services.ai_service import AIService
 import json
-import uuid
 import os
 import shutil
+import uuid
+from datetime import datetime
 from pathlib import Path
+from typing import List
+
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.middleware.auth import get_current_active_user
+from app.models.database import File as FileModel
+from app.models.database import Project, User
+from app.models.schemas import (
+    AnalysisHistoryItem,
+    AnalysisHistoryResponse,
+    ErrorResponse,
+    FileAnalysisResponse,
+    FileAnalyzeRequest,
+    FileInProject,
+    ProjectCreate,
+    ProjectFileUploadResponse,
+    ProjectListResponse,
+    ProjectResponse,
+    ProjectUpdate,
+)
+from app.services.ai_service import AIService
+from app.services.chart_generator import ChartGenerator
+from app.services.data_processor import DataProcessor
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 
@@ -39,7 +42,7 @@ router = APIRouter(prefix="/api/projects", tags=["projects"])
 async def create_project(
     project_data: ProjectCreate,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Create a new project.
@@ -59,9 +62,7 @@ async def create_project(
     try:
         # Create new project
         new_project = Project(
-            name=project_data.name,
-            description=project_data.description,
-            user_id=current_user.id
+            name=project_data.name, description=project_data.description, user_id=current_user.id
         )
 
         db.add(new_project)
@@ -78,7 +79,7 @@ async def create_project(
             "updated_at": new_project.updated_at,
             "is_archived": new_project.is_archived,
             "file_count": 0,
-            "files": None
+            "files": None,
         }
         return ProjectResponse(**project_dict)
 
@@ -86,7 +87,7 @@ async def create_project(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create project: {str(e)}"
+            detail=f"Failed to create project: {str(e)}",
         )
 
 
@@ -94,7 +95,7 @@ async def create_project(
 async def list_projects(
     include_archived: bool = False,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     List all projects for the current user.
@@ -128,20 +129,17 @@ async def list_projects(
                 "updated_at": project.updated_at,
                 "is_archived": project.is_archived,
                 "file_count": len(project.files) if project.files else 0,
-                "files": None  # Don't include files in list view
+                "files": None,  # Don't include files in list view
             }
             project_response = ProjectResponse(**project_dict)
             project_responses.append(project_response)
 
-        return ProjectListResponse(
-            projects=project_responses,
-            total=len(project_responses)
-        )
+        return ProjectListResponse(projects=project_responses, total=len(project_responses))
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list projects: {str(e)}"
+            detail=f"Failed to list projects: {str(e)}",
         )
 
 
@@ -149,7 +147,7 @@ async def list_projects(
 async def get_project(
     project_id: int,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get a specific project by ID.
@@ -166,15 +164,15 @@ async def get_project(
         HTTP 404: If project not found or not owned by user
     """
     try:
-        project = db.query(Project).filter(
-            Project.id == project_id,
-            Project.user_id == current_user.id
-        ).first()
+        project = (
+            db.query(Project)
+            .filter(Project.id == project_id, Project.user_id == current_user.id)
+            .first()
+        )
 
         if not project:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Project {project_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
             )
 
         # Populate files with analysis status
@@ -190,7 +188,7 @@ async def get_project(
                 "data_schema_json": f.schema_json,
                 "uploaded_at": f.uploaded_at,
                 "has_analysis": f.analysis_json is not None,
-                "analyzed_at": f.analysis_timestamp
+                "analyzed_at": f.analysis_timestamp,
             }
             files_with_analysis.append(FileInProject(**file_dict))
 
@@ -204,7 +202,7 @@ async def get_project(
             "updated_at": project.updated_at,
             "is_archived": project.is_archived,
             "file_count": len(project.files),
-            "files": files_with_analysis
+            "files": files_with_analysis,
         }
 
         return ProjectResponse(**project_dict)
@@ -214,7 +212,7 @@ async def get_project(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get project: {str(e)}"
+            detail=f"Failed to get project: {str(e)}",
         )
 
 
@@ -223,7 +221,7 @@ async def update_project(
     project_id: int,
     project_data: ProjectUpdate,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Update a project.
@@ -242,15 +240,15 @@ async def update_project(
         HTTP 500: If update fails
     """
     try:
-        project = db.query(Project).filter(
-            Project.id == project_id,
-            Project.user_id == current_user.id
-        ).first()
+        project = (
+            db.query(Project)
+            .filter(Project.id == project_id, Project.user_id == current_user.id)
+            .first()
+        )
 
         if not project:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Project {project_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
             )
 
         # Update fields if provided
@@ -273,7 +271,7 @@ async def update_project(
             "updated_at": project.updated_at,
             "is_archived": project.is_archived,
             "file_count": len(project.files),
-            "files": None
+            "files": None,
         }
         return ProjectResponse(**project_dict)
 
@@ -283,7 +281,7 @@ async def update_project(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update project: {str(e)}"
+            detail=f"Failed to update project: {str(e)}",
         )
 
 
@@ -291,7 +289,7 @@ async def update_project(
 async def delete_project(
     project_id: int,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Delete a project and all associated files.
@@ -306,15 +304,15 @@ async def delete_project(
         HTTP 500: If deletion fails
     """
     try:
-        project = db.query(Project).filter(
-            Project.id == project_id,
-            Project.user_id == current_user.id
-        ).first()
+        project = (
+            db.query(Project)
+            .filter(Project.id == project_id, Project.user_id == current_user.id)
+            .first()
+        )
 
         if not project:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Project {project_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
             )
 
         # Delete files from storage
@@ -332,16 +330,20 @@ async def delete_project(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete project: {str(e)}"
+            detail=f"Failed to delete project: {str(e)}",
         )
 
 
-@router.post("/{project_id}/files", response_model=ProjectFileUploadResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{project_id}/files",
+    response_model=ProjectFileUploadResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def upload_file_to_project(
     project_id: int,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Upload a file to a project.
@@ -362,22 +364,22 @@ async def upload_file_to_project(
     """
     try:
         # Verify project exists and user owns it
-        project = db.query(Project).filter(
-            Project.id == project_id,
-            Project.user_id == current_user.id
-        ).first()
+        project = (
+            db.query(Project)
+            .filter(Project.id == project_id, Project.user_id == current_user.id)
+            .first()
+        )
 
         if not project:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Project {project_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
             )
 
         # Validate file type
-        if not file.filename.endswith(('.csv', '.xlsx')):
+        if not file.filename.endswith((".csv", ".xlsx")):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Only CSV and XLSX files are supported"
+                detail="Only CSV and XLSX files are supported",
             )
 
         # Generate upload ID
@@ -396,7 +398,7 @@ async def upload_file_to_project(
 
         # Process file with DataProcessor
         processor = DataProcessor()
-        file_ext = Path(file.filename).suffix.lstrip('.')
+        file_ext = Path(file.filename).suffix.lstrip(".")
         df = processor.parse_file(str(file_path), file_ext)
 
         # Validate dataframe
@@ -417,7 +419,7 @@ async def upload_file_to_project(
             file_path=str(file_path),
             file_size=os.path.getsize(file_path),
             row_count=len(df),
-            schema_json=schema.model_dump_json()
+            schema_json=schema.model_dump_json(),
         )
 
         db.add(new_file)
@@ -435,7 +437,7 @@ async def upload_file_to_project(
             file_size=new_file.file_size,
             row_count=new_file.row_count,
             data_schema=schema,
-            uploaded_at=new_file.uploaded_at
+            uploaded_at=new_file.uploaded_at,
         )
 
     except HTTPException:
@@ -443,11 +445,11 @@ async def upload_file_to_project(
     except Exception as e:
         db.rollback()
         # Clean up file if it was created
-        if 'file_path' in locals() and os.path.exists(file_path):
+        if "file_path" in locals() and os.path.exists(file_path):
             os.remove(file_path)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to upload file: {str(e)}"
+            detail=f"Failed to upload file: {str(e)}",
         )
 
 
@@ -455,7 +457,7 @@ async def upload_file_to_project(
 async def list_project_files(
     project_id: int,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     List all files in a project.
@@ -472,15 +474,15 @@ async def list_project_files(
         HTTP 404: If project not found
     """
     try:
-        project = db.query(Project).filter(
-            Project.id == project_id,
-            Project.user_id == current_user.id
-        ).first()
+        project = (
+            db.query(Project)
+            .filter(Project.id == project_id, Project.user_id == current_user.id)
+            .first()
+        )
 
         if not project:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Project {project_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
             )
 
         # Populate files with analysis status
@@ -496,7 +498,7 @@ async def list_project_files(
                 "data_schema_json": f.schema_json,
                 "uploaded_at": f.uploaded_at,
                 "has_analysis": f.analysis_json is not None,
-                "analyzed_at": f.analysis_timestamp
+                "analyzed_at": f.analysis_timestamp,
             }
             files_with_analysis.append(FileInProject(**file_dict))
 
@@ -507,7 +509,7 @@ async def list_project_files(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list files: {str(e)}"
+            detail=f"Failed to list files: {str(e)}",
         )
 
 
@@ -516,7 +518,7 @@ async def delete_project_file(
     project_id: int,
     file_id: int,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Delete a file from a project.
@@ -533,27 +535,28 @@ async def delete_project_file(
     """
     try:
         # Verify project exists
-        project = db.query(Project).filter(
-            Project.id == project_id,
-            Project.user_id == current_user.id
-        ).first()
+        project = (
+            db.query(Project)
+            .filter(Project.id == project_id, Project.user_id == current_user.id)
+            .first()
+        )
 
         if not project:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Project {project_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
             )
 
         # Find file
-        file = db.query(FileModel).filter(
-            FileModel.id == file_id,
-            FileModel.project_id == project_id
-        ).first()
+        file = (
+            db.query(FileModel)
+            .filter(FileModel.id == file_id, FileModel.project_id == project_id)
+            .first()
+        )
 
         if not file:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"File {file_id} not found in project {project_id}"
+                detail=f"File {file_id} not found in project {project_id}",
             )
 
         # Delete file from storage
@@ -574,7 +577,7 @@ async def delete_project_file(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete file: {str(e)}"
+            detail=f"Failed to delete file: {str(e)}",
         )
 
 
@@ -584,7 +587,7 @@ async def analyze_project_file(
     file_id: int,
     request: FileAnalyzeRequest,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Analyze a file in a project, generating charts and AI insights.
@@ -606,32 +609,33 @@ async def analyze_project_file(
     """
     try:
         # Verify project exists and user owns it
-        project = db.query(Project).filter(
-            Project.id == project_id,
-            Project.user_id == current_user.id
-        ).first()
+        project = (
+            db.query(Project)
+            .filter(Project.id == project_id, Project.user_id == current_user.id)
+            .first()
+        )
 
         if not project:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Project {project_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
             )
 
         # Find file
-        file = db.query(FileModel).filter(
-            FileModel.id == file_id,
-            FileModel.project_id == project_id
-        ).first()
+        file = (
+            db.query(FileModel)
+            .filter(FileModel.id == file_id, FileModel.project_id == project_id)
+            .first()
+        )
 
         if not file:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"File {file_id} not found in project {project_id}"
+                detail=f"File {file_id} not found in project {project_id}",
             )
 
         # Load the dataframe
         processor = DataProcessor()
-        file_ext = Path(file.filename).suffix.lstrip('.')
+        file_ext = Path(file.filename).suffix.lstrip(".")
         df = processor.parse_file(file.file_path, file_ext)
 
         # Parse schema from stored JSON
@@ -639,13 +643,16 @@ async def analyze_project_file(
 
         # Generate charts
         chart_generator = ChartGenerator()
-        charts_data_raw = chart_generator.generate_charts(df, schema, user_intent=request.user_intent)
+        charts_data_raw = chart_generator.generate_charts(
+            df, schema, user_intent=request.user_intent
+        )
 
         # Generate AI insights
         ai_service = AIService()
 
         # Add insights to charts by creating new chart objects with insights
         from app.models.schemas import ChartData
+
         charts_with_insights = []
         for chart_data in charts_data_raw:
             # Generate insight for this chart
@@ -653,17 +660,19 @@ async def analyze_project_file(
 
             # Create new chart dict with insight
             chart_dict = chart_data if isinstance(chart_data, dict) else chart_data.model_dump()
-            chart_dict['insight'] = insight
+            chart_dict["insight"] = insight
             charts_with_insights.append(ChartData(**chart_dict))
 
         # Generate global summary
-        global_summary = ai_service.generate_global_summary(charts_with_insights, schema, user_intent=request.user_intent)
+        global_summary = ai_service.generate_global_summary(
+            charts_with_insights, schema, user_intent=request.user_intent
+        )
 
         # Store analysis results in database
         analysis_json = {
             "charts": [chart.model_dump() for chart in charts_with_insights],
             "global_summary": global_summary,
-            "schema": schema.model_dump()
+            "schema": schema.model_dump(),
         }
 
         file.analysis_json = json.dumps(analysis_json)
@@ -679,7 +688,7 @@ async def analyze_project_file(
             charts=charts_with_insights,
             global_summary=global_summary,
             user_intent=request.user_intent,
-            analyzed_at=file.analysis_timestamp
+            analyzed_at=file.analysis_timestamp,
         )
 
     except HTTPException:
@@ -688,7 +697,7 @@ async def analyze_project_file(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to analyze file: {str(e)}"
+            detail=f"Failed to analyze file: {str(e)}",
         )
 
 
@@ -697,7 +706,7 @@ async def get_project_file_analysis(
     project_id: int,
     file_id: int,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get saved analysis results for a file in a project.
@@ -716,34 +725,35 @@ async def get_project_file_analysis(
     """
     try:
         # Verify project exists and user owns it
-        project = db.query(Project).filter(
-            Project.id == project_id,
-            Project.user_id == current_user.id
-        ).first()
+        project = (
+            db.query(Project)
+            .filter(Project.id == project_id, Project.user_id == current_user.id)
+            .first()
+        )
 
         if not project:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Project {project_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
             )
 
         # Find file
-        file = db.query(FileModel).filter(
-            FileModel.id == file_id,
-            FileModel.project_id == project_id
-        ).first()
+        file = (
+            db.query(FileModel)
+            .filter(FileModel.id == file_id, FileModel.project_id == project_id)
+            .first()
+        )
 
         if not file:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"File {file_id} not found in project {project_id}"
+                detail=f"File {file_id} not found in project {project_id}",
             )
 
         # Check if analysis exists
         if not file.analysis_json:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"No analysis found for file {file_id}. Please analyze the file first."
+                detail=f"No analysis found for file {file_id}. Please analyze the file first.",
             )
 
         # Parse stored analysis
@@ -751,6 +761,7 @@ async def get_project_file_analysis(
 
         # Import ChartData for deserialization
         from app.models.schemas import ChartData
+
         charts = [ChartData(**chart) for chart in analysis_data["charts"]]
 
         return FileAnalysisResponse(
@@ -759,7 +770,7 @@ async def get_project_file_analysis(
             charts=charts,
             global_summary=analysis_data.get("global_summary"),
             user_intent=file.user_intent,
-            analyzed_at=file.analysis_timestamp
+            analyzed_at=file.analysis_timestamp,
         )
 
     except HTTPException:
@@ -767,16 +778,18 @@ async def get_project_file_analysis(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve analysis: {str(e)}"
+            detail=f"Failed to retrieve analysis: {str(e)}",
         )
 
 
-@router.get("/{project_id}/files/{file_id}/analysis-history", response_model=AnalysisHistoryResponse)
+@router.get(
+    "/{project_id}/files/{file_id}/analysis-history", response_model=AnalysisHistoryResponse
+)
 async def get_analysis_history(
     project_id: int,
     file_id: int,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get analysis history for a file (Mockup 3 - Saved Analyses).
@@ -798,27 +811,28 @@ async def get_analysis_history(
     """
     try:
         # Verify project exists and user owns it
-        project = db.query(Project).filter(
-            Project.id == project_id,
-            Project.user_id == current_user.id
-        ).first()
+        project = (
+            db.query(Project)
+            .filter(Project.id == project_id, Project.user_id == current_user.id)
+            .first()
+        )
 
         if not project:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Project {project_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
             )
 
         # Find file
-        file = db.query(FileModel).filter(
-            FileModel.id == file_id,
-            FileModel.project_id == project_id
-        ).first()
+        file = (
+            db.query(FileModel)
+            .filter(FileModel.id == file_id, FileModel.project_id == project_id)
+            .first()
+        )
 
         if not file:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"File {file_id} not found in project {project_id}"
+                detail=f"File {file_id} not found in project {project_id}",
             )
 
         # Build analysis history
@@ -833,21 +847,20 @@ async def get_analysis_history(
             # Generate analysis ID from timestamp
             analysis_id = f"analysis_{file.id}_{int(file.analysis_timestamp.timestamp())}"
 
-            analyses.append(AnalysisHistoryItem(
-                analysis_id=analysis_id,
-                file_id=file.id,
-                filename=file.filename,
-                charts_count=charts_count,
-                user_intent=file.user_intent,
-                analyzed_at=file.analysis_timestamp,
-                has_global_summary=has_summary
-            ))
+            analyses.append(
+                AnalysisHistoryItem(
+                    analysis_id=analysis_id,
+                    file_id=file.id,
+                    filename=file.filename,
+                    charts_count=charts_count,
+                    user_intent=file.user_intent,
+                    analyzed_at=file.analysis_timestamp,
+                    has_global_summary=has_summary,
+                )
+            )
 
         return AnalysisHistoryResponse(
-            file_id=file.id,
-            filename=file.filename,
-            total_analyses=len(analyses),
-            analyses=analyses
+            file_id=file.id, filename=file.filename, total_analyses=len(analyses), analyses=analyses
         )
 
     except HTTPException:
@@ -855,5 +868,5 @@ async def get_analysis_history(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve analysis history: {str(e)}"
+            detail=f"Failed to retrieve analysis history: {str(e)}",
         )

@@ -1,31 +1,23 @@
 """
 Authentication API endpoints for user registration, login, and user management.
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Request
-from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
-from app.database import get_db
-from app.services import auth_service
-from app.middleware.auth import get_current_user, get_current_active_user
-from app.models.schemas import (
-    UserRegister,
-    UserLogin,
-    TokenResponse,
-    UserResponse,
-    ErrorResponse
-)
-from app.models.database import User
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from sqlalchemy.orm import Session
+
 from app.config import settings
+from app.database import get_db
+from app.middleware.auth import get_current_active_user, get_current_user
+from app.models.database import User
+from app.models.schemas import ErrorResponse, TokenResponse, UserLogin, UserRegister, UserResponse
+from app.services import auth_service
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-async def register(
-    user_data: UserRegister,
-    request: Request,
-    db: Session = Depends(get_db)
-):
+async def register(user_data: UserRegister, request: Request, db: Session = Depends(get_db)):
     """
     Register a new user.
 
@@ -50,13 +42,11 @@ async def register(
             email=user_data.email,
             username=user_data.username,
             password=user_data.password,
-            full_name=user_data.full_name
+            full_name=user_data.full_name,
         )
 
         # Generate JWT token
-        access_token = auth_service.create_access_token(
-            data={"sub": str(user.id)}
-        )
+        access_token = auth_service.create_access_token(data={"sub": str(user.id)})
 
         # Decode token to get expiration and JTI
         payload = auth_service.decode_access_token(access_token)
@@ -70,33 +60,24 @@ async def register(
             token_jti=token_jti,
             expires_at=expires_at,
             ip_address=request.client.host if request.client else None,
-            user_agent=request.headers.get("user-agent")
+            user_agent=request.headers.get("user-agent"),
         )
 
         return TokenResponse(
-            access_token=access_token,
-            token_type="bearer",
-            user=UserResponse.model_validate(user)
+            access_token=access_token, token_type="bearer", user=UserResponse.model_validate(user)
         )
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Registration failed: {str(e)}"
+            detail=f"Registration failed: {str(e)}",
         )
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(
-    credentials: UserLogin,
-    request: Request,
-    db: Session = Depends(get_db)
-):
+async def login(credentials: UserLogin, request: Request, db: Session = Depends(get_db)):
     """
     Login with username/email and password.
 
@@ -115,9 +96,7 @@ async def login(
     """
     # Authenticate user
     user = auth_service.authenticate_user(
-        db=db,
-        username=credentials.username,
-        password=credentials.password
+        db=db, username=credentials.username, password=credentials.password
     )
 
     if not user:
@@ -128,9 +107,7 @@ async def login(
         )
 
     # Generate JWT token
-    access_token = auth_service.create_access_token(
-        data={"sub": str(user.id)}
-    )
+    access_token = auth_service.create_access_token(data={"sub": str(user.id)})
 
     # Decode token to get expiration and JTI
     payload = auth_service.decode_access_token(access_token)
@@ -144,20 +121,16 @@ async def login(
         token_jti=token_jti,
         expires_at=expires_at,
         ip_address=request.client.host if request.client else None,
-        user_agent=request.headers.get("user-agent")
+        user_agent=request.headers.get("user-agent"),
     )
 
     return TokenResponse(
-        access_token=access_token,
-        token_type="bearer",
-        user=UserResponse.model_validate(user)
+        access_token=access_token, token_type="bearer", user=UserResponse.model_validate(user)
     )
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_me(
-    current_user: User = Depends(get_current_active_user)
-):
+async def get_me(current_user: User = Depends(get_current_active_user)):
     """
     Get current authenticated user's information.
 
@@ -176,7 +149,7 @@ async def get_me(
 async def logout(
     current_user: User = Depends(get_current_user),
     request: Request = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Logout current user by revoking the JWT token.
@@ -195,18 +168,14 @@ async def logout(
     auth_header = request.headers.get("authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authorization header"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authorization header"
         )
 
     token = auth_header.replace("Bearer ", "")
     payload = auth_service.decode_access_token(token)
 
     if not payload or "jti" not in payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
     # Revoke session
     auth_service.revoke_session(db, payload["jti"])
@@ -217,8 +186,4 @@ async def logout(
 @router.get("/health")
 async def health_check():
     """Health check endpoint for authentication service."""
-    return {
-        "status": "healthy",
-        "service": "authentication",
-        "version": "1.0.0"
-    }
+    return {"status": "healthy", "service": "authentication", "version": "1.0.0"}

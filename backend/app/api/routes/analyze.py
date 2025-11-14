@@ -4,13 +4,15 @@ from datetime import datetime
 from typing import Optional
 
 import pandas as pd
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session
 
+from app.database import get_db
 from app.models.schemas import AnalyzeResponse, ChartData
 from app.services.ai_service import AIService
 from app.services.chart_generator import ChartGenerator
 from app.services.data_processor import DataProcessor
-from app.storage import get_upload
+from app.services.upload_service import UploadService
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +25,7 @@ async def analyze_data(
     user_intent: Optional[str] = Query(
         None, description="Optional: What the user wants to analyze"
     ),
+    db: Session = Depends(get_db),
 ):
     """
     Analyze uploaded file and generate charts with AI-powered suggestions.
@@ -34,10 +37,9 @@ async def analyze_data(
     4. Generates global summary (if API key configured)
     """
 
-    # Get upload data from storage
-    upload_data = get_upload(upload_id)
-    if not upload_data:
-        raise HTTPException(status_code=404, detail=f"Upload ID {upload_id} not found")
+    # Get upload data from database using UploadService
+    upload_service = UploadService(db)
+    upload_data = upload_service.get_upload(upload_id)
 
     try:
         # Get data from storage (already parsed)

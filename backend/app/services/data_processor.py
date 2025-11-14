@@ -1,16 +1,19 @@
-import pandas as pd
+from typing import Optional, Tuple
+
 import numpy as np
-from typing import Tuple, Optional
-from app.models.schemas import DataSchema, ColumnInfo
+import pandas as pd
+
+from app.models.schemas import ColumnInfo, DataSchema
+
 
 class DataProcessor:
     @staticmethod
     def parse_file(file_path: str, file_extension: str) -> pd.DataFrame:
         """Parse CSV or Excel file into DataFrame, supporting both US and European formats"""
-        if file_extension == 'csv':
+        if file_extension == "csv":
             # Try US format first (comma delimiter, period decimal)
             try:
-                df = pd.read_csv(file_path, encoding='utf-8')
+                df = pd.read_csv(file_path, encoding="utf-8")
 
                 # Check if parsing was successful (more than 1 column detected)
                 if len(df.columns) > 1:
@@ -24,17 +27,19 @@ class DataProcessor:
                 try:
                     df = pd.read_csv(
                         file_path,
-                        encoding='utf-8',
-                        sep=';',
-                        decimal=',',
-                        thousands=None  # Disable thousands separator
+                        encoding="utf-8",
+                        sep=";",
+                        decimal=",",
+                        thousands=None,  # Disable thousands separator
                     )
                     return df
                 except Exception as e:
                     # If both fail, raise the original error
-                    raise ValueError(f"Failed to parse CSV file. Tried both US (comma) and European (semicolon) formats. Error: {str(e)}")
+                    raise ValueError(
+                        f"Failed to parse CSV file. Tried both US (comma) and European (semicolon) formats. Error: {str(e)}"
+                    )
 
-        elif file_extension in ['xlsx', 'xls']:
+        elif file_extension in ["xlsx", "xls"]:
             return pd.read_excel(file_path)
         else:
             raise ValueError(f"Unsupported file extension: {file_extension}")
@@ -54,7 +59,7 @@ class DataProcessor:
             return False, f"Too many columns: {len(df.columns)} (limit: 50)"
 
         # Check for at least one numeric column
-        numeric_cols = df.select_dtypes(include=['number']).columns
+        numeric_cols = df.select_dtypes(include=["number"]).columns
         if len(numeric_cols) == 0:
             return False, "No numeric columns found for visualization"
 
@@ -71,13 +76,13 @@ class DataProcessor:
         # This catches month_id (202505), week_id (202518), etc.
         if series.name:
             col_name_lower = str(series.name).lower()
-            time_keywords = ['month', 'week', 'year', 'quarter', 'day', 'date', 'period']
+            time_keywords = ["month", "week", "year", "quarter", "day", "date", "period"]
             if any(keyword in col_name_lower for keyword in time_keywords):
                 # Likely a time dimension (even if stored as integer)
                 return "datetime"
 
         # Try to convert to datetime
-        if series.dtype == 'object':
+        if series.dtype == "object":
             try:
                 pd.to_datetime(series.dropna().head(100))
                 return "datetime"
@@ -116,8 +121,7 @@ class DataProcessor:
 
             # Sanitize sample values (remove NaN)
             sample_values = [
-                DataProcessor._sanitize_value(v)
-                for v in series.dropna().head(5).tolist()
+                DataProcessor._sanitize_value(v) for v in series.dropna().head(5).tolist()
             ]
 
             col_info = ColumnInfo(
@@ -125,7 +129,7 @@ class DataProcessor:
                 type=col_type,
                 null_count=int(series.isnull().sum()),
                 unique_values=int(series.nunique()) if col_type == "categorical" else None,
-                sample_values=sample_values
+                sample_values=sample_values,
             )
 
             # Add numeric stats (with NaN handling)
@@ -138,10 +142,6 @@ class DataProcessor:
             columns_info.append(col_info)
 
         # Get preview (first 10 rows) - replace NaN/Inf with None
-        preview = df.head(10).replace([np.nan, np.inf, -np.inf], None).to_dict('records')
+        preview = df.head(10).replace([np.nan, np.inf, -np.inf], None).to_dict("records")
 
-        return DataSchema(
-            columns=columns_info,
-            row_count=len(df),
-            preview=preview
-        )
+        return DataSchema(columns=columns_info, row_count=len(df), preview=preview)

@@ -1,14 +1,17 @@
 """
 Authentication service for user registration, login, and JWT token management.
 """
+import secrets
 from datetime import datetime, timedelta
 from typing import Optional
-from jose import JWTError, jwt
+
 import bcrypt
+from jose import JWTError, jwt
 from sqlalchemy.orm import Session
-from app.models.database import User, Session as SessionModel
+
 from app.config import settings
-import secrets
+from app.models.database import Session as SessionModel
+from app.models.database import User
 
 
 def hash_password(password: str) -> str:
@@ -22,11 +25,11 @@ def hash_password(password: str) -> str:
         Hashed password string
     """
     # Bcrypt has a 72-byte password limit, truncate if necessary
-    password_bytes = password.encode('utf-8')[:72]
+    password_bytes = password.encode("utf-8")[:72]
     # Generate salt and hash password
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(password_bytes, salt)
-    return hashed.decode('utf-8')
+    return hashed.decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -41,8 +44,8 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         True if password matches, False otherwise
     """
     # Truncate to match hashing behavior
-    password_bytes = plain_password.encode('utf-8')[:72]
-    hashed_bytes = hashed_password.encode('utf-8')
+    password_bytes = plain_password.encode("utf-8")[:72]
+    hashed_bytes = hashed_password.encode("utf-8")
     return bcrypt.checkpw(password_bytes, hashed_bytes)
 
 
@@ -65,11 +68,13 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
         expire = datetime.utcnow() + timedelta(days=settings.access_token_expire_days)
 
     # Add expiration and issued-at claims
-    to_encode.update({
-        "exp": expire,
-        "iat": datetime.utcnow(),
-        "jti": secrets.token_urlsafe(32)  # Unique token ID for tracking
-    })
+    to_encode.update(
+        {
+            "exp": expire,
+            "iat": datetime.utcnow(),
+            "jti": secrets.token_urlsafe(32),  # Unique token ID for tracking
+        }
+    )
 
     encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
     return encoded_jwt
@@ -92,7 +97,9 @@ def decode_access_token(token: str) -> Optional[dict]:
         return None
 
 
-def create_user(db: Session, email: str, username: str, password: str, full_name: Optional[str] = None) -> User:
+def create_user(
+    db: Session, email: str, username: str, password: str, full_name: Optional[str] = None
+) -> User:
     """
     Create a new user in the database.
 
@@ -127,7 +134,7 @@ def create_user(db: Session, email: str, username: str, password: str, full_name
         hashed_password=hashed_password,
         full_name=full_name,
         is_active=True,
-        is_superuser=False
+        is_superuser=False,
     )
 
     db.add(new_user)
@@ -150,9 +157,7 @@ def authenticate_user(db: Session, username: str, password: str) -> Optional[Use
         User object if authentication successful, None otherwise
     """
     # Try to find user by username or email
-    user = db.query(User).filter(
-        (User.username == username) | (User.email == username)
-    ).first()
+    user = db.query(User).filter((User.username == username) | (User.email == username)).first()
 
     if not user:
         return None
@@ -172,7 +177,7 @@ def create_session(
     token_jti: str,
     expires_at: datetime,
     ip_address: Optional[str] = None,
-    user_agent: Optional[str] = None
+    user_agent: Optional[str] = None,
 ) -> SessionModel:
     """
     Create a new session record for tracking.
@@ -194,7 +199,7 @@ def create_session(
         expires_at=expires_at,
         ip_address=ip_address,
         user_agent=user_agent,
-        is_revoked=False
+        is_revoked=False,
     )
 
     db.add(session)

@@ -1,23 +1,25 @@
-from pydantic import BaseModel, EmailStr, Field, field_validator
-from typing import List, Dict, Any, Optional, Literal
 from datetime import datetime
+from typing import Any, Dict, List, Literal, Optional
 
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 # ===== Phase 8: Authentication Schemas =====
 
+
 class UserRegister(BaseModel):
     """Request schema for user registration."""
+
     email: EmailStr
     username: str = Field(..., min_length=3, max_length=50, pattern="^[a-zA-Z0-9_-]+$")
     password: str = Field(..., min_length=8, max_length=72)  # Bcrypt limit
     full_name: Optional[str] = Field(None, max_length=255)
 
-    @field_validator('password')
+    @field_validator("password")
     @classmethod
     def validate_password(cls, v):
         """Ensure password meets strength requirements"""
         # Check byte length (bcrypt limit is 72 bytes)
-        if len(v.encode('utf-8')) > 72:
+        if len(v.encode("utf-8")) > 72:
             raise ValueError("Password cannot be longer than 72 bytes")
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters long")
@@ -32,12 +34,14 @@ class UserRegister(BaseModel):
 
 class UserLogin(BaseModel):
     """Request schema for user login."""
+
     username: str  # Can be username or email
     password: str
 
 
 class UserResponse(BaseModel):
     """Response schema for user information."""
+
     id: int
     email: str
     username: str
@@ -52,12 +56,14 @@ class UserResponse(BaseModel):
 
 class TokenResponse(BaseModel):
     """Response schema for login (JWT token)."""
+
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
 
 
 # ===== Phase 1: Upload Schemas =====
+
 
 class ColumnInfo(BaseModel):
     name: str
@@ -71,10 +77,12 @@ class ColumnInfo(BaseModel):
     mean: Optional[float] = None
     median: Optional[float] = None
 
+
 class DataSchema(BaseModel):
     columns: List[ColumnInfo]
     row_count: int
     preview: List[Dict[str, Any]]  # First 10 rows
+
 
 class UploadResponse(BaseModel):
     upload_id: str
@@ -82,10 +90,12 @@ class UploadResponse(BaseModel):
     data_schema: DataSchema
     upload_timestamp: datetime
 
+
 class ErrorResponse(BaseModel):
     error: str
     detail: str
     code: Optional[str] = None
+
 
 # Phase 2: Chart Generation Schemas
 class ChartData(BaseModel):
@@ -99,6 +109,7 @@ class ChartData(BaseModel):
     priority: int
     insight: Optional[str] = None  # Phase 3: AI-generated insight
 
+
 class AnalyzeResponse(BaseModel):
     upload_id: str
     filename: str
@@ -107,16 +118,19 @@ class AnalyzeResponse(BaseModel):
     upload_timestamp: datetime
     global_summary: Optional[str] = None  # Phase 3: Overall AI summary
 
+
 # Phase 4: Q&A Interface Schemas
 class QueryRequest(BaseModel):
     upload_id: str
     question: str
     conversation_id: Optional[str] = None  # For tracking conversation context
 
+
 class ConversationMessage(BaseModel):
     role: Literal["user", "assistant"]
     content: str
     timestamp: datetime
+
 
 class QueryResponse(BaseModel):
     answer: str
@@ -124,9 +138,11 @@ class QueryResponse(BaseModel):
     timestamp: datetime
     chart: Optional[ChartData] = None  # Phase 4B: Generated chart if requested
 
+
 # Phase 5: PDF Export Schemas
 class ExportRequest(BaseModel):
     upload_id: str
+
 
 class ExportResponse(BaseModel):
     export_id: str
@@ -138,6 +154,7 @@ class ExportResponse(BaseModel):
 # Phase 5B: Advanced Export Schemas (Mockup 6)
 class AdvancedExportRequest(BaseModel):
     """Request schema for advanced export with custom options."""
+
     project_id: Optional[int] = None  # For project exports
     file_id: Optional[int] = None  # For single file exports
     upload_id: Optional[str] = None  # Legacy support
@@ -157,7 +174,7 @@ class AdvancedExportRequest(BaseModel):
     # Chart-specific options
     chart_ids: Optional[List[int]] = None  # Specific charts to include (None = all)
 
-    @field_validator('export_format')
+    @field_validator("export_format")
     @classmethod
     def validate_export_format(cls, v):
         """Ensure export format is supported."""
@@ -169,6 +186,7 @@ class AdvancedExportRequest(BaseModel):
 
 class AdvancedExportResponse(BaseModel):
     """Response schema for advanced export."""
+
     export_id: str
     download_url: str
     filename: str
@@ -180,15 +198,18 @@ class AdvancedExportResponse(BaseModel):
 
 # ===== Phase 7: Projects & Multi-File Workspaces Schemas =====
 
+
 # Phase 7A: Project Management
 class ProjectCreate(BaseModel):
     """Request schema for creating a new project."""
+
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = Field(None, max_length=1000)
 
 
 class ProjectUpdate(BaseModel):
     """Request schema for updating an existing project."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = Field(None, max_length=1000)
     is_archived: Optional[bool] = None
@@ -196,6 +217,7 @@ class ProjectUpdate(BaseModel):
 
 class FileInProject(BaseModel):
     """Schema for file metadata within a project."""
+
     id: int
     project_id: int
     filename: str
@@ -213,6 +235,7 @@ class FileInProject(BaseModel):
 
 class ProjectResponse(BaseModel):
     """Response schema for project information."""
+
     id: int
     name: str
     description: Optional[str]
@@ -229,12 +252,14 @@ class ProjectResponse(BaseModel):
 
 class ProjectListResponse(BaseModel):
     """Response schema for listing projects."""
+
     projects: List[ProjectResponse]
     total: int
 
 
 class ProjectFileUploadResponse(BaseModel):
     """Response schema after uploading file to project."""
+
     file_id: int
     upload_id: str
     filename: str
@@ -247,6 +272,7 @@ class ProjectFileUploadResponse(BaseModel):
 # Phase 7B: File Comparison
 class ComparisonRequest(BaseModel):
     """Request schema for comparing two files."""
+
     file_a_id: int
     file_b_id: int
     comparison_type: Literal["trend", "yoy", "side_by_side"] = "side_by_side"
@@ -254,6 +280,7 @@ class ComparisonRequest(BaseModel):
 
 class OverlayChartData(BaseModel):
     """Schema for overlay chart with data from two files."""
+
     chart_type: Literal["line", "bar", "scatter"]
     title: str
     file_a_name: str
@@ -267,6 +294,7 @@ class OverlayChartData(BaseModel):
 
 class ComparisonResponse(BaseModel):
     """Response schema for file comparison."""
+
     comparison_id: int
     file_a: FileInProject
     file_b: FileInProject
@@ -279,6 +307,7 @@ class ComparisonResponse(BaseModel):
 # Phase 7C: File Merging
 class RelationshipCreate(BaseModel):
     """Request schema for creating a file relationship (for merging)."""
+
     file_a_id: int
     file_b_id: int
     join_type: Literal["inner", "left", "right", "outer"] = "inner"
@@ -290,6 +319,7 @@ class RelationshipCreate(BaseModel):
 
 class RelationshipResponse(BaseModel):
     """Response schema for file relationship."""
+
     id: int
     project_id: int
     file_a_id: int
@@ -304,11 +334,13 @@ class RelationshipResponse(BaseModel):
 
 class MergeAnalyzeRequest(BaseModel):
     """Request schema for analyzing merged data."""
+
     relationship_id: int
 
 
 class MergeAnalyzeResponse(BaseModel):
     """Response schema for merged data analysis."""
+
     relationship_id: int
     merged_row_count: int
     merged_schema: DataSchema
@@ -319,6 +351,7 @@ class MergeAnalyzeResponse(BaseModel):
 # Dashboard schemas
 class DashboardCreate(BaseModel):
     """Request schema for creating a dashboard."""
+
     name: str = Field(..., min_length=1, max_length=255)
     dashboard_type: Literal["single_file", "comparison", "merged"]
     config_json: str  # JSON string with chart configs, file IDs, etc.
@@ -326,6 +359,7 @@ class DashboardCreate(BaseModel):
 
 class DashboardUpdate(BaseModel):
     """Request schema for updating a dashboard."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     config_json: Optional[str] = None
     chart_data: Optional[str] = None
@@ -333,6 +367,7 @@ class DashboardUpdate(BaseModel):
 
 class DashboardResponse(BaseModel):
     """Response schema for dashboard information."""
+
     id: int
     project_id: int
     name: str
@@ -348,6 +383,7 @@ class DashboardResponse(BaseModel):
 
 class DashboardListResponse(BaseModel):
     """Response schema for listing dashboards in a project."""
+
     dashboards: List[DashboardResponse]
     total: int
 
@@ -355,6 +391,7 @@ class DashboardListResponse(BaseModel):
 # Analysis History schemas
 class AnalysisHistoryItem(BaseModel):
     """Schema for a single analysis history entry."""
+
     analysis_id: str  # Generated from timestamp
     file_id: int
     filename: str
@@ -366,6 +403,7 @@ class AnalysisHistoryItem(BaseModel):
 
 class AnalysisHistoryResponse(BaseModel):
     """Response schema for analysis history."""
+
     file_id: int
     filename: str
     total_analyses: int
@@ -375,11 +413,15 @@ class AnalysisHistoryResponse(BaseModel):
 # Phase 7D: File Analysis (Persistent Analysis Results)
 class FileAnalyzeRequest(BaseModel):
     """Request schema for analyzing a file in a project."""
-    user_intent: Optional[str] = Field(None, max_length=500, description="User's intent or question for analysis")
+
+    user_intent: Optional[str] = Field(
+        None, max_length=500, description="User's intent or question for analysis"
+    )
 
 
 class FileAnalysisResponse(BaseModel):
     """Response schema for file analysis results."""
+
     file_id: int
     filename: str
     charts: List[ChartData]

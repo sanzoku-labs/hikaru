@@ -2,12 +2,14 @@ import logging
 from datetime import datetime
 
 import pandas as pd
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
+from app.database import get_db
 from app.models.schemas import ChartData, QueryRequest, QueryResponse
 from app.services.ai_service import AIService
 from app.services.chart_generator import ChartGenerator
-from app.storage import get_upload
+from app.services.upload_service import UploadService
 
 logger = logging.getLogger(__name__)
 
@@ -15,17 +17,16 @@ router = APIRouter(prefix="/api", tags=["query"])
 
 
 @router.post("/query", response_model=QueryResponse)
-async def query_data(request: QueryRequest):
+async def query_data(request: QueryRequest, db: Session = Depends(get_db)):
     """
     Answer natural language questions about uploaded data.
 
     Phase 4A: Returns text-only answers with conversation context.
     Phase 4B: Generates charts when user requests visualization.
     """
-    # Validate upload_id exists
-    upload_data = get_upload(request.upload_id)
-    if not upload_data:
-        raise HTTPException(status_code=404, detail=f"Upload ID {request.upload_id} not found")
+    # Get upload data from database using UploadService
+    upload_service = UploadService(db)
+    upload_data = upload_service.get_upload(request.upload_id)
 
     schema = upload_data["schema"]
     df = upload_data["dataframe"]

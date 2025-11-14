@@ -2,7 +2,8 @@
 Database models for user authentication and session management.
 """
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Text
+
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -11,6 +12,7 @@ Base = declarative_base()
 
 class User(Base):
     """User model for authentication."""
+
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -34,11 +36,14 @@ class User(Base):
 
 class Session(Base):
     """Session model for tracking user sessions and JWT tokens."""
+
     __tablename__ = "sessions"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    token_jti = Column(String(255), unique=True, index=True, nullable=False)  # JWT ID for token tracking
+    token_jti = Column(
+        String(255), unique=True, index=True, nullable=False
+    )  # JWT ID for token tracking
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     expires_at = Column(DateTime, nullable=False)
     last_activity = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -55,15 +60,23 @@ class Session(Base):
 
 class Upload(Base):
     """Upload model to track which user uploaded which file."""
+
     __tablename__ = "uploads"
 
     id = Column(Integer, primary_key=True, index=True)
-    upload_id = Column(String(255), unique=True, index=True, nullable=False)  # UUID from existing system
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    upload_id = Column(
+        String(255), unique=True, index=True, nullable=False
+    )  # UUID from existing system
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # Made nullable for backward compatibility
     filename = Column(String(255), nullable=False)
-    file_size = Column(Integer, nullable=False)  # Size in bytes
+    file_size = Column(Integer, nullable=True)  # Size in bytes - nullable for backward compatibility
     uploaded_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    expires_at = Column(DateTime, nullable=False)  # Auto-cleanup after 1 hour
+    expires_at = Column(DateTime, nullable=True)  # Auto-cleanup after 1 hour - nullable for backward compatibility
+
+    # Data storage fields (replaces in-memory storage.py)
+    schema_json = Column(Text, nullable=True)  # JSON string of DataSchema
+    data_csv = Column(Text, nullable=True)  # CSV string of DataFrame
+    upload_date = Column(DateTime, default=datetime.utcnow, nullable=False)  # Duplicate of uploaded_at for compatibility
 
     # Relationships
     user = relationship("User", back_populates="uploads")
@@ -74,6 +87,7 @@ class Upload(Base):
 
 class Project(Base):
     """Project model for organizing multiple files into workspaces."""
+
     __tablename__ = "projects"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -88,7 +102,9 @@ class Project(Base):
     user = relationship("User", back_populates="projects")
     files = relationship("File", back_populates="project", cascade="all, delete-orphan")
     dashboards = relationship("Dashboard", back_populates="project", cascade="all, delete-orphan")
-    relationships = relationship("FileRelationship", back_populates="project", cascade="all, delete-orphan")
+    relationships = relationship(
+        "FileRelationship", back_populates="project", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<Project(id={self.id}, name={self.name}, user_id={self.user_id})>"
@@ -96,12 +112,15 @@ class Project(Base):
 
 class File(Base):
     """File model to track files within projects."""
+
     __tablename__ = "files"
 
     id = Column(Integer, primary_key=True, index=True)
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False)
     filename = Column(String(255), nullable=False)
-    upload_id = Column(String(255), unique=True, index=True, nullable=False)  # Links to existing upload system
+    upload_id = Column(
+        String(255), unique=True, index=True, nullable=False
+    )  # Links to existing upload system
     file_path = Column(String(512), nullable=False)  # Storage path
     file_size = Column(Integer, nullable=False)  # Size in bytes
     row_count = Column(Integer, nullable=True)  # Number of rows in dataset
@@ -109,7 +128,9 @@ class File(Base):
     uploaded_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Analysis fields (for persistent analysis results)
-    analysis_json = Column(Text, nullable=True)  # JSON string of analysis results (charts, insights)
+    analysis_json = Column(
+        Text, nullable=True
+    )  # JSON string of analysis results (charts, insights)
     analysis_timestamp = Column(DateTime, nullable=True)  # When analysis was last run
     user_intent = Column(Text, nullable=True)  # User's intent when analysis was run
 
@@ -122,6 +143,7 @@ class File(Base):
 
 class FileRelationship(Base):
     """FileRelationship model to define relationships between files (for merging/comparison)."""
+
     __tablename__ = "file_relationships"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -143,6 +165,7 @@ class FileRelationship(Base):
 
 class Dashboard(Base):
     """Dashboard model to save chart configurations and analyses."""
+
     __tablename__ = "dashboards"
 
     id = Column(Integer, primary_key=True, index=True)

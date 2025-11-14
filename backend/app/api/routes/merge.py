@@ -3,34 +3,41 @@ File merging and relationship API endpoints for Phase 7C.
 
 Handles creating relationships between files and analyzing merged datasets.
 """
+import json
+from datetime import datetime
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
-from datetime import datetime
+
 from app.database import get_db
 from app.middleware.auth import get_current_active_user
+from app.models.database import File as FileModel
+from app.models.database import FileRelationship, Project, User
 from app.models.schemas import (
-    RelationshipCreate,
-    RelationshipResponse,
+    ChartData,
     MergeAnalyzeRequest,
     MergeAnalyzeResponse,
-    ChartData
+    RelationshipCreate,
+    RelationshipResponse,
 )
-from app.models.database import User, Project, File as FileModel, FileRelationship
-from app.services.merge_service import MergeService
-from app.services.chart_generator import ChartGenerator
 from app.services.ai_service import AIService
-import json
+from app.services.chart_generator import ChartGenerator
+from app.services.merge_service import MergeService
 
 router = APIRouter(prefix="/api/projects", tags=["merge"])
 
 
-@router.post("/{project_id}/relationships", response_model=RelationshipResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{project_id}/relationships",
+    response_model=RelationshipResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_relationship(
     project_id: int,
     relationship_data: RelationshipCreate,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Create a relationship between two files for merging.
@@ -51,32 +58,34 @@ async def create_relationship(
     """
     try:
         # Verify project exists
-        project = db.query(Project).filter(
-            Project.id == project_id,
-            Project.user_id == current_user.id
-        ).first()
+        project = (
+            db.query(Project)
+            .filter(Project.id == project_id, Project.user_id == current_user.id)
+            .first()
+        )
 
         if not project:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Project {project_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
             )
 
         # Get files
-        file_a = db.query(FileModel).filter(
-            FileModel.id == relationship_data.file_a_id,
-            FileModel.project_id == project_id
-        ).first()
+        file_a = (
+            db.query(FileModel)
+            .filter(FileModel.id == relationship_data.file_a_id, FileModel.project_id == project_id)
+            .first()
+        )
 
-        file_b = db.query(FileModel).filter(
-            FileModel.id == relationship_data.file_b_id,
-            FileModel.project_id == project_id
-        ).first()
+        file_b = (
+            db.query(FileModel)
+            .filter(FileModel.id == relationship_data.file_b_id, FileModel.project_id == project_id)
+            .first()
+        )
 
         if not file_a or not file_b:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="One or both files not found in project"
+                detail="One or both files not found in project",
             )
 
         # Validate merge compatibility
@@ -86,15 +95,13 @@ async def create_relationship(
         df_b = merge_service.load_file(file_b.file_path)
 
         compatibility = merge_service.validate_merge_compatibility(
-            df_a, df_b,
-            relationship_data.left_key,
-            relationship_data.right_key
+            df_a, df_b, relationship_data.left_key, relationship_data.right_key
         )
 
         if not compatibility["compatible"]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Files are not compatible for merge: {', '.join(compatibility['warnings'])}"
+                detail=f"Files are not compatible for merge: {', '.join(compatibility['warnings'])}",
             )
 
         # Create relationship config
@@ -104,7 +111,7 @@ async def create_relationship(
             "right_key": relationship_data.right_key,
             "left_suffix": relationship_data.left_suffix,
             "right_suffix": relationship_data.right_suffix,
-            "compatibility": compatibility
+            "compatibility": compatibility,
         }
 
         # Store relationship
@@ -113,7 +120,7 @@ async def create_relationship(
             file_a_id=file_a.id,
             file_b_id=file_b.id,
             relationship_type="merge",
-            config_json=json.dumps(config)
+            config_json=json.dumps(config),
         )
 
         db.add(relationship)
@@ -128,7 +135,7 @@ async def create_relationship(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create relationship: {str(e)}"
+            detail=f"Failed to create relationship: {str(e)}",
         )
 
 
@@ -136,7 +143,7 @@ async def create_relationship(
 async def list_relationships(
     project_id: int,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     List all relationships in a project.
@@ -153,20 +160,20 @@ async def list_relationships(
         HTTP 404: If project not found
     """
     try:
-        project = db.query(Project).filter(
-            Project.id == project_id,
-            Project.user_id == current_user.id
-        ).first()
+        project = (
+            db.query(Project)
+            .filter(Project.id == project_id, Project.user_id == current_user.id)
+            .first()
+        )
 
         if not project:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Project {project_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
             )
 
-        relationships = db.query(FileRelationship).filter(
-            FileRelationship.project_id == project_id
-        ).all()
+        relationships = (
+            db.query(FileRelationship).filter(FileRelationship.project_id == project_id).all()
+        )
 
         return [RelationshipResponse.model_validate(r) for r in relationships]
 
@@ -175,16 +182,18 @@ async def list_relationships(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list relationships: {str(e)}"
+            detail=f"Failed to list relationships: {str(e)}",
         )
 
 
-@router.delete("/{project_id}/relationships/{relationship_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{project_id}/relationships/{relationship_id}", status_code=status.HTTP_204_NO_CONTENT
+)
 async def delete_relationship(
     project_id: int,
     relationship_id: int,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Delete a file relationship.
@@ -199,26 +208,29 @@ async def delete_relationship(
         HTTP 404: If project or relationship not found
     """
     try:
-        project = db.query(Project).filter(
-            Project.id == project_id,
-            Project.user_id == current_user.id
-        ).first()
+        project = (
+            db.query(Project)
+            .filter(Project.id == project_id, Project.user_id == current_user.id)
+            .first()
+        )
 
         if not project:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Project {project_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
             )
 
-        relationship = db.query(FileRelationship).filter(
-            FileRelationship.id == relationship_id,
-            FileRelationship.project_id == project_id
-        ).first()
+        relationship = (
+            db.query(FileRelationship)
+            .filter(
+                FileRelationship.id == relationship_id, FileRelationship.project_id == project_id
+            )
+            .first()
+        )
 
         if not relationship:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Relationship {relationship_id} not found"
+                detail=f"Relationship {relationship_id} not found",
             )
 
         db.delete(relationship)
@@ -230,7 +242,7 @@ async def delete_relationship(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete relationship: {str(e)}"
+            detail=f"Failed to delete relationship: {str(e)}",
         )
 
 
@@ -239,7 +251,7 @@ async def analyze_merged_data(
     project_id: int,
     merge_request: MergeAnalyzeRequest,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Analyze merged data from a relationship and generate charts.
@@ -259,28 +271,32 @@ async def analyze_merged_data(
     """
     try:
         # Verify project exists
-        project = db.query(Project).filter(
-            Project.id == project_id,
-            Project.user_id == current_user.id
-        ).first()
+        project = (
+            db.query(Project)
+            .filter(Project.id == project_id, Project.user_id == current_user.id)
+            .first()
+        )
 
         if not project:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Project {project_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
             )
 
         # Get relationship
-        relationship = db.query(FileRelationship).filter(
-            FileRelationship.id == merge_request.relationship_id,
-            FileRelationship.project_id == project_id,
-            FileRelationship.relationship_type == "merge"
-        ).first()
+        relationship = (
+            db.query(FileRelationship)
+            .filter(
+                FileRelationship.id == merge_request.relationship_id,
+                FileRelationship.project_id == project_id,
+                FileRelationship.relationship_type == "merge",
+            )
+            .first()
+        )
 
         if not relationship:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Merge relationship {merge_request.relationship_id} not found"
+                detail=f"Merge relationship {merge_request.relationship_id} not found",
             )
 
         # Load config
@@ -292,8 +308,7 @@ async def analyze_merged_data(
 
         if not file_a or not file_b:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Associated files not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Associated files not found"
             )
 
         # Merge files
@@ -303,12 +318,13 @@ async def analyze_merged_data(
         df_b = merge_service.load_file(file_b.file_path)
 
         merged_df, merged_schema = merge_service.merge_files(
-            df_a, df_b,
+            df_a,
+            df_b,
             config["left_key"],
             config["right_key"],
             config["join_type"],
             config.get("left_suffix", "_a"),
-            config.get("right_suffix", "_b")
+            config.get("right_suffix", "_b"),
         )
 
         # Generate charts from merged data
@@ -320,18 +336,19 @@ async def analyze_merged_data(
 
         # Add insights to charts by creating new chart objects
         from app.models.schemas import ChartData
+
         charts_with_insights = []
         for chart_data in charts_data:
             insight = ai_service.generate_chart_insight(chart_data, merged_schema)
             chart_dict = chart_data if isinstance(chart_data, dict) else chart_data.model_dump()
-            chart_dict['insight'] = insight
+            chart_dict["insight"] = insight
             charts_with_insights.append(ChartData(**chart_dict))
 
         # Generate global summary
         global_summary = ai_service.generate_global_summary(
             filename=f"Merged: {file_a.filename} + {file_b.filename}",
             schema=merged_schema,
-            charts=charts_with_insights
+            charts=charts_with_insights,
         )
 
         return MergeAnalyzeResponse(
@@ -339,7 +356,7 @@ async def analyze_merged_data(
             merged_row_count=len(merged_df),
             merged_schema=merged_schema,
             charts=charts_with_insights,
-            global_summary=global_summary
+            global_summary=global_summary,
         )
 
     except HTTPException:
@@ -347,5 +364,5 @@ async def analyze_merged_data(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to analyze merged data: {str(e)}"
+            detail=f"Failed to analyze merged data: {str(e)}",
         )

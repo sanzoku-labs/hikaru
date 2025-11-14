@@ -3,10 +3,12 @@ Merge service for Phase 7C - File Merging.
 
 Handles merging two files using SQL-like joins (inner, left, right, outer).
 """
-import pandas as pd
-from typing import Tuple
 from pathlib import Path
-from app.models.schemas import DataSchema, ColumnInfo
+from typing import Tuple
+
+import pandas as pd
+
+from app.models.schemas import ColumnInfo, DataSchema
 from app.services.data_processor import DataProcessor
 
 
@@ -28,9 +30,9 @@ class MergeService:
         """
         file_path = Path(file_path)
 
-        if file_path.suffix == '.csv':
+        if file_path.suffix == ".csv":
             return pd.read_csv(file_path)
-        elif file_path.suffix == '.xlsx':
+        elif file_path.suffix == ".xlsx":
             return pd.read_excel(file_path)
         else:
             raise ValueError(f"Unsupported file type: {file_path.suffix}")
@@ -43,7 +45,7 @@ class MergeService:
         right_key: str,
         join_type: str = "inner",
         left_suffix: str = "_a",
-        right_suffix: str = "_b"
+        right_suffix: str = "_b",
     ) -> Tuple[pd.DataFrame, DataSchema]:
         """
         Merge two DataFrames.
@@ -77,7 +79,7 @@ class MergeService:
                 left_on=left_key,
                 right_on=right_key,
                 how=join_type,
-                suffixes=(left_suffix, right_suffix)
+                suffixes=(left_suffix, right_suffix),
             )
 
             if len(merged_df) == 0:
@@ -123,7 +125,7 @@ class MergeService:
                     min=min_val,
                     max=max_val,
                     mean=mean_val,
-                    median=median_val
+                    median=median_val,
                 )
 
             elif pd.api.types.is_datetime64_any_dtype(col_data):
@@ -134,7 +136,7 @@ class MergeService:
                     name=col_name,
                     type=col_type,
                     null_count=null_count,
-                    sample_values=col_data.dropna().astype(str).head(5).tolist()
+                    sample_values=col_data.dropna().astype(str).head(5).tolist(),
                 )
 
             else:
@@ -147,26 +149,18 @@ class MergeService:
                     type=col_type,
                     null_count=null_count,
                     unique_values=unique_values,
-                    sample_values=col_data.dropna().head(5).tolist()
+                    sample_values=col_data.dropna().head(5).tolist(),
                 )
 
             columns.append(column_info)
 
         # Get preview (first 10 rows)
-        preview = df.head(10).fillna("").to_dict('records')
+        preview = df.head(10).fillna("").to_dict("records")
 
-        return DataSchema(
-            columns=columns,
-            row_count=len(df),
-            preview=preview
-        )
+        return DataSchema(columns=columns, row_count=len(df), preview=preview)
 
     def validate_merge_compatibility(
-        self,
-        df_a: pd.DataFrame,
-        df_b: pd.DataFrame,
-        left_key: str,
-        right_key: str
+        self, df_a: pd.DataFrame, df_b: pd.DataFrame, left_key: str, right_key: str
     ) -> dict:
         """
         Validate if two files can be merged on given keys.
@@ -183,12 +177,7 @@ class MergeService:
         result = {
             "compatible": True,
             "warnings": [],
-            "estimated_row_count": {
-                "inner": 0,
-                "left": len(df_a),
-                "right": len(df_b),
-                "outer": 0
-            }
+            "estimated_row_count": {"inner": 0, "left": len(df_a), "right": len(df_b), "outer": 0},
         }
 
         # Check if keys exist
@@ -226,7 +215,11 @@ class MergeService:
             )
 
         # Rough estimates (actual counts may vary)
-        result["estimated_row_count"]["inner"] = max(1, int(len(df_a) * matching_keys / max(len(unique_a), 1)))
-        result["estimated_row_count"]["outer"] = len(df_a) + len(df_b) - result["estimated_row_count"]["inner"]
+        result["estimated_row_count"]["inner"] = max(
+            1, int(len(df_a) * matching_keys / max(len(unique_a), 1))
+        )
+        result["estimated_row_count"]["outer"] = (
+            len(df_a) + len(df_b) - result["estimated_row_count"]["inner"]
+        )
 
         return result

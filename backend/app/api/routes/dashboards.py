@@ -2,31 +2,36 @@
 Dashboard CRUD API routes for custom dashboard management.
 Implements Mockup 9 - Dashboard Builder backend support.
 """
-from fastapi import APIRouter, HTTPException, Depends, status
-from sqlalchemy.orm import Session
-from typing import List
 import json
+from typing import List
 
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.middleware.auth import get_current_active_user
+from app.models.database import Dashboard, Project, User
 from app.models.schemas import (
     DashboardCreate,
-    DashboardUpdate,
-    DashboardResponse,
     DashboardListResponse,
-    ErrorResponse
+    DashboardResponse,
+    DashboardUpdate,
+    ErrorResponse,
 )
-from app.models.database import User, Project, Dashboard
-from app.middleware.auth import get_current_active_user
-from app.database import get_db
 
 router = APIRouter(prefix="/api/projects", tags=["dashboards"])
 
 
-@router.post("/{project_id}/dashboards", response_model=DashboardResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{project_id}/dashboards",
+    response_model=DashboardResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_dashboard(
     project_id: int,
     dashboard: DashboardCreate,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Create a new dashboard in a project.
@@ -47,15 +52,15 @@ async def create_dashboard(
     """
     try:
         # Verify project exists and user owns it
-        project = db.query(Project).filter(
-            Project.id == project_id,
-            Project.user_id == current_user.id
-        ).first()
+        project = (
+            db.query(Project)
+            .filter(Project.id == project_id, Project.user_id == current_user.id)
+            .first()
+        )
 
         if not project:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Project {project_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
             )
 
         # Validate config_json is valid JSON
@@ -63,8 +68,7 @@ async def create_dashboard(
             json.loads(dashboard.config_json)
         except json.JSONDecodeError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="config_json must be valid JSON"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="config_json must be valid JSON"
             )
 
         # Create dashboard
@@ -72,7 +76,7 @@ async def create_dashboard(
             project_id=project_id,
             name=dashboard.name,
             dashboard_type=dashboard.dashboard_type,
-            config_json=dashboard.config_json
+            config_json=dashboard.config_json,
         )
 
         db.add(db_dashboard)
@@ -87,7 +91,7 @@ async def create_dashboard(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create dashboard: {str(e)}"
+            detail=f"Failed to create dashboard: {str(e)}",
         )
 
 
@@ -95,7 +99,7 @@ async def create_dashboard(
 async def list_dashboards(
     project_id: int,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     List all dashboards in a project.
@@ -113,25 +117,28 @@ async def list_dashboards(
     """
     try:
         # Verify project exists and user owns it
-        project = db.query(Project).filter(
-            Project.id == project_id,
-            Project.user_id == current_user.id
-        ).first()
+        project = (
+            db.query(Project)
+            .filter(Project.id == project_id, Project.user_id == current_user.id)
+            .first()
+        )
 
         if not project:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Project {project_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
             )
 
         # Get all dashboards for project
-        dashboards = db.query(Dashboard).filter(
-            Dashboard.project_id == project_id
-        ).order_by(Dashboard.updated_at.desc()).all()
+        dashboards = (
+            db.query(Dashboard)
+            .filter(Dashboard.project_id == project_id)
+            .order_by(Dashboard.updated_at.desc())
+            .all()
+        )
 
         return DashboardListResponse(
             dashboards=[DashboardResponse.model_validate(d) for d in dashboards],
-            total=len(dashboards)
+            total=len(dashboards),
         )
 
     except HTTPException:
@@ -139,7 +146,7 @@ async def list_dashboards(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list dashboards: {str(e)}"
+            detail=f"Failed to list dashboards: {str(e)}",
         )
 
 
@@ -148,7 +155,7 @@ async def get_dashboard(
     project_id: int,
     dashboard_id: int,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get a specific dashboard by ID.
@@ -167,27 +174,28 @@ async def get_dashboard(
     """
     try:
         # Verify project exists and user owns it
-        project = db.query(Project).filter(
-            Project.id == project_id,
-            Project.user_id == current_user.id
-        ).first()
+        project = (
+            db.query(Project)
+            .filter(Project.id == project_id, Project.user_id == current_user.id)
+            .first()
+        )
 
         if not project:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Project {project_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
             )
 
         # Get dashboard
-        dashboard = db.query(Dashboard).filter(
-            Dashboard.id == dashboard_id,
-            Dashboard.project_id == project_id
-        ).first()
+        dashboard = (
+            db.query(Dashboard)
+            .filter(Dashboard.id == dashboard_id, Dashboard.project_id == project_id)
+            .first()
+        )
 
         if not dashboard:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Dashboard {dashboard_id} not found in project {project_id}"
+                detail=f"Dashboard {dashboard_id} not found in project {project_id}",
             )
 
         return DashboardResponse.model_validate(dashboard)
@@ -197,7 +205,7 @@ async def get_dashboard(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get dashboard: {str(e)}"
+            detail=f"Failed to get dashboard: {str(e)}",
         )
 
 
@@ -207,7 +215,7 @@ async def update_dashboard(
     dashboard_id: int,
     dashboard_update: DashboardUpdate,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Update a dashboard's configuration.
@@ -229,27 +237,28 @@ async def update_dashboard(
     """
     try:
         # Verify project exists and user owns it
-        project = db.query(Project).filter(
-            Project.id == project_id,
-            Project.user_id == current_user.id
-        ).first()
+        project = (
+            db.query(Project)
+            .filter(Project.id == project_id, Project.user_id == current_user.id)
+            .first()
+        )
 
         if not project:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Project {project_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
             )
 
         # Get dashboard
-        dashboard = db.query(Dashboard).filter(
-            Dashboard.id == dashboard_id,
-            Dashboard.project_id == project_id
-        ).first()
+        dashboard = (
+            db.query(Dashboard)
+            .filter(Dashboard.id == dashboard_id, Dashboard.project_id == project_id)
+            .first()
+        )
 
         if not dashboard:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Dashboard {dashboard_id} not found in project {project_id}"
+                detail=f"Dashboard {dashboard_id} not found in project {project_id}",
             )
 
         # Update fields
@@ -262,8 +271,7 @@ async def update_dashboard(
                 json.loads(dashboard_update.config_json)
             except json.JSONDecodeError:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="config_json must be valid JSON"
+                    status_code=status.HTTP_400_BAD_REQUEST, detail="config_json must be valid JSON"
                 )
             dashboard.config_json = dashboard_update.config_json
 
@@ -281,7 +289,7 @@ async def update_dashboard(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update dashboard: {str(e)}"
+            detail=f"Failed to update dashboard: {str(e)}",
         )
 
 
@@ -290,7 +298,7 @@ async def delete_dashboard(
     project_id: int,
     dashboard_id: int,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Delete a dashboard.
@@ -310,27 +318,28 @@ async def delete_dashboard(
     """
     try:
         # Verify project exists and user owns it
-        project = db.query(Project).filter(
-            Project.id == project_id,
-            Project.user_id == current_user.id
-        ).first()
+        project = (
+            db.query(Project)
+            .filter(Project.id == project_id, Project.user_id == current_user.id)
+            .first()
+        )
 
         if not project:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Project {project_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Project {project_id} not found"
             )
 
         # Get dashboard
-        dashboard = db.query(Dashboard).filter(
-            Dashboard.id == dashboard_id,
-            Dashboard.project_id == project_id
-        ).first()
+        dashboard = (
+            db.query(Dashboard)
+            .filter(Dashboard.id == dashboard_id, Dashboard.project_id == project_id)
+            .first()
+        )
 
         if not dashboard:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Dashboard {dashboard_id} not found in project {project_id}"
+                detail=f"Dashboard {dashboard_id} not found in project {project_id}",
             )
 
         db.delete(dashboard)
@@ -342,5 +351,5 @@ async def delete_dashboard(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete dashboard: {str(e)}"
+            detail=f"Failed to delete dashboard: {str(e)}",
         )

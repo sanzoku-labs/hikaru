@@ -4,7 +4,7 @@ interface User {
   id: number;
   email: string;
   username: string;
-  full_name: string | null;
+  full_name?: string;
   is_active: boolean;
   is_superuser: boolean;
   created_at: string;

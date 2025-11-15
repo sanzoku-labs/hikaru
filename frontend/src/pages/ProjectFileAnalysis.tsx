@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../services/api";
-import type { FileAnalysisResponse } from "../types";
+import type { FileAnalysisResponse, FileInProject, DataSchema } from "../types";
 import { Layout } from "../components/Layout";
 import { Button } from "../components/ui/button";
 import {
@@ -45,6 +45,7 @@ export default function ProjectFileAnalysis() {
   const navigate = useNavigate();
 
   const [analysis, setAnalysis] = useState<FileAnalysisResponse | null>(null);
+  const [fileMetadata, setFileMetadata] = useState<FileInProject | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -57,27 +58,38 @@ export default function ProjectFileAnalysis() {
   const [exportModalOpen, setExportModalOpen] = useState(false);
 
   useEffect(() => {
-    loadAnalysis();
+    loadFileData();
   }, [projectId, fileId]);
 
-  const loadAnalysis = async () => {
+  const loadFileData = async () => {
     if (!projectId || !fileId) return;
 
     try {
       setLoading(true);
       setError(null);
-      const data = await api.getProjectFileAnalysis(
+
+      // Fetch file metadata
+      const file = await api.getProjectFile(
         parseInt(projectId),
         parseInt(fileId),
       );
-      setAnalysis(data);
-    } catch (err: any) {
-      // If no analysis exists, show dialog to create one
-      if (err.status === 404 && err.message.includes("No analysis found")) {
-        setShowReanalyzeDialog(true);
-      } else {
-        setError(err.message || "Failed to load analysis");
+      setFileMetadata(file);
+
+      // Fetch analysis if it exists
+      try {
+        const analysisData = await api.getProjectFileAnalysis(
+          parseInt(projectId),
+          parseInt(fileId),
+        );
+        setAnalysis(analysisData);
+      } catch (err: any) {
+        // If no analysis exists, show dialog to create one
+        if (err.status === 404 && err.message.includes("No analysis found")) {
+          setShowReanalyzeDialog(true);
+        }
       }
+    } catch (err: any) {
+      setError(err.message || "Failed to load file data");
     } finally {
       setLoading(false);
     }
@@ -128,6 +140,76 @@ export default function ProjectFileAnalysis() {
       setError(err.message || "Export failed");
       throw err;
     }
+  };
+
+  // Utility function to format file size
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+    if (bytes < 1024 * 1024 * 1024)
+      return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+  };
+
+  // Utility function to calculate file statistics from metadata
+  const calculateFileStats = () => {
+    if (!fileMetadata) {
+      return {
+        fileSize: "N/A",
+        rows: 0,
+        columns: 0,
+        dataQuality: 100,
+        missingValues: 0,
+        lastModified: "N/A",
+      };
+    }
+
+    let schema: DataSchema | null = null;
+    try {
+      schema = fileMetadata.data_schema_json
+        ? JSON.parse(fileMetadata.data_schema_json)
+        : null;
+    } catch (e) {
+      console.error("Failed to parse data_schema_json:", e);
+    }
+
+    const columnCount = schema?.columns?.length || 0;
+    const rowCount = fileMetadata.row_count || schema?.row_count || 0;
+    const totalCells = rowCount * columnCount;
+
+    // Calculate missing values from schema
+    const missingValues =
+      schema?.columns?.reduce((sum, col) => sum + (col.null_count || 0), 0) ||
+      0;
+
+    // Calculate data quality percentage
+    const dataQuality =
+      totalCells > 0 ? ((totalCells - missingValues) / totalCells) * 100 : 100;
+
+    // Format last modified date
+    const lastModified = fileMetadata.analyzed_at || fileMetadata.uploaded_at;
+    const lastModifiedDate = new Date(lastModified);
+    const now = new Date();
+    const diffMs = now.getTime() - lastModifiedDate.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    let lastModifiedStr = "";
+    if (diffMins < 1) lastModifiedStr = "Just now";
+    else if (diffMins < 60) lastModifiedStr = `${diffMins}m ago`;
+    else if (diffHours < 24) lastModifiedStr = `${diffHours}h ago`;
+    else if (diffDays < 7) lastModifiedStr = `${diffDays}d ago`;
+    else lastModifiedStr = lastModifiedDate.toLocaleDateString();
+
+    return {
+      fileSize: formatFileSize(fileMetadata.file_size),
+      rows: rowCount,
+      columns: columnCount,
+      dataQuality: dataQuality,
+      missingValues: missingValues,
+      lastModified: lastModifiedStr,
+    };
   };
 
   const getChartOption = (chart: any) => {
@@ -409,6 +491,61 @@ export default function ProjectFileAnalysis() {
           </div>
         </div>
       </header>
+
+      {/* File Info Bar - 6 columns */}
+      {loading ? (
+        <div className="bg-white border-b border-gray-200 px-8 py-6">
+          <div className="grid grid-cols-6 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i}>
+                <Skeleton className="h-4 w-20 mb-2" />
+                <Skeleton className="h-6 w-24" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white border-b border-gray-200 px-8 py-6">
+          <div className="grid grid-cols-6 gap-6">
+            <div>
+              <p className="text-gray-500 text-sm mb-1">File Size</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {calculateFileStats().fileSize}
+              </p>
+            </div>
+            <div>
+              <p className="text-gray-500 text-sm mb-1">Rows</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {calculateFileStats().rows.toLocaleString()}
+              </p>
+            </div>
+            <div>
+              <p className="text-gray-500 text-sm mb-1">Columns</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {calculateFileStats().columns}
+              </p>
+            </div>
+            <div>
+              <p className="text-gray-500 text-sm mb-1">Data Quality</p>
+              <p className="text-lg font-semibold text-green-600">
+                {calculateFileStats().dataQuality.toFixed(1)}%
+              </p>
+            </div>
+            <div>
+              <p className="text-gray-500 text-sm mb-1">Missing Values</p>
+              <p className="text-lg font-semibold text-orange-600">
+                {calculateFileStats().missingValues.toLocaleString()}
+              </p>
+            </div>
+            <div>
+              <p className="text-gray-500 text-sm mb-1">Last Modified</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {calculateFileStats().lastModified}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Scrollable Content Area */}
       <div className="px-8 py-6 space-y-6 overflow-auto">

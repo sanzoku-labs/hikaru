@@ -410,48 +410,6 @@ export default function ProjectFileAnalysis() {
         </div>
       </header>
 
-      {/* File Info Bar - 6 columns */}
-      <div className="bg-white border-b border-gray-200 px-8 py-6">
-        <div className="grid grid-cols-6 gap-6">
-          <div>
-            <p className="text-gray-500 text-sm mb-1">File Size</p>
-            <p className="text-lg font-semibold text-gray-900">
-              {fileStats.fileSize}
-            </p>
-          </div>
-          <div>
-            <p className="text-gray-500 text-sm mb-1">Rows</p>
-            <p className="text-lg font-semibold text-gray-900">
-              {fileStats.rows}
-            </p>
-          </div>
-          <div>
-            <p className="text-gray-500 text-sm mb-1">Columns</p>
-            <p className="text-lg font-semibold text-gray-900">
-              {fileStats.columns}
-            </p>
-          </div>
-          <div>
-            <p className="text-gray-500 text-sm mb-1">Data Quality</p>
-            <p className="text-lg font-semibold text-green-600">
-              {fileStats.dataQuality}
-            </p>
-          </div>
-          <div>
-            <p className="text-gray-500 text-sm mb-1">Missing Values</p>
-            <p className="text-lg font-semibold text-orange-600">
-              {fileStats.missingValues}
-            </p>
-          </div>
-          <div>
-            <p className="text-gray-500 text-sm mb-1">Last Modified</p>
-            <p className="text-lg font-semibold text-gray-900">
-              {fileStats.lastModified}
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Scrollable Content Area */}
       <div className="px-8 py-6 space-y-6 overflow-auto">
         {/* AI-Generated Insights Section - 2x2 Grid */}

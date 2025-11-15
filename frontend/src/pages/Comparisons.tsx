@@ -1,213 +1,329 @@
-import { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
-import { ComparisonToolbar } from "@/components/comparison/ComparisonToolbar";
-import { SplitViewPanel } from "@/components/comparison/SplitViewPanel";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Download } from "lucide-react";
-
-// Mock data for demonstration
-const mockFileA = {
-  id: 1,
-  name: "sales_q3_2024.csv",
-  rows: 1245,
-  columns: 12,
-  size: "2.3 MB",
-};
-
-const mockFileB = {
-  id: 2,
-  name: "sales_q4_2024.csv",
-  rows: 1387,
-  columns: 12,
-  size: "2.6 MB",
-};
-
-const mockColumns = [
-  "ID",
-  "Product",
-  "Category",
-  "Price",
-  "Quantity",
-  "Total",
-  "Date",
-  "Region",
-  "Customer",
-];
-
-// Generate mock data
-const generateMockData = (count: number) => {
-  return Array.from({ length: count }, (_, i) => ({
-    ID: i + 1,
-    Product: `Product ${i + 1}`,
-    Category: ["Electronics", "Clothing", "Food", "Books"][i % 4],
-    Price: (Math.random() * 100 + 10).toFixed(2),
-    Quantity: Math.floor(Math.random() * 20) + 1,
-    Total: (Math.random() * 1000 + 100).toFixed(2),
-    Date: new Date(
-      2024,
-      8 + Math.floor(i / 100),
-      (i % 28) + 1,
-    ).toLocaleDateString(),
-    Region: ["North", "South", "East", "West"][i % 4],
-    Customer: `Customer ${Math.floor(Math.random() * 100) + 1}`,
-  }));
-};
-
-const mockDataA = generateMockData(50);
-const mockDataB = generateMockData(50);
-
-// Mock differences (row index -> diff type)
-const mockDifferences = {
-  5: "added" as const,
-  12: "added" as const,
-  23: "removed" as const,
-  34: "modified" as const,
-  38: "modified" as const,
-  41: "added" as const,
-};
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowLeft, GitCompare, AlertCircle } from "lucide-react";
+import ReactECharts from "echarts-for-react";
+import { api } from "@/services/api";
+import type { FileInProject, ComparisonResponse } from "@/types";
 
 export function Comparisons() {
+  const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const [fileA] = useState(mockFileA);
-  const [fileB] = useState(mockFileB);
-  const [viewMode, setViewMode] = useState<"side-by-side" | "overlay">(
-    "side-by-side",
-  );
-  const [syncScroll, setSyncScroll] = useState(true);
 
-  const panelARef = useRef<HTMLDivElement>(null);
-  const panelBRef = useRef<HTMLDivElement>(null);
+  const [files, setFiles] = useState<FileInProject[]>([]);
+  const [fileAId, setFileAId] = useState<number | null>(null);
+  const [fileBId, setFileBId] = useState<number | null>(null);
+  const [comparison, setComparison] = useState<ComparisonResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [comparing, setComparing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Calculate difference stats
-  const diffStats = {
-    additions: Object.values(mockDifferences).filter((d) => d === "added")
-      .length,
-    deletions: Object.values(mockDifferences).filter((d) => d === "removed")
-      .length,
-    modifications: Object.values(mockDifferences).filter(
-      (d) => d === "modified",
-    ).length,
-  };
+  useEffect(() => {
+    loadFiles();
+  }, [projectId]);
 
-  const handleFileAClick = () => {
-    // TODO: Open file selector dialog
-    // File selector dialog implementation pending
-  };
+  const loadFiles = async () => {
+    if (!projectId) {
+      setError("No project selected. Please select a project first.");
+      setLoading(false);
+      return;
+    }
 
-  const handleFileBClick = () => {
-    // TODO: Open file selector dialog
-    // File selector dialog implementation pending
-  };
+    try {
+      setLoading(true);
+      setError(null);
+      const projectFiles = await api.listProjectFiles(parseInt(projectId));
+      setFiles(projectFiles);
 
-  const handleViewModeChange = (mode: "side-by-side" | "overlay") => {
-    setViewMode(mode);
-  };
-
-  const handleSyncScrollToggle = () => {
-    setSyncScroll(!syncScroll);
-  };
-
-  const handlePanelAScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (syncScroll && panelBRef.current) {
-      panelBRef.current.scrollTop = e.currentTarget.scrollTop;
+      // Auto-select first two files if available
+      if (projectFiles.length >= 2) {
+        setFileAId(projectFiles[0].id);
+        setFileBId(projectFiles[1].id);
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to load project files");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handlePanelBScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (syncScroll && panelARef.current) {
-      panelARef.current.scrollTop = e.currentTarget.scrollTop;
+  const handleCompare = async () => {
+    if (!projectId || !fileAId || !fileBId) return;
+
+    try {
+      setComparing(true);
+      setError(null);
+      const result = await api.compareFiles(parseInt(projectId), {
+        file_a_id: fileAId,
+        file_b_id: fileBId,
+        comparison_type: "side_by_side",
+      });
+      setComparison(result);
+    } catch (err: any) {
+      setError(err.message || "Failed to compare files");
+    } finally {
+      setComparing(false);
     }
   };
 
-  const handleGenerateMerge = () => {
-    // TODO: Navigate to merge page with pre-selected files
-    navigate("/merging");
+  const getChartOption = (chart: any) => {
+    const {
+      chart_type,
+      title,
+      x_column,
+      file_a_name,
+      file_b_name,
+      file_a_data,
+      file_b_data,
+    } = chart;
+
+    if (chart_type === "line" || chart_type === "bar") {
+      return {
+        title: { text: title, left: "center" },
+        tooltip: { trigger: "axis" },
+        legend: { data: [file_a_name, file_b_name], bottom: 10 },
+        xAxis: {
+          type: "category",
+          data: file_a_data.map((d: any) => d[x_column] || d.x),
+        },
+        yAxis: { type: "value" },
+        series: [
+          {
+            name: file_a_name,
+            type: chart_type,
+            data: file_a_data.map((d: any) => d.value || d.y),
+            itemStyle: { color: "#3b82f6" },
+          },
+          {
+            name: file_b_name,
+            type: chart_type,
+            data: file_b_data.map((d: any) => d.value || d.y),
+            itemStyle: { color: "#10b981" },
+          },
+        ],
+      };
+    }
+
+    return {};
   };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="p-6 space-y-6">
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-96 w-full" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!projectId) {
+    return (
+      <Layout>
+        <div className="p-6">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Please select a project from the Projects page to compare files.
+            </AlertDescription>
+          </Alert>
+          <Button onClick={() => navigate("/projects")} className="mt-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Go to Projects
+          </Button>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
-      <div className="flex flex-col h-[calc(100vh-4rem)]">
-        {/* Comparison Toolbar */}
-        <ComparisonToolbar
-          fileA={fileA}
-          fileB={fileB}
-          viewMode={viewMode}
-          syncScroll={syncScroll}
-          onFileAClick={handleFileAClick}
-          onFileBClick={handleFileBClick}
-          onViewModeChange={handleViewModeChange}
-          onSyncScrollToggle={handleSyncScrollToggle}
-        />
-
-        {/* Split View Panels */}
-        <div className="flex-1 flex overflow-hidden">
-          <div className="flex-1 overflow-hidden">
-            <SplitViewPanel
-              file={fileA}
-              data={mockDataA}
-              columns={mockColumns}
-              role="original"
-              onScroll={handlePanelAScroll}
-            />
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">File Comparison</h1>
+            <p className="text-muted-foreground mt-1">
+              Compare two files side-by-side with AI-powered insights
+            </p>
           </div>
-          <div className="flex-1 overflow-hidden">
-            <SplitViewPanel
-              file={fileB}
-              data={mockDataB}
-              columns={mockColumns}
-              role="comparison"
-              differences={mockDifferences}
-              onScroll={handlePanelBScroll}
-            />
-          </div>
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/projects/${projectId}`)}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Project
+          </Button>
         </div>
 
-        {/* Comparison Summary Footer */}
-        <div className="bg-white border-t border-gray-200 px-8 py-4">
-          <div className="flex items-center justify-between">
-            {/* Difference Stats */}
-            <div className="flex items-center space-x-6">
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-green-500 rounded-sm"></div>
-                <span className="text-sm text-gray-600">
-                  {diffStats.additions} additions
-                </span>
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* File Selection */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Select Files to Compare</CardTitle>
+            <CardDescription>
+              Choose two files from this project to analyze differences
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">File A</label>
+                <Select
+                  value={fileAId?.toString()}
+                  onValueChange={(value) => setFileAId(parseInt(value))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select first file" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {files.map((file) => (
+                      <SelectItem key={file.id} value={file.id.toString()}>
+                        {file.filename}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-red-500 rounded-sm"></div>
-                <span className="text-sm text-gray-600">
-                  {diffStats.deletions} deletions
-                </span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-yellow-500 rounded-sm"></div>
-                <span className="text-sm text-gray-600">
-                  {diffStats.modifications} modifications
-                </span>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">File B</label>
+                <Select
+                  value={fileBId?.toString()}
+                  onValueChange={(value) => setFileBId(parseInt(value))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select second file" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {files.map((file) => (
+                      <SelectItem key={file.id} value={file.id.toString()}>
+                        {file.filename}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center space-x-3">
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Previous Diff
-              </Button>
-              <Button variant="outline" size="sm">
-                Next Diff
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-              <Button
-                onClick={handleGenerateMerge}
-                className="bg-green-600 hover:bg-green-700 text-white"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Generate Merge
-              </Button>
-            </div>
+            <Button
+              onClick={handleCompare}
+              disabled={
+                !fileAId || !fileBId || comparing || fileAId === fileBId
+              }
+              className="w-full"
+            >
+              <GitCompare className="mr-2 h-4 w-4" />
+              {comparing ? "Comparing..." : "Compare Files"}
+            </Button>
+
+            {fileAId === fileBId && fileAId && (
+              <p className="text-sm text-orange-600">
+                Please select two different files to compare
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Comparison Results */}
+        {comparison && (
+          <div className="space-y-6">
+            {/* Summary Insight */}
+            {comparison.summary_insight && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Comparison Summary</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-700">{comparison.summary_insight}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Overlay Charts */}
+            {comparison.overlay_charts &&
+              comparison.overlay_charts.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {comparison.overlay_charts.map((chart, index) => (
+                    <Card key={index}>
+                      <CardHeader>
+                        <CardTitle>{chart.title}</CardTitle>
+                        {chart.comparison_insight && (
+                          <CardDescription className="mt-2">
+                            {chart.comparison_insight}
+                          </CardDescription>
+                        )}
+                      </CardHeader>
+                      <CardContent>
+                        <ReactECharts
+                          option={getChartOption(chart)}
+                          style={{ height: "350px" }}
+                        />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+            {/* No Charts Message */}
+            {(!comparison.overlay_charts ||
+              comparison.overlay_charts.length === 0) && (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <AlertCircle className="h-16 w-16 text-gray-400 mb-4" />
+                  <p className="text-lg font-medium mb-2">
+                    No Charts Generated
+                  </p>
+                  <p className="text-gray-600 text-center max-w-md">
+                    The comparison didn't generate any overlay charts. The files
+                    may have incompatible schemas.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </div>
-        </div>
+        )}
+
+        {/* No Files Message */}
+        {files.length < 2 && !loading && (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <AlertCircle className="h-16 w-16 text-gray-400 mb-4" />
+              <p className="text-lg font-medium mb-2">Not Enough Files</p>
+              <p className="text-gray-600 text-center max-w-md mb-6">
+                You need at least 2 files in this project to perform a
+                comparison.
+              </p>
+              <Button onClick={() => navigate(`/projects/${projectId}`)}>
+                Upload More Files
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </Layout>
   );

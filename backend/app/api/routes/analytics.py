@@ -11,7 +11,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_active_user, get_db
+from app.database import get_db
+from app.middleware.auth import get_current_active_user
 from app.models.database import File as FileModel
 from app.models.database import Project as ProjectModel
 from app.models.database import User

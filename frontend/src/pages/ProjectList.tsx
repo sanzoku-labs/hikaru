@@ -1,18 +1,37 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { api } from '@/services/api'
-import type { ProjectResponse, ProjectCreate } from '@/types'
-import { Layout } from '@/components/Layout'
-import { StatCard } from '@/components/shared/StatCard'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { api } from "@/services/api";
+import type { ProjectResponse, ProjectCreate } from "@/types";
+import { Layout } from "@/components/Layout";
+import { StatCard } from "@/components/shared/StatCard";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   FolderOpen,
   Plus,
@@ -25,107 +44,142 @@ import {
   List,
   BarChart3,
   FileSpreadsheet,
-  CheckCircle2
-} from 'lucide-react'
+  CheckCircle2,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from "@/components/ui/dropdown-menu";
 
 export function ProjectList() {
-  const navigate = useNavigate()
-  const [projects, setProjects] = useState<ProjectResponse[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false)
-  const [newProjectName, setNewProjectName] = useState('')
-  const [newProjectDescription, setNewProjectDescription] = useState('')
-  const [creating, setCreating] = useState(false)
+  const navigate = useNavigate();
+  const [projects, setProjects] = useState<ProjectResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
+  const [newProjectName, setNewProjectName] = useState("");
+  const [newProjectDescription, setNewProjectDescription] = useState("");
+  const [creating, setCreating] = useState(false);
 
   // Search and filter state
-  const [searchTerm, setSearchTerm] = useState('')
-  const [sortBy, setSortBy] = useState<'recent' | 'name' | 'files'>('recent')
-  const [filterBy, setFilterBy] = useState<'all' | 'active' | 'archived'>('all')
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<"recent" | "name" | "files">("recent");
+  const [filterBy, setFilterBy] = useState<"all" | "active" | "archived">(
+    "all",
+  );
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   useEffect(() => {
-    loadProjects()
-  }, [])
+    loadProjects();
+  }, []);
 
   const loadProjects = async () => {
     try {
-      setLoading(true)
-      setError(null)
-      const response = await api.listProjects(false)
-      setProjects(response.projects)
+      setLoading(true);
+      setError(null);
+      const response = await api.listProjects(false);
+      setProjects(response.projects);
     } catch (err: any) {
-      setError(err.message || 'Failed to load projects')
+      setError(err.message || "Failed to load projects");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleCreateProject = async () => {
-    if (!newProjectName.trim()) return
+    if (!newProjectName.trim()) return;
 
     try {
-      setCreating(true)
+      setCreating(true);
       const projectData: ProjectCreate = {
         name: newProjectName.trim(),
         description: newProjectDescription.trim() || undefined,
-      }
-      const project = await api.createProject(projectData)
-      setProjects([project, ...projects])
-      setNewProjectDialogOpen(false)
-      setNewProjectName('')
-      setNewProjectDescription('')
+      };
+      const project = await api.createProject(projectData);
+      setProjects([project, ...projects]);
+      setNewProjectDialogOpen(false);
+      setNewProjectName("");
+      setNewProjectDescription("");
       // Navigate to the new project
-      navigate(`/projects/${project.id}`)
+      navigate(`/projects/${project.id}`);
     } catch (err: any) {
-      setError(err.message || 'Failed to create project')
+      setError(err.message || "Failed to create project");
     } finally {
-      setCreating(false)
+      setCreating(false);
     }
-  }
+  };
+
+  const handleArchiveProject = async (projectId: number) => {
+    try {
+      await api.updateProject(projectId, { is_archived: true });
+      setProjects(
+        projects.map((p) =>
+          p.id === projectId ? { ...p, is_archived: true } : p,
+        ),
+      );
+    } catch (err: any) {
+      setError(err.message || "Failed to archive project");
+    }
+  };
+
+  const handleDeleteProject = async (projectId: number) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this project? This action cannot be undone.",
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await api.deleteProject(projectId);
+      setProjects(projects.filter((p) => p.id !== projectId));
+    } catch (err: any) {
+      setError(err.message || "Failed to delete project");
+    }
+  };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
 
   // Filter and sort projects
   const filteredAndSortedProjects = useMemo(() => {
-    let filtered = projects
+    let filtered = projects;
 
     // Apply search filter
     if (searchTerm) {
-      filtered = filtered.filter(project =>
-        project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.description?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      filtered = filtered.filter(
+        (project) =>
+          project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          project.description?.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
     }
 
     // Apply sorting
     const sorted = [...filtered].sort((a, b) => {
-      if (sortBy === 'recent') {
-        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-      } else if (sortBy === 'name') {
-        return a.name.localeCompare(b.name)
-      } else if (sortBy === 'files') {
-        return (b.file_count || 0) - (a.file_count || 0)
+      if (sortBy === "recent") {
+        return (
+          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+        );
+      } else if (sortBy === "name") {
+        return a.name.localeCompare(b.name);
+      } else if (sortBy === "files") {
+        return (b.file_count || 0) - (a.file_count || 0);
       }
-      return 0
-    })
+      return 0;
+    });
 
-    return sorted
-  }, [projects, searchTerm, sortBy])
+    return sorted;
+  }, [projects, searchTerm, sortBy]);
 
   // Get recent projects (top 3 by update time) - for future use
   // const recentProjects = useMemo(() => {
@@ -136,17 +190,20 @@ export function ProjectList() {
 
   // Calculate statistics
   const stats = useMemo(() => {
-    const total = projects.length
-    const active = projects.filter(p => !p.is_archived).length
-    const totalFiles = projects.reduce((sum, p) => sum + (p.file_count || 0), 0)
+    const total = projects.length;
+    const active = projects.filter((p) => !p.is_archived).length;
+    const totalFiles = projects.reduce(
+      (sum, p) => sum + (p.file_count || 0),
+      0,
+    );
 
     return {
       totalProjects: total,
       activeProjects: active,
       filesAnalyzed: totalFiles,
-      reportsGenerated: totalFiles * 2 // Mock: assume 2 reports per file
-    }
-  }, [projects])
+      reportsGenerated: totalFiles * 2, // Mock: assume 2 reports per file
+    };
+  }, [projects]);
 
   return (
     <Layout>
@@ -159,60 +216,65 @@ export function ProjectList() {
               Manage multi-file workspaces for complex data analysis
             </p>
           </div>
-          <Dialog open={newProjectDialogOpen} onOpenChange={setNewProjectDialogOpen}>
+          <Dialog
+            open={newProjectDialogOpen}
+            onOpenChange={setNewProjectDialogOpen}
+          >
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 New Project
               </Button>
             </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Project</DialogTitle>
-              <DialogDescription>
-                Create a workspace to upload and analyze multiple data files
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="project-name">Project Name *</Label>
-                <Input
-                  id="project-name"
-                  placeholder="e.g., Q4 Sales Analysis"
-                  value={newProjectName}
-                  onChange={(e) => setNewProjectName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleCreateProject()
-                  }}
-                />
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Project</DialogTitle>
+                <DialogDescription>
+                  Create a workspace to upload and analyze multiple data files
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="project-name">Project Name *</Label>
+                  <Input
+                    id="project-name"
+                    placeholder="e.g., Q4 Sales Analysis"
+                    value={newProjectName}
+                    onChange={(e) => setNewProjectName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleCreateProject();
+                    }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="project-description">
+                    Description (Optional)
+                  </Label>
+                  <Input
+                    id="project-description"
+                    placeholder="Brief description of this project..."
+                    value={newProjectDescription}
+                    onChange={(e) => setNewProjectDescription(e.target.value)}
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setNewProjectDialogOpen(false)}
+                    disabled={creating}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleCreateProject}
+                    disabled={!newProjectName.trim() || creating}
+                  >
+                    {creating ? "Creating..." : "Create Project"}
+                  </Button>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="project-description">Description (Optional)</Label>
-                <Input
-                  id="project-description"
-                  placeholder="Brief description of this project..."
-                  value={newProjectDescription}
-                  onChange={(e) => setNewProjectDescription(e.target.value)}
-                />
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setNewProjectDialogOpen(false)}
-                  disabled={creating}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleCreateProject}
-                  disabled={!newProjectName.trim() || creating}
-                >
-                  {creating ? 'Creating...' : 'Create Project'}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Error Alert */}
@@ -269,7 +331,10 @@ export function ProjectList() {
               />
             </div>
             <div className="flex gap-2">
-              <Select value={filterBy} onValueChange={(v: any) => setFilterBy(v)}>
+              <Select
+                value={filterBy}
+                onValueChange={(v: any) => setFilterBy(v)}
+              >
                 <SelectTrigger className="w-[140px]">
                   <SelectValue placeholder="Filter" />
                 </SelectTrigger>
@@ -293,17 +358,17 @@ export function ProjectList() {
 
               <div className="flex border rounded-md">
                 <Button
-                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  variant={viewMode === "grid" ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => setViewMode('grid')}
+                  onClick={() => setViewMode("grid")}
                   className="rounded-r-none"
                 >
                   <Grid3x3 className="h-4 w-4" />
                 </Button>
                 <Button
-                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  variant={viewMode === "list" ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => setViewMode('list')}
+                  onClick={() => setViewMode("list")}
                   className="rounded-l-none"
                 >
                   <List className="h-4 w-4" />
@@ -333,7 +398,8 @@ export function ProjectList() {
             <FolderOpen className="h-16 w-16 text-muted-foreground mb-4" />
             <h2 className="text-2xl font-bold mb-2">No Projects Yet</h2>
             <p className="text-muted-foreground mb-6 max-w-md">
-              Create your first project to start uploading and analyzing multiple data files together
+              Create your first project to start uploading and analyzing
+              multiple data files together
             </p>
             <Button onClick={() => setNewProjectDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -348,10 +414,13 @@ export function ProjectList() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">
-                  {searchTerm ? 'Search Results' : 'All Projects'}
+                  {searchTerm ? "Search Results" : "All Projects"}
                 </h2>
                 <span className="text-sm text-muted-foreground">
-                  {filteredAndSortedProjects.length} {filteredAndSortedProjects.length === 1 ? 'project' : 'projects'}
+                  {filteredAndSortedProjects.length}{" "}
+                  {filteredAndSortedProjects.length === 1
+                    ? "project"
+                    : "projects"}
                 </span>
               </div>
 
@@ -363,11 +432,21 @@ export function ProjectList() {
                   </p>
                 </div>
               ) : (
-                <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
+                <div
+                  className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"}`}
+                >
                   {filteredAndSortedProjects.map((project) => {
-                    const status = project.is_archived ? 'Archived' : (project.file_count || 0) > 0 ? 'Active' : 'Empty'
-                    const statusColor = status === 'Active' ? 'bg-emerald-100 text-emerald-700' :
-                                      status === 'Archived' ? 'bg-gray-100 text-gray-700' : 'bg-blue-100 text-blue-700'
+                    const status = project.is_archived
+                      ? "Archived"
+                      : (project.file_count || 0) > 0
+                        ? "Active"
+                        : "Empty";
+                    const statusColor =
+                      status === "Active"
+                        ? "bg-emerald-100 text-emerald-700"
+                        : status === "Archived"
+                          ? "bg-gray-100 text-gray-700"
+                          : "bg-blue-100 text-blue-700";
 
                     return (
                       <Card
@@ -393,28 +472,38 @@ export function ProjectList() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
-                              <Badge className={statusColor} variant="secondary">
+                              <Badge
+                                className={statusColor}
+                                variant="secondary"
+                              >
                                 {status}
                               </Badge>
                               <DropdownMenu>
-                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <DropdownMenuTrigger
+                                  asChild
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                  >
                                     <MoreVertical className="h-4 w-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem
                                     onClick={(e) => {
-                                      e.stopPropagation()
-                                      navigate(`/projects/${project.id}`)
+                                      e.stopPropagation();
+                                      navigate(`/projects/${project.id}`);
                                     }}
                                   >
                                     Open Project
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={(e) => {
-                                      e.stopPropagation()
-                                      // TODO: Implement edit
+                                      e.stopPropagation();
+                                      navigate(`/projects/${project.id}`);
                                     }}
                                   >
                                     Edit Details
@@ -422,8 +511,8 @@ export function ProjectList() {
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
                                     onClick={(e) => {
-                                      e.stopPropagation()
-                                      // TODO: Implement archive
+                                      e.stopPropagation();
+                                      handleArchiveProject(project.id);
                                     }}
                                     className="text-orange-600"
                                   >
@@ -431,8 +520,8 @@ export function ProjectList() {
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={(e) => {
-                                      e.stopPropagation()
-                                      // TODO: Implement delete
+                                      e.stopPropagation();
+                                      handleDeleteProject(project.id);
                                     }}
                                     className="text-red-600"
                                   >
@@ -460,8 +549,8 @@ export function ProjectList() {
                               size="sm"
                               className="w-full justify-between group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
                               onClick={(e) => {
-                                e.stopPropagation()
-                                navigate(`/projects/${project.id}`)
+                                e.stopPropagation();
+                                navigate(`/projects/${project.id}`);
                               }}
                             >
                               Open Project
@@ -470,7 +559,7 @@ export function ProjectList() {
                           </div>
                         </CardContent>
                       </Card>
-                    )
+                    );
                   })}
                 </div>
               )}
@@ -479,5 +568,5 @@ export function ProjectList() {
         )}
       </div>
     </Layout>
-  )
+  );
 }

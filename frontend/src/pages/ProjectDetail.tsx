@@ -379,9 +379,15 @@ export function ProjectDetail() {
                       selectedFile.filename.split(".").pop()?.toUpperCase() ||
                       "UNKNOWN"
                     }
-                    onDownload={() => {
-                      // TODO: Implement file download
-                      // File download implementation pending
+                    onDownload={async () => {
+                      try {
+                        await api.downloadProjectFile(
+                          project.id,
+                          selectedFile.id,
+                        );
+                      } catch (err: any) {
+                        setError(err.message || "Failed to download file");
+                      }
                     }}
                     onAnalyze={() => handleAnalyzeFile(selectedFile.id)}
                   />

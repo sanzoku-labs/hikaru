@@ -1,493 +1,586 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI assistants (like Claude Code) when working with code in this repository.
+
+---
 
 ## Project Overview
 
-**Hikaru (Data Smart Board)** is an AI-powered data analytics dashboard that transforms CSV/Excel files into interactive BI dashboards with AI-generated insights. Think of it as a simplified, intelligent alternative to Power BI or Tableau, designed for non-technical users.
+**Hikaru (Data Smart Board)** is a production-ready AI-powered data analytics dashboard that transforms CSV/Excel files into interactive BI dashboards with AI-generated insights.
 
-**Current Status**: Pre-development (Phase 0) - This repository currently contains only comprehensive documentation. No source code has been implemented yet. All specifications, API designs, and UI mockups are ready for development.
+**Current Status**: ✅ **Production Ready (v1.0.0)**
 
-**Technology Stack**:
-- **Backend**: FastAPI (Python 3.11+), Pandas, DuckDB, Anthropic Claude Sonnet 4
-- **Frontend**: React 18 + TypeScript, Vite, shadcn/ui, Tailwind CSS, ECharts v5
-- **Testing**: Pytest (backend), Vitest (frontend), Playwright/Cypress (E2E)
-- **Database**: SQLite (MVP) → PostgreSQL (post-MVP)
+**All Major Features Complete**:
+- ✅ Phase 1-5: MVP (File upload, charts, AI insights, Q&A, PDF export)
+- ✅ Phase 7: Multi-file projects
+- ✅ Phase 8: User authentication (JWT)
+- ✅ Phase 9: UI redesign (high-fidelity interface)
+- ✅ Week 3-4: Backend refactoring (service layer pattern)
+- ✅ Phase 5: Testing (253 tests, 55% coverage)
+
+**Next Steps**: Additional testing (Phase 10), deployment preparation (Phase 11)
+
+---
+
+## Technology Stack
+
+| Component | Technology | Version/Details |
+|-----------|------------|-----------------|
+| **Backend** | FastAPI | Python 3.13, Poetry package manager |
+| **Database** | SQLite | PostgreSQL-ready with SQLAlchemy 2.0 |
+| **Data Processing** | Pandas, DuckDB | For CSV/Excel analysis |
+| **AI** | Anthropic Claude | Sonnet 4 (claude-sonnet-4-20250514) |
+| **Authentication** | JWT + bcrypt | 7-day token expiry, session tracking |
+| **PDF Generation** | ReportLab | Professional report exports |
+| **Frontend** | React 18 + TypeScript | Vite build tool |
+| **UI Library** | shadcn/ui | 35 components, Tailwind CSS |
+| **Charts** | ECharts v5 | Interactive visualizations |
+| **Testing** | Pytest | 253 tests, 55% coverage |
+
+---
 
 ## Development Commands
 
-### Initial Setup (When Implementing)
+### Backend
 
 ```bash
-# Backend setup
 cd backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
 
-# Create .env file with required variables:
-# - ANTHROPIC_API_KEY
-# - MAX_FILE_SIZE_MB=10
-# - CORS_ORIGINS=http://localhost:5173
+# Install dependencies
+poetry install
 
-# Start development server
-uvicorn app.main:app --reload --port 8000
+# Activate virtual environment
+poetry shell
+
+# Run development server
+poetry run uvicorn app.main:app --reload --port 8000
+
+# Run tests
+poetry run pytest
+poetry run pytest --cov=app                    # With coverage
+poetry run pytest tests/unit/test_services/    # Specific suite
+poetry run pytest -v -s                        # Verbose with print output
+
+# Code quality
+poetry run black app/                          # Format
+poetry run ruff check app/                     # Lint
+poetry run mypy app/                           # Type check
+
+# Database migrations
+poetry run alembic revision --autogenerate -m "description"
+poetry run alembic upgrade head
+poetry run alembic downgrade -1
+
+# Add dependencies
+poetry add package-name
+poetry add --group dev package-name
 ```
 
+### Frontend
+
 ```bash
-# Frontend setup
 cd frontend
+
+# Install dependencies
 npm install
 
-# Initialize shadcn/ui
-npx shadcn-ui@latest init
-
-# Add required components
-npx shadcn-ui@latest add button card input table badge alert skeleton dialog
-
-# Create .env file with:
-# - VITE_API_BASE_URL=http://localhost:8000
-
-# Start development server
+# Run development server
 npm run dev
+
+# Build for production
+npm run build
+npm run preview                # Preview production build
+
+# Tests (when implemented)
+npm run test
+npm run test:coverage
 ```
 
-### Testing Commands
+---
 
-```bash
-# Backend tests
-cd backend
-pytest                          # Run all tests
-pytest tests/test_upload.py     # Run specific test file
-pytest -v -s                    # Verbose output with print statements
-pytest --cov=app --cov-report=html  # Coverage report
-
-# Frontend tests
-cd frontend
-npm run test                    # Run Vitest
-npm run test:ui                 # Interactive UI
-npm run test:coverage           # Coverage report
-
-# E2E tests
-npm run test:e2e                # Run Playwright/Cypress tests
-```
-
-### Build Commands
-
-```bash
-# Backend (no build step - interpreted Python)
-python -m pytest  # Validate before deployment
-
-# Frontend
-cd frontend
-npm run build     # Production build to dist/
-npm run preview   # Preview production build
-```
-
-## Architecture Overview
-
-### Project Structure
+## Project Structure
 
 ```
 hikaru/
-├── backend/               # FastAPI application (to be created)
+├── backend/                         # FastAPI application
 │   ├── app/
-│   │   ├── main.py       # FastAPI app instance
-│   │   ├── api/routes/   # API endpoints
-│   │   ├── services/     # Business logic (data processing, chart generation, AI)
-│   │   └── models/       # Pydantic schemas
-│   ├── tests/
-│   └── requirements.txt
-├── frontend/              # React application (to be created)
+│   │   ├── main.py                 # FastAPI app instance + CORS config
+│   │   ├── config.py               # Pydantic Settings for env vars
+│   │   │
+│   │   ├── api/                    # API layer (thin controllers)
+│   │   │   ├── dependencies.py    # Dependency injection (get_db, get_current_user)
+│   │   │   └── routes/            # 8 route modules, 25+ endpoints
+│   │   │       ├── upload.py      # POST /api/upload
+│   │   │       ├── analyze.py     # POST /api/analyze/{upload_id}
+│   │   │       ├── export.py      # POST /api/export
+│   │   │       ├── query.py       # POST /api/query (Q&A chat)
+│   │   │       ├── auth.py        # POST /api/auth/register|login|logout
+│   │   │       ├── projects.py    # CRUD for projects + file upload
+│   │   │       ├── dashboards.py  # Dashboard management
+│   │   │       └── merge.py       # File comparison + merging
+│   │   │
+│   │   ├── services/              # Business logic (Service Layer Pattern)
+│   │   │   ├── ai_service.py            # Claude API integration (insights, Q&A)
+│   │   │   ├── analysis_service.py      # Chart generation orchestration
+│   │   │   ├── auth_service.py          # User registration, login, sessions
+│   │   │   ├── cache_service.py         # In-memory caching (24hr TTL)
+│   │   │   ├── chart_generator.py       # Chart heuristics engine
+│   │   │   ├── data_processor.py        # Pandas operations, schema detection
+│   │   │   ├── project_service.py       # Project CRUD operations
+│   │   │   └── upload_service.py        # File upload handling
+│   │   │
+│   │   ├── models/                # Data models
+│   │   │   ├── database.py       # SQLAlchemy ORM models (8 tables)
+│   │   │   └── schemas.py        # Pydantic request/response models (30+)
+│   │   │
+│   │   ├── core/                  # Core functionality
+│   │   │   ├── exceptions.py            # Custom exception classes
+│   │   │   └── exception_handlers.py    # Global error handlers
+│   │   │
+│   │   └── storage.py             # File storage utilities
+│   │
+│   ├── alembic/                   # Database migrations
+│   ├── tests/                     # Test suite (253 tests, 55% coverage)
+│   │   └── unit/
+│   │       ├── test_api/
+│   │       ├── test_core/
+│   │       └── test_services/
+│   ├── storage/                   # Uploaded files (gitignored)
+│   ├── pyproject.toml             # Poetry dependencies
+│   └── .env                       # Environment variables (gitignored)
+│
+├── frontend/                      # React application
 │   ├── src/
-│   │   ├── components/   # shadcn/ui components + custom components
-│   │   ├── lib/          # Utilities and API client
-│   │   └── App.tsx       # Main app component
-│   ├── public/
-│   └── package.json
-└── docs/                  # Comprehensive specifications (current)
-    ├── README.md          # Quick start guide
-    ├── DSB_PRD_v1.1.md    # Master specification (77KB)
-    ├── CLAUDE_CODE_PROMPT.md  # Ready-to-paste implementation guide
-    ├── DAY_1_QUICK_START.md   # 4-hour implementation checklist
-    └── PROJECTS_FEATURE_OVERVIEW.md  # Post-MVP features
+│   │   ├── main.tsx              # Entry point
+│   │   ├── App.tsx               # Quick analysis page (root route)
+│   │   │
+│   │   ├── pages/                # Page components
+│   │   │   ├── Login.tsx
+│   │   │   ├── Register.tsx
+│   │   │   ├── Dashboard.tsx
+│   │   │   ├── Projects.tsx
+│   │   │   ├── ProjectDetail.tsx
+│   │   │   ├── ProjectFileAnalysis.tsx
+│   │   │   ├── ProjectComparison.tsx
+│   │   │   └── ProjectMerging.tsx
+│   │   │
+│   │   ├── components/           # Reusable components (45+)
+│   │   │   ├── ui/              # shadcn/ui components (35)
+│   │   │   ├── FileUploader.tsx
+│   │   │   ├── DataPreview.tsx
+│   │   │   ├── ChartCard.tsx
+│   │   │   ├── GlobalSummary.tsx
+│   │   │   ├── QAChat.tsx
+│   │   │   └── ...
+│   │   │
+│   │   ├── services/             # API client
+│   │   │   └── api.ts           # Axios-based API client
+│   │   │
+│   │   └── types/                # TypeScript types
+│   │       └── api.ts           # API response types
+│   │
+│   ├── public/                   # Static assets
+│   ├── dist/                     # Production build (gitignored)
+│   └── package.json              # npm dependencies
+│
+├── docs/                          # Historical documentation (archived)
+│   └── archive/
+│       ├── completed/            # Phase completion reports
+│       ├── features/             # Feature guides
+│       └── ...                   # Original planning docs
+│
+├── PROGRESS.md                    # Current project status tracker
+├── CLAUDE.md                      # This file
+└── README.md                      # Project overview + quick start
 ```
 
-### System Architecture
+---
+
+## Architecture Overview
+
+### Backend Architecture
 
 ```
-┌─────────────────────────────────────────────┐
-│         Frontend (React + TypeScript)        │
-│  ┌────────┬─────────┬──────┬───────────┐   │
-│  │ Upload │ Charts  │ Q&A  │  Export   │   │
-│  │ (shadcn)│ (ECharts)│ Chat │  (PDF)    │   │
-│  └────────┴─────────┴──────┴───────────┘   │
-│              ↓ HTTP/REST                     │
-└─────────────────────────────────────────────┘
-                 ↓
-┌─────────────────────────────────────────────┐
-│          Backend (FastAPI)                   │
-│  ┌──────────────────────────────────────┐  │
-│  │ API Routes                            │  │
-│  │ /upload /analyze /query /export      │  │
-│  └──────────────────────────────────────┘  │
-│        ↓              ↓            ↓        │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐ │
-│  │  Pandas  │  │  Chart   │  │ Claude   │ │
-│  │  DuckDB  │  │Generator │  │   API    │ │
-│  └──────────┘  └──────────┘  └──────────┘ │
-│        ↓                                    │
-│  ┌──────────────────────────────────────┐  │
-│  │ SQLite (MVP) / Postgres (Later)      │  │
-│  └──────────────────────────────────────┘  │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│                  FastAPI Application                 │
+├─────────────────────────────────────────────────────┤
+│                                                      │
+│  ┌────────────────────────────────────────────┐    │
+│  │ API Layer (routes/)                        │    │
+│  │ - Thin controllers                         │    │
+│  │ - Request validation (Pydantic)            │    │
+│  │ - Response serialization                   │    │
+│  └──────────────┬─────────────────────────────┘    │
+│                 │                                    │
+│                 ▼                                    │
+│  ┌────────────────────────────────────────────┐    │
+│  │ Service Layer (services/)                  │    │
+│  │ - Business logic                           │    │
+│  │ - Data processing (Pandas)                 │    │
+│  │ - AI integration (Claude API)              │    │
+│  │ - Chart generation                         │    │
+│  └──────────────┬─────────────────────────────┘    │
+│                 │                                    │
+│                 ▼                                    │
+│  ┌────────────────────────────────────────────┐    │
+│  │ Data Layer (models/)                       │    │
+│  │ - SQLAlchemy ORM models                    │    │
+│  │ - Database operations                      │    │
+│  │ - File storage (storage.py)                │    │
+│  └────────────────────────────────────────────┘    │
+│                                                      │
+└─────────────────────────────────────────────────────┘
 ```
 
-### Core Design Patterns
+**Key Pattern**: Service Layer Pattern
+- Routes handle HTTP concerns only
+- Services contain all business logic
+- Models handle data persistence
+- Clean separation of concerns
 
-**API-First Design**:
-- All endpoints use Pydantic models for request/response validation
-- Type-safe contracts between frontend and backend
-- OpenAPI/Swagger documentation auto-generated
-- Complete API specifications available in `docs/DSB_PRD_v1.1.md` (Section 8)
-
-**Service Layer Pattern** (Backend):
-```python
-app/
-├── api/routes/          # FastAPI endpoints (thin controllers)
-│   ├── upload.py
-│   ├── analyze.py
-│   └── export.py
-├── services/            # Business logic (core functionality)
-│   ├── data_processor.py    # Pandas/DuckDB operations
-│   ├── chart_generator.py   # Chart selection heuristics
-│   └── ai_service.py         # Claude API integration
-└── models/schemas.py    # Pydantic models
-```
-
-**Component-Based UI** (Frontend):
-- shadcn/ui components copied into project (not npm dependencies)
-- Full customization control with Tailwind CSS
-- Radix UI primitives for accessibility
-- Key components: FileUploader, DataPreview, ChartCard, ExportModal
-
-**Progressive Enhancement**:
-- Application works without AI (shows charts without insights)
-- Graceful degradation on API failures
-- Background jobs for heavy operations (PDF exports)
-- Optimistic UI updates with loading states
-
-## Key Development Workflows
-
-### Data Processing Pipeline
+### Frontend Architecture
 
 ```
-Upload → Validate → Parse → Analyze → Store
-  ↓         ↓         ↓        ↓        ↓
-File     Size/Type  Pandas  Schema   SQLite
-Check    Check      Read    Detect   Save
+┌─────────────────────────────────────────────────────┐
+│                  React Application                   │
+├─────────────────────────────────────────────────────┤
+│                                                      │
+│  Pages (routes)                                     │
+│  ↓                                                   │
+│  Components (reusable UI)                           │
+│  ↓                                                   │
+│  Services (API client)                              │
+│  ↓                                                   │
+│  Backend API                                        │
+│                                                      │
+└─────────────────────────────────────────────────────┘
 ```
 
-**Validation Steps**:
-1. File size check (max 10MB for MVP)
-2. File type check (CSV, XLSX only)
-3. Content validation (readable format, valid encoding)
-4. Schema detection (numeric/categorical/datetime columns)
+**Key Pattern**: Component-based architecture
+- Pages compose components
+- Components use shadcn/ui primitives
+- API client handles all backend communication
+- TypeScript ensures type safety
 
-### Chart Generation Heuristics
+---
 
-The system uses **priority-based automatic chart selection**. This is critical to understand:
+## Key Features & Implementation
 
-| Priority | Data Pattern | Chart Type | Example Use Case |
-|----------|--------------|------------|------------------|
-| 1 | 1 datetime + 1 numeric | Line Chart | Monthly revenue trend |
-| 2 | 1 categorical (≤8 values) + 1 numeric | Pie Chart | Market share by segment |
-| 3 | 1 categorical + 1 numeric | Bar Chart | Sales by region |
-| 4 | 2+ numeric columns | Scatter Plot | Price vs quantity correlation |
+### 1. Chart Generation Heuristics
 
-**Implementation Logic** (detailed in `docs/DSB_PRD_v1.1.md` Section 5):
-- Iterate through column combinations
-- Apply priority rules in order
-- Generate 3-4 charts maximum (performance target)
-- Include title, axis labels, and data summaries
+**Location**: `backend/app/services/chart_generator.py`
 
-### AI Integration Strategy
+**How it works**: Priority-based automatic chart selection
 
-**Model**: Claude Sonnet 4 (cost-effective, fast, accurate)
+| Priority | Data Pattern | Chart Type | Implementation |
+|----------|--------------|------------|----------------|
+| 1 | 1 datetime + 1 numeric | Line Chart | `_try_line_chart()` |
+| 2 | 1 categorical (≤8 values) + 1 numeric | Pie Chart | `_try_pie_chart()` |
+| 3 | 1 categorical + 1 numeric | Bar Chart | `_try_bar_chart()` |
+| 4 | 2+ numeric columns | Scatter Plot | `_try_scatter()` |
 
-**Prompt Templates** (see `docs/DSB_PRD_v1.1.md` Section 6):
-- Per-chart insights: "Analyze this {chart_type} showing {description}..."
-- Global summary: "Summarize these key findings from the dataset..."
-- Q&A responses: "Given this data context, answer: {user_question}..."
+**Algorithm**:
+1. Detect column types (numeric, categorical, datetime)
+2. Iterate through column combinations
+3. Apply priority rules in order
+4. Generate 3-4 charts maximum
+5. Return chart configurations (ECharts format)
 
-**Caching Strategy**:
-- Cache insights for 24 hours (reduces API costs by ~60%)
+### 2. AI Integration Strategy
+
+**Location**: `backend/app/services/ai_service.py`
+
+**Model**: Claude Sonnet 4 (`claude-sonnet-4-20250514`)
+
+**Use Cases**:
+- **Per-chart insights**: 2-3 sentence analysis of individual charts
+- **Global summary**: 3-4 sentence overview of entire dataset
+- **Q&A chat**: Natural language question answering
+
+**Caching**:
+- In-memory cache with 24-hour TTL
 - Cache key: `hash(filename + file_size + timestamp_day)`
-- Invalidate on file re-upload
+- Reduces API costs by ~60%
 
 **Error Handling**:
 - Always show charts even if AI fails
-- Display friendly error message: "Insights temporarily unavailable"
-- Log failures for debugging
+- Graceful degradation (display charts without insights)
 - Never block user workflow on AI errors
 
-### 6-Phase Development Roadmap
+### 3. Authentication Flow
 
-**Phase 1: Foundation** (Week 1)
-- File upload (drag-drop + click)
-- CSV/XLSX parsing with Pandas
-- Schema detection
-- Data preview table (first 10 rows)
-- **Deliverable**: Working upload + preview in < 2 seconds
+**Location**: `backend/app/services/auth_service.py`, `backend/app/api/routes/auth.py`
 
-**Phase 2: Chart Generation** (Week 2)
-- Implement chart heuristics engine
-- ECharts integration
-- Auto-generate 3-4 charts
-- Responsive grid layout
-- **Deliverable**: Charts render in < 3 seconds per chart
+**Flow**:
+```
+Registration:
+1. User submits email/username/password
+2. Backend validates password requirements
+3. Backend hashes password with bcrypt
+4. Backend creates User record
+5. Backend generates JWT token
+6. Backend creates Session record
+7. Frontend stores token in localStorage
 
-**Phase 3: AI Insights** (Week 3)
-- Claude API integration
-- Per-chart insights (2-3 sentences)
-- Global summary (3-4 sentences)
-- Confidence indicators
-- **Deliverable**: 90%+ coherent insights in < 8 seconds total
+Login:
+1. User submits username/email + password
+2. Backend finds user by username or email
+3. Backend verifies password with bcrypt
+4. Backend generates JWT token (7-day expiry)
+5. Backend creates Session record
+6. Frontend stores token in localStorage
 
-**Phase 4: Interactive Q&A** (Week 4)
-- Natural language query interface
-- Context-aware responses using Claude
-- Dynamic chart updates based on queries
-- Question suggestions (e.g., "What are the trends?")
-- **Deliverable**: Conversational insights
+Protected Requests:
+1. Frontend includes token in Authorization header
+2. Backend validates token signature
+3. Backend checks session not revoked
+4. Backend extracts user_id from token
+5. Request proceeds with authenticated user context
 
-**Phase 5: PDF Export** (Week 5)
-- WeasyPrint integration
-- Professional report layout (company branding)
-- Chart rendering to high-res images
-- Download link with expiry
-- **Deliverable**: PDF generation in < 5 seconds
-
-**Phase 6: Polish & Testing** (Week 6)
-- Comprehensive error handling
-- Loading states and skeleton components
-- Responsive design (mobile/tablet/desktop)
-- Accessibility compliance (WCAG 2.1 AA)
-- Performance optimization
-- **Deliverable**: End-to-end flow < 15 seconds total
-
-## Performance Targets
-
-These are critical success metrics defined in the PRD:
-
-- **File upload**: < 2 seconds
-- **Chart generation**: < 3 seconds per chart
-- **AI insights (all charts + summary)**: < 8 seconds total
-- **PDF export**: < 5 seconds
-- **Total end-to-end (upload → export)**: < 15 seconds
-
-**Optimization Strategies**:
-- Use DuckDB for large dataset queries (faster than Pandas)
-- Implement AI response caching (24-hour TTL)
-- Background jobs for PDF generation
-- Lazy load charts (render on scroll)
-- Compress uploaded files in transit
-
-## Security Considerations
-
-**File Upload Security**:
-- Validate file size (max 10MB)
-- Validate file extensions (`.csv`, `.xlsx` only)
-- Validate file content (reject malformed files)
-- Scan for CSV injection attacks (cells starting with `=`, `+`, `-`, `@`)
-- Use temporary storage with 1-hour auto-cleanup
-
-**API Security**:
-- CORS configuration (whitelist frontend origin)
-- Rate limiting (100 requests/minute per IP)
-- Environment variables for secrets (never commit `.env`)
-- HTTPS only (TLS 1.3)
-- Input validation on all endpoints (Pydantic)
-
-**Data Privacy**:
-- No persistent storage unless user explicitly saves (post-MVP feature)
-- Auto-delete uploaded files after 1 hour
-- No telemetry or analytics in MVP
-- Clear data retention policy in UI
-
-## Documentation Guide
-
-### Where to Find Specifications
-
-**API Specifications** → `docs/DSB_PRD_v1.1.md` (Section 8)
-- Complete request/response schemas
-- Pydantic model definitions
-- Error response formats
-- Example curl commands
-
-**UI Component Specifications** → `docs/DSB_PRD_v1.1.md` (Section 9)
-- shadcn/ui component usage
-- Tailwind CSS classes
-- Responsive breakpoints
-- Accessibility requirements
-
-**AI Prompt Templates** → `docs/DSB_PRD_v1.1.md` (Section 6)
-- Per-chart insight prompts
-- Global summary prompts
-- Q&A conversation prompts
-- System instructions for Claude
-
-**Chart Heuristics Logic** → `docs/DSB_PRD_v1.1.md` (Section 5)
-- Priority-based selection algorithm
-- Column type detection rules
-- Chart configuration examples
-- Edge case handling
-
-### Quick Start Guides
-
-**4-Hour Quick Start** → `docs/DAY_1_QUICK_START.md`
-- Step-by-step checklist for Phase 1
-- Troubleshooting common issues
-- Success criteria validation
-- **Best for**: Immediate hands-on implementation
-
-**Ready-to-Paste Code** → `docs/CLAUDE_CODE_PROMPT.md`
-- Complete backend code examples (FastAPI endpoints)
-- Complete frontend code examples (React components)
-- Sample CSV data for testing
-- **Best for**: Generating initial project scaffold
-
-**Comprehensive Navigation** → `docs/HOW_TO_USE_THESE_DOCS.md`
-- Document relationships matrix
-- When to use which document
-- Reading order recommendations
-- **Best for**: Understanding documentation structure
-
-**Post-MVP Features** → `docs/PROJECTS_FEATURE_OVERVIEW.md`
-- Multi-file workspace architecture
-- File comparison and merging
-- Database schema for projects
-- Implementation timeline (4 weeks post-MVP)
-
-### Reading Recommendations
-
-**For Initial Implementation**:
-1. Read: `docs/DAY_1_QUICK_START.md` (10 min)
-2. Copy: `docs/CLAUDE_CODE_PROMPT.md` → Claude Code (generates scaffold)
-3. Reference: `docs/DSB_PRD_v1.1.md` (as needed for details)
-
-**For Specific Features**:
-- File upload → PRD Section 4.1 + Section 8.1 (API spec)
-- Chart generation → PRD Section 5 (heuristics) + Section 8.2
-- AI insights → PRD Section 6 (prompts) + Section 8.3
-- PDF export → PRD Section 4.5 + Section 8.4
-
-**For Architecture Decisions**:
-- Overall vision → `docs/README.md` Section 2
-- Technical stack → PRD Section 3
-- Database schema → PRD Section 7
-- Deployment → PRD Section 11 (post-MVP)
-
-## Important Implementation Notes
-
-### Error Handling Strategy
-
-**Backend** (see PRD Section 10):
-- HTTP 400 for client errors (invalid file, malformed request)
-- HTTP 500 for server errors (AI API failure, database error)
-- Always return structured JSON: `{"error": "message", "details": {...}}`
-- Clean up resources (temp files) on all error paths
-
-**Frontend**:
-- Display user-friendly error messages (never show stack traces)
-- Use shadcn/ui Alert components for errors
-- Provide actionable recovery steps (e.g., "Try a smaller file")
-- Log detailed errors to console for debugging
-
-### Testing Strategy
-
-**Unit Tests** (80% coverage target):
-- Data processing functions (Pandas operations)
-- Chart heuristics engine (all priority rules)
-- File validation logic
-- Pydantic model serialization
-
-**Integration Tests**:
-- API endpoints (request → response)
-- Database operations (CRUD)
-- AI service integration (mock Claude API)
-
-**E2E Tests** (critical user flows):
-- Upload CSV → view charts → get insights → export PDF
-- Error scenarios (invalid file, large file, AI failure)
-- Responsive design (mobile, tablet, desktop)
-
-### shadcn/ui Component Usage
-
-**File Uploader Pattern**:
-```tsx
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-
-// Drag-drop area with click-to-upload fallback
-// Show file validation errors using Alert component
+Logout:
+1. Frontend sends logout request with token
+2. Backend marks session as revoked
+3. Frontend clears localStorage
+4. User redirected to login
 ```
 
-**Data Preview Table**:
-```tsx
-import { Table } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
+### 4. Project File Management
 
-// Display column types with Badge (numeric/categorical/datetime)
-// Show first 10 rows with "Load more" button
+**Location**: `backend/app/services/project_service.py`, `backend/app/api/routes/projects.py`
+
+**Storage Structure**:
+```
+storage/
+├── {project_id_1}/
+│   ├── {file_id_1}.csv
+│   ├── {file_id_2}.csv
+│   └── {file_id_3}.xlsx
+└── {project_id_2}/
+    ├── {file_id_4}.csv
+    └── {file_id_5}.csv
 ```
 
-**Chart Card**:
-```tsx
-import { Card, CardHeader, CardContent } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+**Benefits**:
+- Easy project cleanup (delete folder)
+- Better organization
+- User isolation (project owner only)
 
-// ECharts component + AI insight text below
-// Loading state with Skeleton component
+### 5. File Comparison
+
+**Location**: `backend/app/api/routes/merge.py`
+
+**How it works**:
+1. Load both DataFrames
+2. Detect common columns
+3. Generate diff statistics (rows added/removed/modified)
+4. Create side-by-side preview
+5. Highlight differences visually
+
+### 6. File Merging
+
+**Location**: `backend/app/api/routes/merge.py`
+
+**How it works**:
+1. User selects join type (inner, left, right, outer)
+2. User maps join keys (e.g., `customer_id` ↔ `id`)
+3. Backend executes `pd.merge()`
+4. Backend generates charts from merged DataFrame
+5. AI provides insights on merged data
+
+---
+
+## Common Development Tasks
+
+### Add a New API Endpoint
+
+1. **Create route** in `backend/app/api/routes/`:
+```python
+# backend/app/api/routes/my_feature.py
+from fastapi import APIRouter, Depends
+from app.api.dependencies import get_current_user
+from app.models.schemas import MyRequest, MyResponse
+
+router = APIRouter()
+
+@router.post("/my-feature", response_model=MyResponse)
+async def my_feature(
+    request: MyRequest,
+    current_user = Depends(get_current_user)
+):
+    # Implementation
+    return MyResponse(...)
 ```
 
-**Export Modal**:
-```tsx
-import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-
-// Format selection (PDF only in MVP)
-// Progress indicator during generation
-// Download button when ready
+2. **Register route** in `backend/app/main.py`:
+```python
+from app.api.routes import my_feature
+app.include_router(my_feature.router, prefix="/api", tags=["my-feature"])
 ```
+
+3. **Add Pydantic schemas** in `backend/app/models/schemas.py`:
+```python
+class MyRequest(BaseModel):
+    field: str
+
+class MyResponse(BaseModel):
+    result: str
+```
+
+4. **Add tests** in `backend/tests/unit/test_api/`:
+```python
+def test_my_feature(client, auth_headers):
+    response = client.post(
+        "/api/my-feature",
+        json={"field": "value"},
+        headers=auth_headers
+    )
+    assert response.status_code == 200
+```
+
+### Add a New Frontend Page
+
+1. **Create page component** in `frontend/src/pages/`:
+```tsx
+// frontend/src/pages/MyPage.tsx
+export function MyPage() {
+  return (
+    <div>
+      <h1>My Page</h1>
+    </div>
+  )
+}
+```
+
+2. **Add route** in `frontend/src/main.tsx`:
+```tsx
+import { MyPage } from './pages/MyPage'
+
+const router = createBrowserRouter([
+  // ... existing routes
+  {
+    path: '/my-page',
+    element: <MyPage />
+  }
+])
+```
+
+3. **Add to navigation** (if needed) in relevant component
+
+### Add a New Service
+
+1. **Create service** in `backend/app/services/`:
+```python
+# backend/app/services/my_service.py
+class MyService:
+    def __init__(self, db: Session):
+        self.db = db
+    
+    def do_something(self, data: dict) -> dict:
+        # Business logic here
+        return {"result": "success"}
+```
+
+2. **Use in route**:
+```python
+from app.services.my_service import MyService
+
+@router.post("/endpoint")
+async def endpoint(db: Session = Depends(get_db)):
+    service = MyService(db)
+    result = service.do_something(data)
+    return result
+```
+
+3. **Add tests** in `backend/tests/unit/test_services/`:
+```python
+def test_my_service():
+    service = MyService(db)
+    result = service.do_something({"key": "value"})
+    assert result["result"] == "success"
+```
+
+---
+
+## Testing Strategy
+
+### Backend Tests
+
+**Location**: `backend/tests/`
+
+**Current Status**: 253 tests, 55% coverage
+
+**Test Organization**:
+```
+tests/
+└── unit/
+    ├── test_api/           # API endpoint tests
+    ├── test_core/          # Core functionality tests
+    └── test_services/      # Service layer tests
+```
+
+**Running Tests**:
+```bash
+poetry run pytest                           # All tests
+poetry run pytest --cov=app                 # With coverage
+poetry run pytest tests/unit/test_services/ # Specific suite
+poetry run pytest -v -s                     # Verbose
+poetry run pytest -k "test_name"            # Specific test
+```
+
+**Writing Tests**:
+```python
+# backend/tests/unit/test_services/test_my_service.py
+import pytest
+from app.services.my_service import MyService
+
+def test_my_service_success(db_session):
+    service = MyService(db_session)
+    result = service.do_something({"key": "value"})
+    assert result["success"] is True
+
+def test_my_service_error(db_session):
+    service = MyService(db_session)
+    with pytest.raises(ValueError):
+        service.do_something({"invalid": "data"})
+```
+
+### Frontend Tests (To Be Implemented)
+
+**Planned Stack**: Vitest + React Testing Library
+
+---
 
 ## Environment Variables
 
 ### Backend (.env)
 
 ```env
-# Server Configuration
+# AI Service
+ANTHROPIC_API_KEY=sk-ant-your-key-here
+ANTHROPIC_MODEL=claude-sonnet-4-20250514
+AI_CACHE_TTL_HOURS=24
+
+# Authentication
+SECRET_KEY=your-secret-key-change-in-production
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_DAYS=7
+
+# Database
+DATABASE_URL=sqlite:///./hikaru.db
+# For PostgreSQL: postgresql://user:pass@localhost/hikaru
+
+# Server
 HOST=0.0.0.0
 PORT=8000
 CORS_ORIGINS=http://localhost:5173
 
-# File Upload Settings
+# File Upload
 MAX_FILE_SIZE_MB=10
 ALLOWED_EXTENSIONS=csv,xlsx
-UPLOAD_DIR=./uploads
+UPLOAD_DIR=./storage
 FILE_RETENTION_HOURS=1
 
-# AI Integration
-ANTHROPIC_API_KEY=sk-ant-...
-ANTHROPIC_MODEL=claude-sonnet-4-20250514
-AI_CACHE_TTL_HOURS=24
-
-# Database
-DATABASE_URL=sqlite:///./hikaru.db
-
 # Security
-SECRET_KEY=your-secret-key-here
 RATE_LIMIT_PER_MINUTE=100
 ```
 
@@ -496,81 +589,195 @@ RATE_LIMIT_PER_MINUTE=100
 ```env
 # API Configuration
 VITE_API_BASE_URL=http://localhost:8000
-
-# Feature Flags (post-MVP)
-VITE_ENABLE_PROJECTS=false
-VITE_ENABLE_FILE_MERGING=false
 ```
-
-## Post-MVP Roadmap
-
-### Projects Feature (Phase 7 - 4 weeks)
-
-After the 6-week MVP, the next major feature is **multi-file workspaces**:
-
-**Capabilities**:
-- Upload multiple files into a "Project"
-- Compare files side-by-side (e.g., Q1 vs Q2 sales)
-- Merge files using SQL-like joins (customer data + transaction data)
-- Cross-file AI insights ("How did revenue change between files?")
-- Persistent work sessions (save/load projects)
-
-**Database Schema** (see `docs/PROJECTS_FEATURE_OVERVIEW.md`):
-```sql
-CREATE TABLE projects (
-  id INTEGER PRIMARY KEY,
-  name TEXT NOT NULL,
-  created_at TIMESTAMP,
-  updated_at TIMESTAMP
-);
-
-CREATE TABLE files (
-  id INTEGER PRIMARY KEY,
-  project_id INTEGER REFERENCES projects(id),
-  filename TEXT NOT NULL,
-  upload_date TIMESTAMP,
-  schema_json TEXT
-);
-
-CREATE TABLE file_relationships (
-  id INTEGER PRIMARY KEY,
-  project_id INTEGER REFERENCES projects(id),
-  file_a_id INTEGER REFERENCES files(id),
-  file_b_id INTEGER REFERENCES files(id),
-  relationship_type TEXT, -- 'comparison' or 'merge'
-  config_json TEXT
-);
-```
-
-**Timeline**: 4 weeks after MVP completion
-
-### Future Enhancements (Phase 8+)
-
-- Real-time collaboration (multiple users editing same project)
-- Custom chart builder (user-defined visualizations)
-- Scheduled reports (email PDF exports daily/weekly)
-- Data source connectors (Google Sheets, databases)
-- Advanced AI queries (trend forecasting, anomaly detection)
-
-## Success Criteria
-
-### Phase 1 (Week 1)
-- [ ] Upload CSV file in < 2 seconds
-- [ ] Display data preview with correct column types
-- [ ] Handle errors gracefully (invalid file, size limit)
-- [ ] Responsive design works on mobile
-
-### Phase 3 (Week 3)
-- [ ] AI insights are coherent and relevant (90%+ accuracy)
-- [ ] Insights load in < 8 seconds total
-- [ ] Charts display without insights if AI fails
-
-### Phase 6 (Week 6)
-- [ ] Complete end-to-end flow (upload → export) in < 15 seconds
-- [ ] All API endpoints have 80%+ test coverage
-- [ ] Application passes WCAG 2.1 AA accessibility audit
-- [ ] Zero console errors in production build
 
 ---
 
-**Last Updated**: 2025-01-10 (Initial creation from documentation analysis)
+## Performance Targets
+
+All targets have been met:
+
+- ✅ File upload processing: < 2s
+- ✅ Chart generation: < 3s per chart
+- ✅ AI insights (all charts + summary): < 8s total
+- ✅ PDF export: < 5s
+- ✅ **Total end-to-end flow**: < 15s
+
+**Optimization Techniques Used**:
+- DuckDB for large dataset queries (faster than Pandas)
+- AI response caching (24-hour TTL)
+- Lazy chart rendering
+- Efficient DataFrame operations
+- Minimal re-renders in React
+
+---
+
+## Security Considerations
+
+### Implemented Security Measures
+
+1. **Authentication**:
+   - JWT tokens with 7-day expiry
+   - bcrypt password hashing (irreversible)
+   - Session tracking with server-side revocation
+
+2. **Authorization**:
+   - All endpoints (except auth) require valid JWT
+   - User isolation (users only see their own data)
+   - Project ownership validation
+
+3. **File Upload Security**:
+   - File size validation (max 10MB)
+   - Extension whitelist (CSV, XLSX only)
+   - Content validation (malformed file detection)
+   - CSV injection protection (sanitize `=`, `+`, `-`, `@` prefixes)
+
+4. **API Security**:
+   - CORS whitelist (frontend origin only)
+   - Rate limiting (100 requests/minute)
+   - Input validation (Pydantic models)
+   - Error message sanitization (no stack traces to client)
+
+5. **Database Security**:
+   - Parameterized queries (SQLAlchemy ORM)
+   - No raw SQL execution
+   - Connection pooling
+
+---
+
+## Common Issues & Solutions
+
+### "ANTHROPIC_API_KEY not found"
+
+**Issue**: AI insights not generating  
+**Solution**: Charts still work, but insights disabled. Add API key to `backend/.env`
+
+### "Could not validate credentials"
+
+**Issue**: 401 error on protected endpoints  
+**Solution**: Token expired or invalid. Log in again.
+
+### "Port 8000 already in use"
+
+**Issue**: Cannot start backend  
+**Solution**: 
+```bash
+lsof -ti:8000 | xargs kill -9  # macOS/Linux
+# Or change PORT in backend/.env
+```
+
+### "Module not found" (Backend)
+
+**Issue**: Import errors  
+**Solution**:
+```bash
+cd backend
+poetry install
+```
+
+### "Cannot connect to backend" (Frontend)
+
+**Issue**: API calls failing  
+**Solution**: Verify backend running at http://localhost:8000/docs
+
+### Database migration conflicts
+
+**Issue**: Alembic migration errors  
+**Solution**:
+```bash
+cd backend
+rm hikaru.db alembic/versions/*.py
+poetry run alembic revision --autogenerate -m "initial"
+poetry run alembic upgrade head
+```
+
+---
+
+## Code Quality Standards
+
+### Backend
+
+- **Formatting**: Black (line length 100)
+- **Linting**: Ruff
+- **Type Checking**: mypy (strict mode)
+- **Testing**: Pytest (aim for 80%+ coverage)
+- **Documentation**: Docstrings for public functions
+
+### Frontend
+
+- **Language**: TypeScript (strict mode)
+- **Formatting**: Prettier
+- **Linting**: ESLint
+- **Components**: Functional components only (no class components)
+- **State**: React hooks (useState, useEffect, etc.)
+
+---
+
+## Where to Find Things
+
+### "I need to..."
+
+**Add a new AI prompt**:
+- Edit `backend/app/services/ai_service.py`
+- Methods: `generate_chart_insight()`, `generate_global_summary()`, `answer_question()`
+
+**Change chart generation logic**:
+- Edit `backend/app/services/chart_generator.py`
+- Methods: `_try_line_chart()`, `_try_pie_chart()`, `_try_bar_chart()`, `_try_scatter()`
+
+**Modify authentication flow**:
+- Edit `backend/app/services/auth_service.py`
+- Edit `backend/app/api/routes/auth.py`
+
+**Add a new database table**:
+1. Edit `backend/app/models/database.py` (add SQLAlchemy model)
+2. Run `poetry run alembic revision --autogenerate -m "add_table"`
+3. Run `poetry run alembic upgrade head`
+
+**Add a new UI component**:
+- Create in `frontend/src/components/`
+- Use shadcn/ui primitives from `frontend/src/components/ui/`
+
+**Change file upload limits**:
+- Edit `MAX_FILE_SIZE_MB` in `backend/.env`
+- Edit validation in `backend/app/api/routes/upload.py`
+
+**Modify PDF export layout**:
+- Edit `backend/app/api/routes/export.py`
+- ReportLab code in `generate_pdf()` function
+
+---
+
+## Next Steps (Pending)
+
+**Phase 10: Additional Testing**
+- Frontend tests (Vitest + React Testing Library)
+- E2E tests (Playwright or Cypress)
+- Increase backend coverage to 80%+
+
+**Phase 11: Deployment**
+- Docker containerization
+- PostgreSQL migration
+- Environment-specific configs
+- CI/CD pipeline
+- Production monitoring
+
+See [`PROGRESS.md`](PROGRESS.md) for current status and detailed plans.
+
+---
+
+## Important Notes for AI Assistants
+
+1. **Always run tests** after making backend changes: `poetry run pytest`
+2. **Always build** after making frontend changes: `npm run build`
+3. **Use Service Layer Pattern** for new business logic (don't put logic in routes)
+4. **Follow existing code style** (Black for Python, Prettier for TypeScript)
+5. **Add tests** for new features (don't decrease coverage)
+6. **Update PROGRESS.md** when completing major work
+7. **Don't commit** `.env`, `hikaru.db`, `storage/`, `node_modules/`, `dist/`
+
+---
+
+**Last Updated**: November 15, 2025  
+**Maintained By**: Sanzoku Labs  
+**For Questions**: See README.md or PROGRESS.md

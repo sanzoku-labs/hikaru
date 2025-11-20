@@ -129,6 +129,7 @@ test.describe('Register Page', () => {
       },
     });
 
+
     // Try to register same username again via UI
     const duplicateEmail = `duplicate_${testUser.email}`;
     await registerPage.fillForm(
@@ -163,6 +164,7 @@ test.describe('Register Page', () => {
         full_name: testUser.fullName,
       },
     });
+
 
     // Try to register same email again via UI
     const duplicateUsername = `duplicate_${testUser.username}`;

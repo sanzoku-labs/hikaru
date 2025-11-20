@@ -451,6 +451,7 @@ export function ProjectList() {
                     return (
                       <Card
                         key={project.id}
+                        data-testid="project-card"
                         className="hover:shadow-card-hover transition-all cursor-pointer group"
                         onClick={() => navigate(`/projects/${project.id}`)}
                       >

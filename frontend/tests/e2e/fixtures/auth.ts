@@ -25,7 +25,7 @@ function generateTestUser() {
   const random = Math.random().toString(36).substring(7);
 
   return {
-    email: `test-${timestamp}-${random}@hikaru.test`,
+    email: `test-${timestamp}-${random}@example.com`,
     username: `testuser_${timestamp}_${random}`,
     password: 'TestPassword123!',
     fullName: `Test User ${timestamp}`,
@@ -47,7 +47,7 @@ async function registerUser(page: Page, user: { email: string; username: string;
 
   expect(response.ok()).toBeTruthy();
   const data = await response.json();
-  return data.access_token;
+  return { token: data.access_token, user: data.user };
 }
 
 /**
@@ -67,12 +67,15 @@ async function loginUser(page: Page, username: string, password: string) {
 }
 
 /**
- * Sets authentication token in localStorage
+ * Sets authentication token and user data in localStorage
  */
-async function setAuthToken(page: Page, token: string) {
-  await page.addInitScript((token) => {
+async function setAuthToken(page: Page, token: string, user?: any) {
+  await page.addInitScript(({ token, user }) => {
     localStorage.setItem('auth_token', token);
-  }, token);
+    if (user) {
+      localStorage.setItem('auth_user', JSON.stringify(user));
+    }
+  }, { token, user });
 }
 
 /**
@@ -88,16 +91,22 @@ export const test = base.extend<AuthFixtures>({
   // Authenticated page fixture - automatically logs in before each test
   authenticatedPage: async ({ page, testUser }, use) => {
     // Register and login the test user
-    const token = await registerUser(page, testUser);
+    const { token, user } = await registerUser(page, testUser);
 
-    // Set auth token in localStorage
-    await setAuthToken(page, token);
+    // Set auth token and user data in localStorage
+    await setAuthToken(page, token, user);
 
-    // Navigate to app (now authenticated)
-    await page.goto('/');
+    // Navigate to app (now authenticated) - go directly to projects
+    await page.goto('/projects');
+
+    // Wait for page to fully load
+    await page.waitForLoadState('networkidle');
 
     // Wait for app to recognize authentication
-    await page.waitForSelector('[data-testid="authenticated-layout"]', { timeout: 5000 }).catch(() => {
+    await page.waitForSelector('[data-testid="authenticated-layout"]', {
+      state: 'visible',
+      timeout: 5000
+    }).catch(() => {
       // Fallback: just wait for page load
     });
 

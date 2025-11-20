@@ -55,7 +55,7 @@ test.describe('Login Page', () => {
 
   test('should successfully login with valid credentials', async ({ page, testUser }) => {
     // First register the user via API
-    await page.request.post('http://localhost:8000/api/auth/register', {
+    const registerResponse = await page.request.post('http://localhost:8000/api/auth/register', {
       data: {
         email: testUser.email,
         username: testUser.username,
@@ -63,6 +63,9 @@ test.describe('Login Page', () => {
         full_name: testUser.fullName,
       },
     });
+
+    // Verify registration succeeded
+    expect(registerResponse.ok()).toBeTruthy();
 
     // Now login via UI
     await loginPage.fillCredentials(testUser.username, testUser.password);
@@ -87,6 +90,7 @@ test.describe('Login Page', () => {
       },
     });
 
+
     // Login with email
     await loginPage.fillCredentials(testUser.email, testUser.password);
     await loginPage.submit();
@@ -105,6 +109,7 @@ test.describe('Login Page', () => {
         full_name: testUser.fullName,
       },
     });
+
 
     await loginPage.fillCredentials(testUser.username, testUser.password);
 

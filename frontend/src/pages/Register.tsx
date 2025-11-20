@@ -65,7 +65,7 @@ export default function Register() {
 
       // Registration successful - auto login
       login(result.access_token, result.user);
-      navigate("/");
+      navigate("/projects");
     } catch (err: any) {
       if (err instanceof ApiError) {
         setError(err.detail || err.message);

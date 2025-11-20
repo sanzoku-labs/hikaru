@@ -12,6 +12,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import List
 
+import pandas as pd
+
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
@@ -25,6 +27,7 @@ from app.models.database import Project, User
 from app.models.schemas import (
     AnalysisHistoryItem,
     AnalysisHistoryResponse,
+    AnalysisListResponse,
     ErrorResponse,
     FileAnalysisResponse,
     FileAnalyzeRequest,
@@ -34,6 +37,8 @@ from app.models.schemas import (
     ProjectListResponse,
     ProjectResponse,
     ProjectUpdate,
+    SavedAnalysisDetail,
+    SavedAnalysisSummary,
 )
 from app.services.ai_service import AIService
 from app.services.chart_generator import ChartGenerator
@@ -41,6 +46,26 @@ from app.services.data_processor import DataProcessor
 from app.services.project_service import ProjectService
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
+
+
+# Custom JSON encoder to handle Pandas Timestamps and other special types
+class CustomJSONEncoder(json.JSONEncoder):
+    """JSON encoder that handles Pandas Timestamps and numpy types."""
+
+    def default(self, obj):
+        # Handle Pandas Timestamp
+        if isinstance(obj, pd.Timestamp):
+            return obj.isoformat()
+
+        # Handle standard datetime
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+
+        # Handle pandas NA/NaT
+        if pd.isna(obj):
+            return None
+
+        return super().default(obj)
 
 
 @router.post("", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
@@ -617,17 +642,19 @@ async def analyze_project_file(
     project_id: int,
     file_id: int,
     request: FileAnalyzeRequest,
+    save: bool = True,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
     """
     Analyze a file in a project, generating charts and AI insights.
-    Results are saved to the database for fast retrieval.
+    Results can be saved to database or returned as temporary analysis.
 
     Args:
         project_id: Project ID
         file_id: File ID
         request: Analysis request with optional user intent
+        save: If True, saves analysis to database. If False, returns temporary analysis
         current_user: Authenticated user
         db: Database session
 
@@ -673,59 +700,44 @@ async def analyze_project_file(
         # Parse schema from stored JSON
         schema = processor.analyze_schema(df)
 
-        # Generate charts
-        chart_generator = ChartGenerator()
-        charts_data_raw = chart_generator.generate_charts(df, schema)
+        # Use AnalysisService for AI-powered chart generation with user intent support
+        from app.services.analysis_service import AnalysisService
 
-        # Generate AI insights
-        ai_service = AIService()
+        analysis_service = AnalysisService()
+        analysis_result = analysis_service.perform_full_analysis(
+            df=df,
+            schema=schema,
+            user_intent=request.user_intent,  # Pass user intent for AI-powered suggestions
+            max_charts=4
+        )
 
-        # Add insights to charts by creating new chart objects with insights
-        from app.models.schemas import ChartData
+        charts_with_insights = analysis_result["charts"]
+        global_summary = analysis_result["global_summary"]
 
-        charts_with_insights = []
-        for chart_data in charts_data_raw:
-            try:
-                # Convert to ChartData if it's a dict
-                if isinstance(chart_data, dict):
-                    chart_obj = ChartData(**chart_data)
-                else:
-                    chart_obj = chart_data
+        # Conditional save: only save to database if save=True
+        if save:
+            # Store analysis results in FileAnalysis table
+            from app.models.database import FileAnalysis
 
-                # Generate insight for this chart
-                insight = ai_service.generate_chart_insight(chart_obj, schema)
+            analysis_json_dict = {
+                "charts": [chart.model_dump() for chart in charts_with_insights],
+                "global_summary": global_summary,
+                "schema": schema.model_dump(),
+            }
 
-                # Create new chart dict with insight
-                chart_dict = chart_obj.model_dump()
-                chart_dict["insight"] = insight
-                charts_with_insights.append(ChartData(**chart_dict))
-            except Exception as e:
-                logger.warning(f"Failed to generate insight for chart: {e}")
-                # Add chart without insight
-                chart_dict = chart_data if isinstance(chart_data, dict) else chart_data.model_dump()
-                chart_dict["insight"] = None
-                charts_with_insights.append(ChartData(**chart_dict))
+            file_analysis = FileAnalysis(
+                file_id=file.id,
+                analysis_json=json.dumps(analysis_json_dict, cls=CustomJSONEncoder),
+                user_intent=request.user_intent,
+            )
 
-        # Generate global summary
-        try:
-            global_summary = ai_service.generate_global_summary(charts_with_insights, schema)
-        except Exception as e:
-            logger.warning(f"Failed to generate global summary: {e}")
-            global_summary = None
-
-        # Store analysis results in database
-        analysis_json = {
-            "charts": [chart.model_dump() for chart in charts_with_insights],
-            "global_summary": global_summary,
-            "schema": schema.model_dump(),
-        }
-
-        file.analysis_json = json.dumps(analysis_json)
-        file.analysis_timestamp = datetime.now(timezone.utc)
-        file.user_intent = request.user_intent
-
-        db.commit()
-        db.refresh(file)
+            db.add(file_analysis)
+            db.commit()
+            db.refresh(file_analysis)
+            analyzed_at = file_analysis.created_at
+        else:
+            # Return temporary analysis without saving
+            analyzed_at = datetime.now(timezone.utc)
 
         return FileAnalysisResponse(
             file_id=file.id,
@@ -733,7 +745,7 @@ async def analyze_project_file(
             charts=charts_with_insights,
             global_summary=global_summary,
             user_intent=request.user_intent,
-            analyzed_at=file.analysis_timestamp,
+            analyzed_at=analyzed_at,
         )
 
     except HTTPException:
@@ -901,4 +913,252 @@ async def get_analysis_history(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve analysis history: {str(e)}",
+        )
+
+
+# ===== Multi-Analysis Endpoints (FileAnalysis table) =====
+
+
+@router.get("/{project_id}/files/{file_id}/analyses", response_model=AnalysisListResponse)
+async def list_file_analyses(
+    project_id: int,
+    file_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    List all saved analyses for a file.
+
+    Args:
+        project_id: Project ID
+        file_id: File ID
+        current_user: Authenticated user
+        db: Database session
+
+    Returns:
+        AnalysisListResponse with list of saved analyses
+    """
+    try:
+        from app.models.database import FileAnalysis
+        from app.models.schemas import SavedAnalysisSummary, ChartData
+
+        project_service = ProjectService(db)
+
+        # Verify project exists and user owns it
+        project = project_service.get_project(project_id=project_id, user_id=current_user.id)
+
+        # Find file
+        file = (
+            db.query(FileModel)
+            .filter(FileModel.id == file_id, FileModel.project_id == project_id)
+            .first()
+        )
+
+        if not file:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"File {file_id} not found in project {project_id}",
+            )
+
+        # Get all analyses for this file
+        file_analyses = (
+            db.query(FileAnalysis)
+            .filter(FileAnalysis.file_id == file_id)
+            .order_by(FileAnalysis.created_at.desc())
+            .all()
+        )
+
+        # Build summary list
+        summaries = []
+        for analysis in file_analyses:
+            analysis_data = json.loads(analysis.analysis_json)
+            charts_count = len(analysis_data.get("charts", []))
+
+            summaries.append(
+                SavedAnalysisSummary(
+                    analysis_id=analysis.id,
+                    user_intent=analysis.user_intent,
+                    charts_count=charts_count,
+                    created_at=analysis.created_at,
+                )
+            )
+
+        return AnalysisListResponse(
+            file_id=file.id,
+            filename=file.filename,
+            total_analyses=len(summaries),
+            analyses=summaries,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to list analyses for file {file_id}: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to list analyses: {str(e)}",
+        )
+
+
+@router.get(
+    "/{project_id}/files/{file_id}/analyses/{analysis_id}",
+    response_model=SavedAnalysisDetail,
+)
+async def get_file_analysis(
+    project_id: int,
+    file_id: int,
+    analysis_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Get a specific saved analysis.
+
+    Args:
+        project_id: Project ID
+        file_id: File ID
+        analysis_id: Analysis ID
+        current_user: Authenticated user
+        db: Database session
+
+    Returns:
+        SavedAnalysisDetail with full analysis data
+    """
+    try:
+        from app.models.database import FileAnalysis
+        from app.models.schemas import ChartData
+
+        project_service = ProjectService(db)
+
+        # Verify project exists and user owns it
+        project = project_service.get_project(project_id=project_id, user_id=current_user.id)
+
+        # Find file
+        file = (
+            db.query(FileModel)
+            .filter(FileModel.id == file_id, FileModel.project_id == project_id)
+            .first()
+        )
+
+        if not file:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"File {file_id} not found in project {project_id}",
+            )
+
+        # Find analysis
+        analysis = (
+            db.query(FileAnalysis)
+            .filter(FileAnalysis.id == analysis_id, FileAnalysis.file_id == file_id)
+            .first()
+        )
+
+        if not analysis:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Analysis {analysis_id} not found",
+            )
+
+        # Parse analysis data
+        analysis_data = json.loads(analysis.analysis_json)
+        charts = [ChartData(**chart) for chart in analysis_data.get("charts", [])]
+
+        return SavedAnalysisDetail(
+            analysis_id=analysis.id,
+            file_id=file.id,
+            filename=file.filename,
+            charts=charts,
+            global_summary=analysis_data.get("global_summary"),
+            user_intent=analysis.user_intent,
+            created_at=analysis.created_at,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(
+            f"Failed to get analysis {analysis_id} for file {file_id}: {str(e)}", exc_info=True
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get analysis: {str(e)}",
+        )
+
+
+@router.delete(
+    "/{project_id}/files/{file_id}/analyses/{analysis_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_file_analysis(
+    project_id: int,
+    file_id: int,
+    analysis_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Delete a saved analysis.
+
+    Args:
+        project_id: Project ID
+        file_id: File ID
+        analysis_id: Analysis ID
+        current_user: Authenticated user
+        db: Database session
+
+    Returns:
+        No content (204)
+    """
+    try:
+        from app.models.database import FileAnalysis
+
+        project_service = ProjectService(db)
+
+        # Verify project exists and user owns it
+        project = project_service.get_project(project_id=project_id, user_id=current_user.id)
+
+        # Find file
+        file = (
+            db.query(FileModel)
+            .filter(FileModel.id == file_id, FileModel.project_id == project_id)
+            .first()
+        )
+
+        if not file:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"File {file_id} not found in project {project_id}",
+            )
+
+        # Find analysis
+        analysis = (
+            db.query(FileAnalysis)
+            .filter(FileAnalysis.id == analysis_id, FileAnalysis.file_id == file_id)
+            .first()
+        )
+
+        if not analysis:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Analysis {analysis_id} not found",
+            )
+
+        # Delete analysis
+        db.delete(analysis)
+        db.commit()
+
+        logger.info(
+            f"Deleted analysis {analysis_id} for file {file_id} in project {project_id}"
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(
+            f"Failed to delete analysis {analysis_id} for file {file_id}: {str(e)}", exc_info=True
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete analysis: {str(e)}",
         )

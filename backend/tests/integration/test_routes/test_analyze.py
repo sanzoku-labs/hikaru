@@ -62,7 +62,8 @@ class TestAnalyzeEndpoint:
             upload_id=upload_id,
             filename="test_data.csv",
             schema=schema,
-            df=df
+            df=df,
+            user_id=test_user.id  # Associate upload with test_user
         )
 
         return upload_id

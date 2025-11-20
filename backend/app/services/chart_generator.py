@@ -337,7 +337,7 @@ class ChartGenerator:
     def _create_pie_chart_from_suggestion(
         self, df: pd.DataFrame, suggestion: Dict[str, Any]
     ) -> Optional[ChartConfig]:
-        """Create pie chart from AI suggestion"""
+        """Create pie chart from AI suggestion with validation"""
         category_col = suggestion.get("category_column")
         value_col = suggestion.get("value_column")
 
@@ -347,6 +347,19 @@ class ChartGenerator:
             or category_col not in df.columns
             or value_col not in df.columns
         ):
+            return None
+
+        # Validate number of unique categories (must be 2-8 for readable pie charts)
+        unique_count = df[category_col].nunique()
+        if unique_count < 2 or unique_count > 8:
+            logger.warning(
+                f"Skipping pie chart suggestion for {category_col}: "
+                f"{unique_count} unique values (must be 2-8 for readability)"
+            )
+            # Convert to bar chart instead if too many categories
+            if unique_count > 8:
+                logger.info(f"Converting to top-15 bar chart instead")
+                return self._create_bar_chart(df, category_col, value_col, priority=3)
             return None
 
         # Use existing method

@@ -24,7 +24,8 @@ class UploadService:
         self.db = db
 
     def store_upload(
-        self, upload_id: str, filename: str, schema: DataSchema, df: pd.DataFrame
+        self, upload_id: str, filename: str, schema: DataSchema, df: pd.DataFrame,
+        user_id: int = None
     ) -> str:
         """
         Store upload metadata and dataframe in the database.
@@ -34,6 +35,7 @@ class UploadService:
             filename: Original filename
             schema: DataSchema object with column metadata
             df: Pandas DataFrame with the uploaded data
+            user_id: Optional user ID who owns this upload
 
         Returns:
             The upload_id
@@ -53,6 +55,7 @@ class UploadService:
             schema_json=schema_json,
             data_csv=data_csv,
             upload_date=datetime.now(timezone.utc),
+            user_id=user_id,
         )
 
         self.db.add(upload)

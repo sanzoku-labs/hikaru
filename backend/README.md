@@ -261,7 +261,7 @@ DATABASE_URL=sqlite:///./hikaru.db
 CORS_ORIGINS=http://localhost:5173
 
 # File Upload
-MAX_FILE_SIZE_MB=10
+MAX_FILE_SIZE_MB=30
 UPLOAD_DIR=./storage
 ```
 

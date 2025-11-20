@@ -347,7 +347,7 @@ All endpoints (except auth) require JWT token in `Authorization: Bearer <token>`
 - **CORS Protection**: Configured origin whitelist
 - **Rate Limiting**: 100 requests/minute per IP
 - **Input Validation**: Pydantic models on all endpoints
-- **File Validation**: Size limits (10MB), extension whitelist, content validation
+- **File Validation**: Size limits (30MB), extension whitelist, content validation
 - **CSV Injection Protection**: Sanitizes cells starting with `=`, `+`, `-`, `@`
 
 ---

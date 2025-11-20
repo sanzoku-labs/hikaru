@@ -67,7 +67,7 @@ export function Analytics() {
   const handleLoadAnalysis = (
     projectId: number,
     fileId: number,
-    analysisId: string,
+    analysisId: number,
   ) => {
     navigate(`/projects/${projectId}/files/${fileId}/analysis/${analysisId}`);
   };

@@ -39,6 +39,12 @@ async def analyze_data(
     upload_service = UploadService(db)
     upload_data = upload_service.get_upload(upload_id)
 
+    # Verify user owns this upload (security check)
+    from app.models.database import Upload
+    upload_record = db.query(Upload).filter_by(upload_id=upload_id).first()
+    if upload_record and upload_record.user_id and upload_record.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail=f"Upload ID {upload_id} not found")
+
     try:
         # Get data from storage (already parsed)
         df = upload_data["dataframe"]

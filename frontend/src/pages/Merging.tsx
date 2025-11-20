@@ -16,7 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -128,7 +127,7 @@ export function Merging() {
     try {
       setAnalyzing(true);
       setError(null);
-      const result = await api.analyzeMerge(parseInt(projectId), {
+      const result = await api.analyzeMergedData(parseInt(projectId), {
         relationship_id: relationship.id,
       });
       setMergeResult(result);

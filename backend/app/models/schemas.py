@@ -107,6 +107,7 @@ class ChartData(BaseModel):
     data: List[Dict[str, Any]]
     priority: int
     insight: Optional[str] = None  # Phase 3: AI-generated insight
+    comparison_insight: Optional[str] = None  # Phase 7: Comparison-specific insight
 
 
 class AnalyzeResponse(BaseModel):
@@ -425,6 +426,37 @@ class FileAnalysisResponse(BaseModel):
     analyzed_at: datetime
 
 
+# Multi-Analysis Schemas (for FileAnalysis table)
+class SavedAnalysisSummary(BaseModel):
+    """Summary of a saved analysis for list view."""
+
+    analysis_id: int
+    user_intent: Optional[str] = None
+    charts_count: int
+    created_at: datetime
+
+
+class SavedAnalysisDetail(BaseModel):
+    """Full details of a saved analysis."""
+
+    analysis_id: int
+    file_id: int
+    filename: str
+    charts: List[ChartData]
+    global_summary: Optional[str] = None
+    user_intent: Optional[str] = None
+    created_at: datetime
+
+
+class AnalysisListResponse(BaseModel):
+    """Response for listing all analyses for a file."""
+
+    file_id: int
+    filename: str
+    total_analyses: int
+    analyses: List[SavedAnalysisSummary]
+
+
 # Analytics Dashboard Schemas
 class RecentAnalysis(BaseModel):
     """Schema for recent analysis item in analytics."""
@@ -468,3 +500,30 @@ class AnalyticsResponse(BaseModel):
     recent_analyses: List[RecentAnalysis]
     chart_type_distribution: ChartDistribution
     top_insights: List[TopInsight]
+
+
+# ===== Phase 10: Advanced Chart Insights =====
+
+
+class ChartInsightRequest(BaseModel):
+    """Request schema for generating advanced chart insight on-demand."""
+
+    file_id: int
+    chart_type: Literal["line", "bar", "pie", "scatter"]
+    chart_title: str
+    chart_data: List[Dict[str, Any]]  # Chart data points
+    x_column: Optional[str] = None
+    y_column: Optional[str] = None
+    category_column: Optional[str] = None
+    value_column: Optional[str] = None
+
+
+class ChartInsightResponse(BaseModel):
+    """Response schema for chart insight."""
+
+    insight: str
+    insight_type: Literal["basic", "advanced"] = "advanced"
+    chart_hash: str  # MD5 hash for caching
+    generated_at: datetime
+    model_version: str
+    cached: bool = False  # Whether this was retrieved from cache/db

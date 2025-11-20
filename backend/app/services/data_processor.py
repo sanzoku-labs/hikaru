@@ -84,7 +84,7 @@ class DataProcessor:
         # Try to convert to datetime
         if series.dtype == "object":
             try:
-                pd.to_datetime(series.dropna().head(100))
+                pd.to_datetime(series.dropna().head(100), format='mixed')
                 return "datetime"
             except:
                 pass

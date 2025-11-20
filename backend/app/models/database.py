@@ -194,3 +194,47 @@ class Dashboard(Base):
 
     def __repr__(self):
         return f"<Dashboard(id={self.id}, name={self.name}, type={self.dashboard_type}, project_id={self.project_id})>"
+
+
+class ChartInsight(Base):
+    """ChartInsight model to store AI-generated insights for individual charts."""
+
+    __tablename__ = "chart_insights"
+
+    id = Column(Integer, primary_key=True, index=True)
+    file_id = Column(Integer, ForeignKey("files.id"), nullable=False)
+    chart_hash = Column(String(64), index=True, nullable=False)  # MD5 of chart config
+    chart_type = Column(String(20), nullable=False)  # line, bar, pie, scatter
+    chart_title = Column(String(255), nullable=False)
+    insight = Column(Text, nullable=False)
+    insight_type = Column(String(20), default="basic", nullable=False)  # basic, advanced
+    generated_at = Column(DateTime, default=utc_now, nullable=False)
+    model_version = Column(String(50), nullable=False)  # e.g., claude-sonnet-4-20250514
+
+    # Relationships
+    file = relationship("File", backref="chart_insights")
+
+    def __repr__(self):
+        return f"<ChartInsight(id={self.id}, chart_title={self.chart_title}, type={self.chart_type})>"
+
+
+class FileAnalysis(Base):
+    """FileAnalysis model to store multiple analysis versions per file."""
+
+    __tablename__ = "file_analyses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    file_id = Column(Integer, ForeignKey("files.id"), nullable=False)
+
+    # Analysis content
+    analysis_json = Column(Text, nullable=False)  # JSON: {charts, global_summary, schema}
+    user_intent = Column(Text, nullable=True)  # User's intent for this analysis
+
+    # Metadata
+    created_at = Column(DateTime, default=utc_now, nullable=False)
+
+    # Relationships
+    file = relationship("File", backref="file_analyses")
+
+    def __repr__(self):
+        return f"<FileAnalysis(id={self.id}, file_id={self.file_id}, created_at={self.created_at})>"

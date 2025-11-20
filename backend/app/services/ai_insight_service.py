@@ -247,6 +247,112 @@ Be concise and specific. Avoid generic statements."""
 
         return "\n".join(lines)
 
+    def generate_advanced_chart_insight(
+        self, chart: ChartData, schema: DataSchema, chart_hash: str
+    ) -> Optional[str]:
+        """
+        Generate advanced insight for a single chart with deeper analysis.
+
+        This method provides more detailed insights including:
+        - Statistical analysis (trends, distributions)
+        - Anomaly detection
+        - Business recommendations
+        - Comparative analysis
+
+        Args:
+            chart: Chart data with type, title, and data points
+            schema: Dataset schema information
+            chart_hash: MD5 hash of chart config for caching
+
+        Returns:
+            Generated advanced insight text or None if AI is disabled/error occurs
+        """
+        if not self.enabled:
+            return None
+
+        # Check cache if available
+        cache_key = None
+        if self.cache:
+            cache_key = f"advanced_insight:{chart_hash}"
+            cached_insight = self.cache.get(cache_key)
+            if cached_insight:
+                logger.debug(f"Cache hit for advanced chart insight: {cache_key}")
+                return cached_insight
+
+        try:
+            prompt = self._build_advanced_chart_prompt(chart, schema)
+
+            message = self.client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=400,  # More tokens for detailed analysis
+                messages=[{"role": "user", "content": prompt}],
+            )
+
+            insight = message.content[0].text.strip()
+
+            # Cache the result if cache available
+            if self.cache and cache_key:
+                self.cache.set(cache_key, insight, ttl_hours=24)
+
+            return insight
+
+        except Exception as e:
+            logger.error(f"Error generating advanced chart insight: {e}")
+            return None
+
+    def _build_advanced_chart_prompt(self, chart: ChartData, schema: DataSchema) -> str:
+        """Build prompt for advanced chart-specific insight with deep analysis"""
+        data_section = self._format_chart_data(chart)
+
+        # Chart-type-specific analysis prompts
+        chart_specific_prompts = {
+            "line": """- Identify trends (upward, downward, cyclical, seasonal patterns)
+- Detect anomalies or sudden changes
+- Forecast potential future behavior
+- Compare performance across different periods""",
+            "bar": """- Rank categories by performance
+- Identify top and bottom performers
+- Calculate performance gaps and disparities
+- Suggest optimization opportunities for underperforming categories""",
+            "pie": """- Analyze distribution and concentration
+- Identify dominant vs. negligible segments
+- Suggest consolidation or splitting strategies
+- Highlight imbalanced distributions""",
+            "scatter": """- Identify correlation patterns (positive, negative, none)
+- Detect clusters or outliers
+- Suggest potential relationships between variables
+- Highlight data points that deviate from expected patterns""",
+        }
+
+        chart_type_prompt = chart_specific_prompts.get(
+            chart.chart_type,
+            """- Identify key patterns and trends
+- Detect anomalies or outliers
+- Provide actionable recommendations""",
+        )
+
+        prompt = f"""Analyze this {chart.chart_type} chart in detail and provide advanced insights (4-6 sentences).
+
+Chart: {chart.title}
+Type: {chart.chart_type}
+Data points: {len(chart.data)}
+
+{data_section}
+
+Provide a comprehensive analysis covering:
+
+{chart_type_prompt}
+
+**Format your response with:**
+1. **Key Finding**: One sentence summarizing the most important pattern
+2. **Statistical Insight**: Specific numbers, percentages, or metrics
+3. **Anomalies/Outliers**: Any unusual data points or deviations (if applicable)
+4. **Business Recommendation**: Actionable advice based on the data
+
+Be specific, quantitative, and actionable. Avoid generic statements."""
+
+        return prompt
+
     def _build_summary_prompt(self, charts: List[ChartData], schema: DataSchema) -> str:
         """Build prompt for global data summary"""
         chart_titles = [chart.title for chart in charts]

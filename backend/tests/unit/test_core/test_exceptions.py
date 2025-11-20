@@ -115,11 +115,11 @@ class TestFileTooLargeError:
     """Tests for FileTooLargeError."""
 
     def test_has_correct_status_code(self):
-        error = FileTooLargeError("File exceeds 10MB")
+        error = FileTooLargeError("File exceeds 30MB")
         assert error.status_code == 413
 
     def test_has_correct_error_code(self):
-        error = FileTooLargeError("File exceeds 10MB")
+        error = FileTooLargeError("File exceeds 30MB")
         assert error.error_code == "file_too_large"
 
 

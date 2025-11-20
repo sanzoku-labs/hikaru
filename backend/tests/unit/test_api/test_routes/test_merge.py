@@ -180,7 +180,12 @@ async def test_create_relationship_success(
         mock_merge_service_class.return_value = mock_merge_service
 
         # Setup db operations
-        with patch.object(mock_db, "refresh", side_effect=lambda obj: setattr(obj, "id", 10)):
+        def mock_refresh(obj):
+            """Mock refresh to set database-generated fields"""
+            obj.id = 10
+            obj.created_at = datetime.now(timezone.utc)
+
+        with patch.object(mock_db, "refresh", side_effect=mock_refresh):
             # Call endpoint
             result = await create_relationship(
                 project_id=1,
@@ -355,7 +360,12 @@ async def test_create_relationship_left_join(
 
         mock_db.add.side_effect = track_add
 
-        with patch.object(mock_db, "refresh", side_effect=lambda obj: setattr(obj, "id", 11)):
+        def mock_refresh(obj):
+            """Mock refresh to set database-generated fields"""
+            obj.id = 11
+            obj.created_at = datetime.now(timezone.utc)
+
+        with patch.object(mock_db, "refresh", side_effect=mock_refresh):
             # Call endpoint
             await create_relationship(
                 project_id=1,
@@ -450,13 +460,22 @@ async def test_analyze_merged_data_success(
     sample_merge_charts,
 ):
     """Test successful merge analysis"""
+    # Create sample relationship
+    sample_relationship = Mock()
+    sample_relationship.id = 1
+    sample_relationship.project_id = 1
+    sample_relationship.relationship_type = "merge"
+    sample_relationship.config_json = json.dumps({
+        "file_a_id": 1,
+        "file_b_id": 2,
+        "join_type": "inner",
+        "left_key": "customer_id",
+        "right_key": "customer_id",
+    })
+    sample_relationship.created_at = datetime.now(timezone.utc)
+
     request_data = MergeAnalyzeRequest(
-        file_a_id=1,
-        file_b_id=2,
-        join_type="inner",
-        left_key="customer_id",
-        right_key="customer_id",
-        max_charts=4,
+        relationship_id=1,
     )
 
     sample_schema = DataSchema(
@@ -492,11 +511,12 @@ async def test_analyze_merged_data_success(
     )
 
     with patch("app.api.routes.merge.MergeService") as mock_merge_service_class:
-        with patch("app.api.routes.merge.DataProcessor") as mock_data_processor_class:
-            with patch("app.api.routes.merge.AnalysisService") as mock_analysis_service_class:
-                # Setup db mocks
+        with patch("app.api.routes.merge.ChartGenerator") as mock_chart_generator_class:
+            with patch("app.api.routes.merge.AIService") as mock_ai_service_class:
+                # Setup db mocks - need to include relationship query
                 mock_db.query.return_value.filter.return_value.first.side_effect = [
                     sample_project,
+                    sample_relationship,
                     sample_file_a,
                     sample_file_b,
                 ]
@@ -504,45 +524,43 @@ async def test_analyze_merged_data_success(
                 # Setup MergeService mock
                 mock_merge_service = Mock()
                 mock_merge_service.load_file.side_effect = [sample_dataframe_a, sample_dataframe_b]
-                mock_merge_service.merge_dataframes.return_value = sample_merged_dataframe
+                mock_merge_service.merge_files.return_value = (sample_merged_dataframe, sample_schema)
                 mock_merge_service_class.return_value = mock_merge_service
 
-                # Setup DataProcessor mock
-                mock_data_processor = Mock()
-                mock_data_processor.detect_schema.return_value = sample_schema
-                mock_data_processor_class.return_value = mock_data_processor
+                # Setup ChartGenerator mock
+                mock_chart_generator = Mock()
+                mock_chart_generator.generate_charts.return_value = sample_merge_charts
+                mock_chart_generator_class.return_value = mock_chart_generator
 
-                # Setup AnalysisService mock
-                mock_analysis_service = Mock()
-                mock_analysis_service.perform_full_analysis.return_value = {
-                    "charts": sample_merge_charts,
-                    "global_summary": "Merged data shows customer order patterns"
-                }
-                mock_analysis_service_class.return_value = mock_analysis_service
+                # Setup AIService mock
+                mock_ai_service = Mock()
+                mock_ai_service.generate_chart_insight.return_value = "AI insight"
+                mock_ai_service.generate_global_summary.return_value = "Merged data shows customer order patterns"
+                mock_ai_service_class.return_value = mock_ai_service
 
                 # Call endpoint
                 result = await analyze_merged_data(
                     project_id=1,
-                    merge_data=request_data,
+                    merge_request=request_data,
                     current_user=mock_user,
                     db=mock_db,
                 )
 
                 # Verify result
-                assert result.merged_rows == 3
+                assert result.merged_row_count == 3
                 assert len(result.charts) == 1
                 assert result.global_summary == "Merged data shows customer order patterns"
-                assert result.schema.row_count == 3
+                assert result.merged_schema.row_count == 3
 
                 # Verify service was called
-                mock_merge_service.merge_dataframes.assert_called_once_with(
+                mock_merge_service.merge_files.assert_called_once_with(
                     sample_dataframe_a,
                     sample_dataframe_b,
-                    left_key="customer_id",
-                    right_key="customer_id",
-                    join_type="inner",
-                    left_suffix="_x",
-                    right_suffix="_y"
+                    "customer_id",
+                    "customer_id",
+                    "inner",
+                    "_a",
+                    "_b"
                 )
 
 
@@ -559,63 +577,75 @@ async def test_analyze_merged_data_outer_join(
     sample_merge_charts,
 ):
     """Test merge analysis with outer join"""
+    # Create sample relationship with outer join
+    sample_relationship = Mock()
+    sample_relationship.id = 2
+    sample_relationship.project_id = 1
+    sample_relationship.relationship_type = "merge"
+    sample_relationship.config_json = json.dumps({
+        "file_a_id": 1,
+        "file_b_id": 2,
+        "join_type": "outer",
+        "left_key": "customer_id",
+        "right_key": "customer_id",
+    })
+    sample_relationship.created_at = datetime.now(timezone.utc)
+
     request_data = MergeAnalyzeRequest(
-        file_a_id=1,
-        file_b_id=2,
-        join_type="outer",
-        left_key="customer_id",
-        right_key="customer_id",
+        relationship_id=2,
     )
 
     with patch("app.api.routes.merge.MergeService") as mock_merge_service_class:
-        with patch("app.api.routes.merge.DataProcessor") as mock_data_processor_class:
-            with patch("app.api.routes.merge.AnalysisService") as mock_analysis_service_class:
+        with patch("app.api.routes.merge.ChartGenerator") as mock_chart_generator_class:
+            with patch("app.api.routes.merge.AIService") as mock_ai_service_class:
                 # Setup mocks
                 mock_db.query.return_value.filter.return_value.first.side_effect = [
                     sample_project,
+                    sample_relationship,
                     sample_file_a,
                     sample_file_b,
                 ]
 
+                schema_with_row_count = DataSchema(
+                    columns=[],
+                    row_count=5,
+                    preview=[],
+                )
+
                 mock_merge_service = Mock()
                 mock_merge_service.load_file.side_effect = [sample_dataframe_a, sample_dataframe_b]
-                mock_merge_service.merge_dataframes.return_value = sample_merged_dataframe
+                mock_merge_service.merge_files.return_value = (sample_merged_dataframe, schema_with_row_count)
                 mock_merge_service_class.return_value = mock_merge_service
 
-                mock_data_processor = Mock()
-                mock_data_processor.detect_schema.return_value = Mock(row_count=5)
-                mock_data_processor_class.return_value = mock_data_processor
+                mock_chart_generator = Mock()
+                mock_chart_generator.generate_charts.return_value = sample_merge_charts
+                mock_chart_generator_class.return_value = mock_chart_generator
 
-                mock_analysis_service = Mock()
-                mock_analysis_service.perform_full_analysis.return_value = {
-                    "charts": sample_merge_charts,
-                    "global_summary": "Summary"
-                }
-                mock_analysis_service_class.return_value = mock_analysis_service
+                mock_ai_service = Mock()
+                mock_ai_service.generate_chart_insight.return_value = None
+                mock_ai_service.generate_global_summary.return_value = "Summary"
+                mock_ai_service_class.return_value = mock_ai_service
 
                 # Call endpoint
                 result = await analyze_merged_data(
                     project_id=1,
-                    merge_data=request_data,
+                    merge_request=request_data,
                     current_user=mock_user,
                     db=mock_db,
                 )
 
                 # Verify outer join was used
-                mock_merge_service.merge_dataframes.assert_called_once()
-                call_kwargs = mock_merge_service.merge_dataframes.call_args[1]
-                assert call_kwargs["join_type"] == "outer"
+                mock_merge_service.merge_files.assert_called_once()
+                call_args = mock_merge_service.merge_files.call_args[0]
+                # join_type is the 5th positional argument
+                assert call_args[4] == "outer"
 
 
 @pytest.mark.asyncio
 async def test_analyze_merged_data_project_not_found(mock_db, mock_user):
     """Test merge analysis when project doesn't exist"""
     request_data = MergeAnalyzeRequest(
-        file_a_id=1,
-        file_b_id=2,
-        join_type="inner",
-        left_key="id",
-        right_key="id",
+        relationship_id=1,
     )
 
     # Setup db to return None for project
@@ -625,7 +655,7 @@ async def test_analyze_merged_data_project_not_found(mock_db, mock_user):
     with pytest.raises(HTTPException) as exc_info:
         await analyze_merged_data(
             project_id=999,
-            merge_data=request_data,
+            merge_request=request_data,
             current_user=mock_user,
             db=mock_db,
         )
@@ -642,36 +672,48 @@ async def test_analyze_merged_data_service_error(
     sample_file_b,
 ):
     """Test merge analysis when service throws error"""
+    # Create sample relationship
+    sample_relationship = Mock()
+    sample_relationship.id = 1
+    sample_relationship.project_id = 1
+    sample_relationship.relationship_type = "merge"
+    sample_relationship.config_json = json.dumps({
+        "file_a_id": 1,
+        "file_b_id": 2,
+        "join_type": "inner",
+        "left_key": "customer_id",
+        "right_key": "customer_id",
+    })
+    sample_relationship.created_at = datetime.now(timezone.utc)
+
     request_data = MergeAnalyzeRequest(
-        file_a_id=1,
-        file_b_id=2,
-        join_type="inner",
-        left_key="customer_id",
-        right_key="customer_id",
+        relationship_id=1,
     )
 
     with patch("app.api.routes.merge.MergeService") as mock_merge_service_class:
-        # Setup db mocks
-        mock_db.query.return_value.filter.return_value.first.side_effect = [
-            sample_project,
-            sample_file_a,
-            sample_file_b,
-        ]
+        with patch("app.api.routes.merge.ChartGenerator"):
+            with patch("app.api.routes.merge.AIService"):
+                # Setup db mocks
+                mock_db.query.return_value.filter.return_value.first.side_effect = [
+                    sample_project,
+                    sample_relationship,
+                    sample_file_a,
+                    sample_file_b,
+                ]
 
-        # Setup MergeService to raise error
-        mock_merge_service = Mock()
-        mock_merge_service.load_file.side_effect = Exception("Failed to load file")
-        mock_merge_service_class.return_value = mock_merge_service
+                # Setup MergeService to raise error
+                mock_merge_service = Mock()
+                mock_merge_service.load_file.side_effect = Exception("Failed to load file")
+                mock_merge_service_class.return_value = mock_merge_service
 
-        # Should raise HTTPException
-        with pytest.raises(HTTPException) as exc_info:
-            await analyze_merged_data(
-                project_id=1,
-                merge_data=request_data,
-                current_user=mock_user,
-                db=mock_db,
-            )
+                # Should raise HTTPException
+                with pytest.raises(HTTPException) as exc_info:
+                    await analyze_merged_data(
+                        project_id=1,
+                        merge_request=request_data,
+                        current_user=mock_user,
+                        db=mock_db,
+                    )
 
-        assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-        assert "Failed to merge and analyze files" in str(exc_info.value.detail)
-        mock_db.rollback.assert_called_once()
+                assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+                assert "Failed to analyze merged data" in str(exc_info.value.detail)

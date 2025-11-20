@@ -29,7 +29,11 @@ import type {
   DashboardResponse,
   DashboardListResponse,
   AnalysisHistoryResponse,
+  AnalysisListResponse,
+  SavedAnalysisDetail,
   AnalyticsResponse,
+  ChartInsightRequest,
+  ChartInsightResponse,
 } from "@/types";
 
 const API_BASE_URL =
@@ -613,9 +617,10 @@ export const api = {
     projectId: number,
     fileId: number,
     userIntent?: string,
+    save: boolean = true,
   ): Promise<FileAnalysisResponse> {
     const response = await fetch(
-      `${API_BASE_URL}/api/projects/${projectId}/files/${fileId}/analyze`,
+      `${API_BASE_URL}/api/projects/${projectId}/files/${fileId}/analyze?save=${save}`,
       {
         method: "POST",
         headers: {
@@ -850,6 +855,105 @@ export const api = {
       const error = await response.json();
       throw new ApiError(
         error.detail || "Delete dashboard failed",
+        response.status,
+        error.detail,
+      );
+    }
+  },
+
+  // ===== Chart Insights API (Phase 10) =====
+
+  async generateChartInsight(
+    request: ChartInsightRequest,
+  ): Promise<ChartInsightResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/charts/insight`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new ApiError(
+        error.detail || "Generate chart insight failed",
+        response.status,
+        error.detail,
+      );
+    }
+
+    return response.json();
+  },
+
+  // Multi-Analysis Endpoints (FileAnalysis table)
+  async listFileAnalyses(
+    projectId: number,
+    fileId: number,
+  ): Promise<AnalysisListResponse> {
+    const response = await fetch(
+      `${API_BASE_URL}/api/projects/${projectId}/files/${fileId}/analyses`,
+      {
+        method: "GET",
+        headers: getAuthHeaders(),
+      },
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new ApiError(
+        error.detail || "Failed to list analyses",
+        response.status,
+        error.detail,
+      );
+    }
+
+    return response.json();
+  },
+
+  async getFileAnalysis(
+    projectId: number,
+    fileId: number,
+    analysisId: number,
+  ): Promise<SavedAnalysisDetail> {
+    const response = await fetch(
+      `${API_BASE_URL}/api/projects/${projectId}/files/${fileId}/analyses/${analysisId}`,
+      {
+        method: "GET",
+        headers: getAuthHeaders(),
+      },
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new ApiError(
+        error.detail || "Failed to get analysis",
+        response.status,
+        error.detail,
+      );
+    }
+
+    return response.json();
+  },
+
+  async deleteFileAnalysis(
+    projectId: number,
+    fileId: number,
+    analysisId: number,
+  ): Promise<void> {
+    const response = await fetch(
+      `${API_BASE_URL}/api/projects/${projectId}/files/${fileId}/analyses/${analysisId}`,
+      {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      },
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new ApiError(
+        error.detail || "Failed to delete analysis",
         response.status,
         error.detail,
       );

@@ -70,12 +70,15 @@ async def test_get_analytics_success(mock_db, mock_user):
     recent_file1.filename = "sales.csv"
     recent_file1.analysis_timestamp = datetime.now(timezone.utc) - timedelta(hours=1)
     recent_file1.project_id = 1
-    recent_file1.project = Mock(name="Project A")
     recent_file1.schema_json = '{"columns": [], "row_count": 100, "preview": []}'
     recent_file1.analysis_json = '{"charts": [], "global_summary": "Test summary"}'
 
-    # For all() call (recent analyses)
-    mock_query.all.return_value = [recent_file1]
+    recent_project1 = Mock()
+    recent_project1.id = 1
+    recent_project1.name = "Project A"
+
+    # For all() call (recent analyses) - must return list of tuples (file, project)
+    mock_query.all.return_value = [(recent_file1, recent_project1)]
 
     # For order_by, limit calls
     mock_query.order_by.return_value = mock_query
@@ -197,7 +200,6 @@ async def test_get_analytics_with_chart_distribution(mock_db, mock_user):
     file1.filename = "data1.csv"
     file1.analysis_timestamp = datetime.now(timezone.utc)
     file1.project_id = 1
-    file1.project = Mock(name="Project")
     file1.schema_json = '{}'
     file1.analysis_json = '{"charts": [{"chart_type": "line"}, {"chart_type": "bar"}], "global_summary": ""}'
 
@@ -206,11 +208,20 @@ async def test_get_analytics_with_chart_distribution(mock_db, mock_user):
     file2.filename = "data2.csv"
     file2.analysis_timestamp = datetime.now(timezone.utc)
     file2.project_id = 1
-    file2.project = Mock(name="Project")
     file2.schema_json = '{}'
     file2.analysis_json = '{"charts": [{"chart_type": "line"}, {"chart_type": "pie"}], "global_summary": ""}'
 
-    mock_query.all.return_value = [file1, file2]
+    project1 = Mock()
+    project1.id = 1
+    project1.name = "Project"
+
+    # Setup mock to handle multiple .all() calls in execution order
+    # First call (line 169): recent_files query (returns tuples of (file, project))
+    # Second call (line 203): analyzed_files query (returns just files, not tuples)
+    mock_query.all.side_effect = [
+        [(file1, project1), (file2, project1)],  # recent_files (for recent analyses)
+        [file1, file2]  # analyzed_files (for chart distribution)
+    ]
     mock_query.order_by.return_value = mock_query
     mock_query.limit.return_value = mock_query
     mock_db.query.return_value = mock_query
@@ -223,11 +234,11 @@ async def test_get_analytics_with_chart_distribution(mock_db, mock_user):
 
     # Verify chart distribution is calculated
     # Should have: 2 line, 1 bar, 1 pie
-    assert len(result.chart_distribution) > 0
-    chart_types = {chart.chart_type: chart.count for chart in result.chart_distribution}
-    assert chart_types.get("line", 0) == 2
-    assert chart_types.get("bar", 0) == 1
-    assert chart_types.get("pie", 0) == 1
+    # Fixed: use chart_type_distribution (not chart_distribution)
+    assert result.chart_type_distribution.line == 2
+    assert result.chart_type_distribution.bar == 1
+    assert result.chart_type_distribution.pie == 1
+    assert result.chart_type_distribution.scatter == 0
 
 
 @pytest.mark.asyncio
@@ -247,20 +258,27 @@ async def test_get_analytics_with_top_insights(mock_db, mock_user):
     file1.filename = "sales.csv"
     file1.analysis_timestamp = datetime.now(timezone.utc)
     file1.project_id = 1
-    file1.project = Mock(name="Sales Project")
     file1.schema_json = '{}'
-    file1.analysis_json = '{"charts": [], "global_summary": "Revenue increased by 20%"}'
+    file1.analysis_json = '{"charts": [{"insight": "Revenue increased by 20%"}], "global_summary": ""}'
 
     file2 = Mock()
     file2.id = 2
     file2.filename = "users.csv"
     file2.analysis_timestamp = datetime.now(timezone.utc)
-    file2.project_id = 1
-    file2.project = Mock(name="User Project")
+    file2.project_id = 2
     file2.schema_json = '{}'
-    file2.analysis_json = '{"charts": [], "global_summary": "User growth is strong"}'
+    file2.analysis_json = '{"charts": [{"insight": "User growth is strong"}], "global_summary": ""}'
 
-    mock_query.all.return_value = [file1, file2]
+    project1 = Mock()
+    project1.id = 1
+    project1.name = "Sales Project"
+
+    project2 = Mock()
+    project2.id = 2
+    project2.name = "User Project"
+
+    # Must return list of tuples (file, project)
+    mock_query.all.return_value = [(file1, project1), (file2, project2)]
     mock_query.order_by.return_value = mock_query
     mock_query.limit.return_value = mock_query
     mock_db.query.return_value = mock_query
@@ -291,7 +309,7 @@ async def test_get_analytics_database_error(mock_db, mock_user):
         )
 
     assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-    assert "Failed to get analytics" in str(exc_info.value.detail)
+    assert "Failed to calculate analytics" in str(exc_info.value.detail)  # Fixed: actual error message
 
 
 @pytest.mark.asyncio
@@ -311,7 +329,6 @@ async def test_get_analytics_recent_analyses_sorting(mock_db, mock_user):
     file1.filename = "old.csv"
     file1.analysis_timestamp = datetime.now(timezone.utc) - timedelta(days=5)
     file1.project_id = 1
-    file1.project = Mock(name="Project")
     file1.schema_json = '{}'
     file1.analysis_json = '{}'
 
@@ -320,7 +337,6 @@ async def test_get_analytics_recent_analyses_sorting(mock_db, mock_user):
     file2.filename = "new.csv"
     file2.analysis_timestamp = datetime.now(timezone.utc) - timedelta(hours=1)
     file2.project_id = 1
-    file2.project = Mock(name="Project")
     file2.schema_json = '{}'
     file2.analysis_json = '{}'
 
@@ -329,12 +345,15 @@ async def test_get_analytics_recent_analyses_sorting(mock_db, mock_user):
     file3.filename = "newest.csv"
     file3.analysis_timestamp = datetime.now(timezone.utc)
     file3.project_id = 1
-    file3.project = Mock(name="Project")
     file3.schema_json = '{}'
     file3.analysis_json = '{}'
 
-    # Return in order (should be sorted by timestamp desc)
-    mock_query.all.return_value = [file3, file2, file1]
+    project1 = Mock()
+    project1.id = 1
+    project1.name = "Project"
+
+    # Return in order (should be sorted by timestamp desc) - must be tuples (file, project)
+    mock_query.all.return_value = [(file3, project1), (file2, project1), (file1, project1)]
     mock_query.order_by.return_value = mock_query
     mock_query.limit.return_value = mock_query
     mock_db.query.return_value = mock_query

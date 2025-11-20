@@ -5,9 +5,10 @@ import type { ChartData } from '@/types'
 interface ChartGridProps {
   charts: ChartData[]
   loading?: boolean
+  fileId?: number // Optional file ID for advanced insights
 }
 
-export function ChartGrid({ charts, loading = false }: ChartGridProps) {
+export function ChartGrid({ charts, loading = false, fileId }: ChartGridProps) {
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -29,7 +30,7 @@ export function ChartGrid({ charts, loading = false }: ChartGridProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {charts.map((chart, index) => (
-        <ChartCard key={index} chart={chart} />
+        <ChartCard key={index} chart={chart} fileId={fileId} />
       ))}
     </div>
   )

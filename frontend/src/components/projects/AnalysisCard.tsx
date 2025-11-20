@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 
 interface AnalysisCardProps {
   analysis: {
-    analysis_id: string;
+    analysis_id: number;
     file_id: number;
     filename: string;
     charts_count: number;

@@ -651,7 +651,7 @@ export function ProjectDetail() {
           <FileUploadZone
             onUpload={handleFileUpload}
             acceptedFileTypes={[".csv", ".xlsx", ".xls"]}
-            maxSize={10}
+            maxSize={30}
           />
         </DialogContent>
       </Dialog>

@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     cors_origins: str | List[str] = "http://localhost:5173"
 
     # File Upload
-    max_file_size_mb: int = 10
+    max_file_size_mb: int = 30
     allowed_extensions: str | List[str] = "csv,xlsx"
 
     # AI

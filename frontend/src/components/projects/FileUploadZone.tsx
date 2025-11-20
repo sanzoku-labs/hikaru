@@ -45,7 +45,7 @@ const formatFileSize = (bytes: number): string => {
 export function FileUploadZone({
   onUpload,
   multiple = false,
-  maxSize = 10, // 10MB default
+  maxSize = 30, // 30MB default
   acceptedFileTypes = ['.csv', '.xlsx', '.xls'],
   disabled = false,
   className

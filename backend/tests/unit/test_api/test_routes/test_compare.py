@@ -52,22 +52,38 @@ def sample_project():
 @pytest.fixture
 def sample_file_a():
     """Sample file A"""
+    from datetime import datetime, timezone
     file = Mock()
     file.id = 1
     file.filename = "sales_2023.csv"
     file.file_path = "storage/1/sales_2023.csv"
     file.project_id = 1
+    file.upload_id = "upload-123"
+    file.file_size = 1024
+    file.row_count = 3
+    file.data_schema_json = '{"columns": []}'
+    file.uploaded_at = datetime.now(timezone.utc)
+    file.has_analysis = True
+    file.analyzed_at = datetime.now(timezone.utc)
     return file
 
 
 @pytest.fixture
 def sample_file_b():
     """Sample file B"""
+    from datetime import datetime, timezone
     file = Mock()
     file.id = 2
     file.filename = "sales_2024.csv"
     file.file_path = "storage/1/sales_2024.csv"
     file.project_id = 1
+    file.upload_id = "upload-456"
+    file.file_size = 2048
+    file.row_count = 3
+    file.data_schema_json = '{"columns": []}'
+    file.uploaded_at = datetime.now(timezone.utc)
+    file.has_analysis = True
+    file.analyzed_at = datetime.now(timezone.utc)
     return file
 
 
@@ -92,19 +108,24 @@ def sample_dataframe_b():
 @pytest.fixture
 def sample_overlay_charts():
     """Sample overlay charts"""
+    from app.models.schemas import OverlayChartData
     return [
-        ChartData(
+        OverlayChartData(
             chart_type="line",
             title="Revenue Comparison",
+            file_a_name="sales_2023.csv",
+            file_b_name="sales_2024.csv",
             x_column="month",
             y_column="revenue",
-            data=[
-                {"series": "sales_2023.csv", "x": "Jan", "y": 100},
-                {"series": "sales_2023.csv", "x": "Feb", "y": 150},
-                {"series": "sales_2024.csv", "x": "Jan", "y": 120},
-                {"series": "sales_2024.csv", "x": "Feb", "y": 180},
+            file_a_data=[
+                {"x": "Jan", "y": 100},
+                {"x": "Feb", "y": 150},
             ],
-            priority=1,
+            file_b_data=[
+                {"x": "Jan", "y": 120},
+                {"x": "Feb", "y": 180},
+            ],
+            comparison_insight="Strong positive correlation",
         )
     ]
 
@@ -161,10 +182,17 @@ async def test_compare_files_success(
             mock_comparison_service.calculate_metrics.return_value = sample_metrics
             mock_comparison_service_class.return_value = mock_comparison_service
 
-            # Setup AIService mock
+            # Setup AIService mock (methods are async)
             mock_ai_service = Mock()
-            mock_ai_service.generate_comparison_insight.return_value = "Revenue increased by 20% in 2024"
-            mock_ai_service.generate_chart_comparison_insight.return_value = "Strong positive correlation"
+
+            async def mock_generate_comparison_insight(*args, **kwargs):
+                return "Revenue increased by 20% in 2024"
+
+            async def mock_generate_chart_comparison_insight(*args, **kwargs):
+                return "Strong positive correlation"
+
+            mock_ai_service.generate_comparison_insight = mock_generate_comparison_insight
+            mock_ai_service.generate_chart_comparison_insight = mock_generate_chart_comparison_insight
             mock_ai_service_class.return_value = mock_ai_service
 
             # Setup db operations
@@ -176,7 +204,12 @@ async def test_compare_files_success(
             mock_db.refresh.return_value = None
 
             # Mock the relationship refresh
-            with patch.object(mock_db, "refresh", side_effect=lambda obj: setattr(obj, "id", 1)):
+            def mock_refresh(obj):
+                """Mock refresh to set database-generated fields"""
+                obj.id = 1
+                obj.created_at = datetime.now(timezone.utc)
+
+            with patch.object(mock_db, "refresh", side_effect=mock_refresh):
                 # Call endpoint
                 result = await compare_files(
                     project_id=1,
@@ -316,7 +349,7 @@ async def test_compare_files_year_over_year(
     request_data = ComparisonRequest(
         file_a_id=1,
         file_b_id=2,
-        comparison_type="year_over_year"
+        comparison_type="yoy"  # Fixed: use literal "yoy" not "year_over_year"
     )
 
     with patch("app.api.routes.compare.ComparisonService") as mock_comparison_service_class:
@@ -334,13 +367,26 @@ async def test_compare_files_year_over_year(
             mock_comparison_service.calculate_metrics.return_value = sample_metrics
             mock_comparison_service_class.return_value = mock_comparison_service
 
+            # Setup AIService mock (methods are async)
             mock_ai_service = Mock()
-            mock_ai_service.generate_comparison_insight.return_value = "YoY growth: 20%"
-            mock_ai_service.generate_chart_comparison_insight.return_value = "Consistent growth"
+
+            async def mock_generate_comparison_insight(*args, **kwargs):
+                return "YoY growth: 20%"
+
+            async def mock_generate_chart_comparison_insight(*args, **kwargs):
+                return "Consistent growth"
+
+            mock_ai_service.generate_comparison_insight = mock_generate_comparison_insight
+            mock_ai_service.generate_chart_comparison_insight = mock_generate_chart_comparison_insight
             mock_ai_service_class.return_value = mock_ai_service
 
             # Setup relationship
-            with patch.object(mock_db, "refresh", side_effect=lambda obj: setattr(obj, "id", 2)):
+            def mock_refresh(obj):
+                """Mock refresh to set database-generated fields"""
+                obj.id = 2
+                obj.created_at = datetime.now(timezone.utc)
+
+            with patch.object(mock_db, "refresh", side_effect=mock_refresh):
                 # Call endpoint
                 result = await compare_files(
                     project_id=1,
@@ -350,13 +396,13 @@ async def test_compare_files_year_over_year(
                 )
 
             # Verify correct comparison_type was used
-            assert result.comparison_type == "year_over_year"
+            assert result.comparison_type == "yoy"  # Fixed: check for literal value
             mock_comparison_service.generate_overlay_charts.assert_called_once_with(
                 sample_dataframe_a,
                 sample_dataframe_b,
                 sample_file_a.filename,
                 sample_file_b.filename,
-                "year_over_year"
+                "yoy"  # Fixed: use literal value not alias
             )
 
 
@@ -394,13 +440,26 @@ async def test_compare_files_trend_comparison(
             mock_comparison_service.calculate_metrics.return_value = sample_metrics
             mock_comparison_service_class.return_value = mock_comparison_service
 
+            # Setup AIService mock (methods are async)
             mock_ai_service = Mock()
-            mock_ai_service.generate_comparison_insight.return_value = "Upward trend detected"
-            mock_ai_service.generate_chart_comparison_insight.return_value = "Trend insight"
+
+            async def mock_generate_comparison_insight(*args, **kwargs):
+                return "Upward trend detected"
+
+            async def mock_generate_chart_comparison_insight(*args, **kwargs):
+                return "Trend insight"
+
+            mock_ai_service.generate_comparison_insight = mock_generate_comparison_insight
+            mock_ai_service.generate_chart_comparison_insight = mock_generate_chart_comparison_insight
             mock_ai_service_class.return_value = mock_ai_service
 
             # Setup relationship
-            with patch.object(mock_db, "refresh", side_effect=lambda obj: setattr(obj, "id", 3)):
+            def mock_refresh(obj):
+                """Mock refresh to set database-generated fields"""
+                obj.id = 3
+                obj.created_at = datetime.now(timezone.utc)
+
+            with patch.object(mock_db, "refresh", side_effect=mock_refresh):
                 # Call endpoint
                 result = await compare_files(
                     project_id=1,
@@ -489,9 +548,17 @@ async def test_compare_files_stores_relationship(
             mock_comparison_service.calculate_metrics.return_value = sample_metrics
             mock_comparison_service_class.return_value = mock_comparison_service
 
+            # Setup AIService mock (methods are async)
             mock_ai_service = Mock()
-            mock_ai_service.generate_comparison_insight.return_value = "Insight"
-            mock_ai_service.generate_chart_comparison_insight.return_value = "Chart insight"
+
+            async def mock_generate_comparison_insight(*args, **kwargs):
+                return "Insight"
+
+            async def mock_generate_chart_comparison_insight(*args, **kwargs):
+                return "Chart insight"
+
+            mock_ai_service.generate_comparison_insight = mock_generate_comparison_insight
+            mock_ai_service.generate_chart_comparison_insight = mock_generate_chart_comparison_insight
             mock_ai_service_class.return_value = mock_ai_service
 
             # Setup relationship tracking
@@ -503,7 +570,12 @@ async def test_compare_files_stores_relationship(
 
             mock_db.add.side_effect = track_add
 
-            with patch.object(mock_db, "refresh", side_effect=lambda obj: setattr(obj, "id", 5)):
+            def mock_refresh(obj):
+                """Mock refresh to set database-generated fields"""
+                obj.id = 5
+                obj.created_at = datetime.now(timezone.utc)
+
+            with patch.object(mock_db, "refresh", side_effect=mock_refresh):
                 # Call endpoint
                 await compare_files(
                     project_id=1,

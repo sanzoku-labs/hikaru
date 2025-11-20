@@ -10,6 +10,7 @@ from app.api.routes import (
     compare,
     dashboards,
     export,
+    insights,
     merge,
     projects,
     query,
@@ -56,6 +57,7 @@ app.include_router(compare.router)  # Phase 7B: File comparison
 app.include_router(merge.router)  # Phase 7C: File merging
 app.include_router(dashboards.router)  # Phase 7E: Dashboard management
 app.include_router(analytics.router)  # Analytics dashboard
+app.include_router(insights.router)  # Phase 10: Advanced chart insights
 
 
 @app.get("/health")

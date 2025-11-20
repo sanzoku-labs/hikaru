@@ -49,10 +49,10 @@ export function FileUploader({ onUploadSuccess }: FileUploaderProps) {
       return
     }
 
-    // Validate file size (10MB)
-    const maxSize = 10 * 1024 * 1024
+    // Validate file size (30MB)
+    const maxSize = 30 * 1024 * 1024
     if (selectedFile.size > maxSize) {
-      setError(`File too large. Maximum size: 10MB`)
+      setError(`File too large. Maximum size: 30MB`)
       return
     }
 
@@ -114,7 +114,7 @@ export function FileUploader({ onUploadSuccess }: FileUploaderProps) {
               or click to browse
             </p>
             <p className="text-xs text-muted-foreground">
-              Supports CSV and Excel files (max 10MB)
+              Supports CSV and Excel files (max 30MB)
             </p>
             <input
               ref={inputRef}

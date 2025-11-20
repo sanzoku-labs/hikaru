@@ -627,7 +627,7 @@ All targets have been met:
    - Project ownership validation
 
 3. **File Upload Security**:
-   - File size validation (max 10MB)
+   - File size validation (max 30MB)
    - Extension whitelist (CSV, XLSX only)
    - Content validation (malformed file detection)
    - CSV injection protection (sanitize `=`, `+`, `-`, `@` prefixes)

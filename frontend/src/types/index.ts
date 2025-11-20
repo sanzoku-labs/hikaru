@@ -288,6 +288,31 @@ export interface AnalysisHistoryResponse {
   analyses: AnalysisHistoryItem[];
 }
 
+// Multi-Analysis Types (FileAnalysis table)
+export interface SavedAnalysisSummary {
+  analysis_id: number;
+  user_intent?: string;
+  charts_count: number;
+  created_at: string;
+}
+
+export interface SavedAnalysisDetail {
+  analysis_id: number;
+  file_id: number;
+  filename: string;
+  charts: ChartData[];
+  global_summary?: string;
+  user_intent?: string;
+  created_at: string;
+}
+
+export interface AnalysisListResponse {
+  file_id: number;
+  filename: string;
+  total_analyses: number;
+  analyses: SavedAnalysisSummary[];
+}
+
 // Dashboard Types
 export interface DashboardCreate {
   name: string;
@@ -319,12 +344,15 @@ export interface DashboardListResponse {
 
 // Analytics Types
 export interface RecentAnalysis {
+  analysis_id: number;
   file_id: number;
   filename: string;
   project_id: number;
   project_name: string;
   analyzed_at: string;
   charts_count: number;
+  has_global_summary: boolean;
+  user_intent?: string;
 }
 
 export interface ChartDistribution {
@@ -352,4 +380,26 @@ export interface AnalyticsResponse {
   recent_analyses: RecentAnalysis[];
   chart_type_distribution: ChartDistribution;
   top_insights: TopInsight[];
+}
+
+// ===== Phase 10: Advanced Chart Insights Types =====
+
+export interface ChartInsightRequest {
+  file_id: number;
+  chart_type: "line" | "bar" | "pie" | "scatter";
+  chart_title: string;
+  chart_data: Array<Record<string, any>>;
+  x_column?: string;
+  y_column?: string;
+  category_column?: string;
+  value_column?: string;
+}
+
+export interface ChartInsightResponse {
+  insight: string;
+  insight_type: "basic" | "advanced";
+  chart_hash: string;
+  generated_at: string;
+  model_version: string;
+  cached: boolean;
 }

@@ -1,0 +1,51 @@
+employee_id,first_name,last_name,department,position,salary,hire_date
+E001,John,Smith,Engineering,Senior Developer,95000,2019-03-15
+E002,Sarah,Johnson,Engineering,Lead Developer,110000,2018-01-10
+E003,Michael,Williams,Engineering,Junior Developer,65000,2022-06-01
+E004,Emily,Brown,Engineering,DevOps Engineer,85000,2020-09-20
+E005,David,Jones,Marketing,Marketing Manager,90000,2019-07-12
+E006,Jennifer,Garcia,Marketing,Content Specialist,55000,2021-11-05
+E007,Robert,Martinez,Marketing,SEO Analyst,60000,2021-03-18
+E008,Lisa,Rodriguez,Sales,Sales Director,115000,2017-05-22
+E009,James,Davis,Sales,Account Manager,75000,2020-02-14
+E010,Maria,Miller,Sales,Sales Representative,52000,2022-08-30
+E011,William,Wilson,Sales,Sales Representative,50000,2023-01-15
+E012,Patricia,Moore,Finance,CFO,135000,2016-11-08
+E013,Richard,Taylor,Finance,Financial Analyst,70000,2020-06-25
+E014,Linda,Anderson,Finance,Accountant,62000,2021-09-10
+E015,Charles,Thomas,HR,HR Manager,82000,2019-04-03
+E016,Barbara,Jackson,HR,HR Specialist,58000,2021-07-20
+E017,Joseph,White,Engineering,QA Engineer,72000,2020-10-12
+E018,Susan,Harris,Engineering,Senior Developer,98000,2018-08-17
+E019,Thomas,Martin,Engineering,Junior Developer,63000,2022-12-05
+E020,Jessica,Thompson,Marketing,Social Media Manager,68000,2020-04-28
+E021,Daniel,Garcia,Marketing,Marketing Analyst,64000,2021-02-14
+E022,Karen,Martinez,Sales,Account Manager,77000,2019-09-30
+E023,Matthew,Lee,Sales,Sales Representative,51000,2022-10-18
+E024,Nancy,Walker,Finance,Financial Analyst,71000,2020-08-06
+E025,Mark,Hall,Finance,Accountant,60000,2021-12-22
+E026,Betty,Allen,HR,Recruiter,56000,2021-05-15
+E027,Donald,Young,Engineering,Senior Developer,96000,2018-12-03
+E028,Dorothy,King,Engineering,DevOps Engineer,86000,2020-03-09
+E029,Steven,Wright,Marketing,Content Specialist,57000,2021-08-25
+E030,Helen,Lopez,Sales,Sales Director,112000,2017-10-14
+E031,Paul,Hill,Sales,Account Manager,76000,2020-01-20
+E032,Sandra,Scott,Finance,Financial Analyst,69000,2021-04-07
+E033,Andrew,Green,Engineering,Lead Developer,108000,2018-06-18
+E034,Ashley,Adams,Marketing,Marketing Manager,88000,2019-11-29
+E035,Kenneth,Baker,Sales,Sales Representative,53000,2022-07-11
+E036,Kimberly,Gonzalez,HR,HR Specialist,59000,2021-10-03
+E037,Joshua,Nelson,Engineering,Junior Developer,64000,2023-02-28
+E038,Donna,Carter,Finance,Accountant,61000,2021-06-16
+E039,Brian,Mitchell,Engineering,QA Engineer,73000,2020-12-01
+E040,Michelle,Perez,Marketing,SEO Analyst,62000,2021-09-22
+E041,George,Roberts,Sales,Account Manager,78000,2019-05-08
+E042,Carol,Turner,Engineering,Senior Developer,97000,2018-10-25
+E043,Edward,Phillips,Finance,Financial Analyst,72000,2020-07-14
+E044,Margaret,Campbell,HR,Recruiter,57000,2021-11-30
+E045,Jason,Parker,Engineering,DevOps Engineer,87000,2020-02-05
+E046,Laura,Evans,Marketing,Marketing Analyst,65000,2021-03-27
+E047,Kevin,Edwards,Sales,Sales Representative,54000,2022-09-13
+E048,Sharon,Collins,Finance,Accountant,63000,2021-08-08
+E049,Ronald,Stewart,Engineering,Lead Developer,109000,2018-04-21
+E050,Cynthia,Morris,Marketing,Social Media Manager,69000,2020-06-17

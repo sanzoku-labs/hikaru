@@ -1,0 +1,68 @@
+date,region,product,revenue,units_sold,customer_id,sales_rep
+2024-10-01,North,Laptop,1299.99,1,C001,Alice Johnson
+2024-10-02,South,Mouse,29.99,5,C002,Bob Smith
+2024-10-03,East,Keyboard,79.99,3,C003,Carol Williams
+2024-10-04,West,Monitor,349.99,2,C004,David Brown
+2024-10-05,North,Laptop,1299.99,2,C005,Alice Johnson
+2024-10-08,South,Desk Chair,199.99,1,C006,Bob Smith
+2024-10-09,East,USB Cable,12.99,10,C007,Carol Williams
+2024-10-10,West,Webcam,89.99,4,C008,David Brown
+2024-10-11,North,Headphones,149.99,3,C009,Alice Johnson
+2024-10-12,South,Mouse Pad,14.99,8,C010,Bob Smith
+2024-10-15,East,Laptop,1299.99,1,C011,Carol Williams
+2024-10-16,West,Keyboard,79.99,2,C012,David Brown
+2024-10-17,North,Monitor,349.99,1,C013,Alice Johnson
+2024-10-18,South,HDMI Cable,19.99,6,C014,Bob Smith
+2024-10-19,East,Mouse,29.99,4,C015,Carol Williams
+2024-10-22,West,Laptop,1299.99,3,C016,David Brown
+2024-10-23,North,USB Hub,34.99,5,C017,Alice Johnson
+2024-10-24,South,Monitor,349.99,2,C018,Bob Smith
+2024-10-25,East,Keyboard,79.99,3,C019,Carol Williams
+2024-10-26,West,Desk Lamp,44.99,4,C020,David Brown
+2024-10-29,North,Laptop Stand,59.99,2,C021,Alice Johnson
+2024-10-30,South,Mouse,29.99,6,C022,Bob Smith
+2024-10-31,East,Laptop,1299.99,2,C023,Carol Williams
+2024-11-01,West,Webcam,89.99,3,C024,David Brown
+2024-11-02,North,Keyboard,79.99,4,C025,Alice Johnson
+2024-11-05,South,Monitor,349.99,1,C026,Bob Smith
+2024-11-06,East,Mouse Pad,14.99,10,C027,Carol Williams
+2024-11-07,West,Headphones,149.99,2,C028,David Brown
+2024-11-08,North,USB Cable,12.99,12,C029,Alice Johnson
+2024-11-09,South,Laptop,1299.99,1,C030,Bob Smith
+2024-11-12,East,Desk Chair,199.99,2,C031,Carol Williams
+2024-11-13,West,Mouse,29.99,5,C032,David Brown
+2024-11-14,North,HDMI Cable,19.99,8,C033,Alice Johnson
+2024-11-15,South,Keyboard,79.99,3,C034,Bob Smith
+2024-11-16,East,Monitor,349.99,1,C035,Carol Williams
+2024-11-19,West,Laptop,1299.99,2,C036,David Brown
+2024-11-20,North,Webcam,89.99,4,C037,Alice Johnson
+2024-11-21,South,Mouse Pad,14.99,9,C038,Bob Smith
+2024-11-22,East,USB Hub,34.99,3,C039,Carol Williams
+2024-11-23,West,Keyboard,79.99,2,C040,David Brown
+2024-11-26,North,Laptop,1299.99,3,C041,Alice Johnson
+2024-11-27,South,Monitor,349.99,2,C042,Bob Smith
+2024-11-28,East,Mouse,29.99,7,C043,Carol Williams
+2024-11-29,West,Desk Lamp,44.99,3,C044,David Brown
+2024-11-30,North,Headphones,149.99,2,C045,Alice Johnson
+2024-12-02,South,Laptop,1299.99,1,C046,Bob Smith
+2024-12-03,East,Keyboard,79.99,4,C047,Carol Williams
+2024-12-04,West,USB Cable,12.99,15,C048,David Brown
+2024-12-05,North,Monitor,349.99,1,C049,Alice Johnson
+2024-12-06,South,Mouse,29.99,6,C050,Bob Smith
+2024-12-09,East,Laptop,1299.99,2,C051,Carol Williams
+2024-12-10,West,Desk Chair,199.99,1,C052,David Brown
+2024-12-11,North,Mouse Pad,14.99,11,C053,Alice Johnson
+2024-12-12,South,Webcam,89.99,3,C054,Bob Smith
+2024-12-13,East,Keyboard,79.99,5,C055,Carol Williams
+2024-12-16,West,Laptop,1299.99,4,C056,David Brown
+2024-12-17,North,HDMI Cable,19.99,7,C057,Alice Johnson
+2024-12-18,South,Monitor,349.99,2,C058,Bob Smith
+2024-12-19,East,Mouse,29.99,8,C059,Carol Williams
+2024-12-20,West,Headphones,149.99,3,C060,David Brown
+2024-12-23,North,Laptop,1299.99,5,C061,Alice Johnson
+2024-12-24,South,USB Hub,34.99,4,C062,Bob Smith
+2024-12-26,East,Keyboard,79.99,3,C063,Carol Williams
+2024-12-27,West,Mouse Pad,14.99,12,C064,David Brown
+2024-12-28,North,Monitor,349.99,2,C065,Alice Johnson
+2024-12-30,South,Laptop,1299.99,3,C066,Bob Smith
+2024-12-31,East,Desk Lamp,44.99,2,C067,Carol Williams

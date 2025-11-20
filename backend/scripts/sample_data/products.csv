@@ -1,0 +1,31 @@
+id,name,category,price,stock_quantity,supplier,last_restocked
+1,Laptop Pro 15,Electronics,1299.99,45,TechSupply Inc,2024-11-01
+2,Wireless Mouse,Electronics,29.99,250,TechSupply Inc,2024-11-10
+3,Mechanical Keyboard,Electronics,79.99,120,TechSupply Inc,2024-11-05
+4,4K Monitor 27inch,Electronics,349.99,80,DisplayTech Ltd,2024-10-28
+5,USB-C Hub,Electronics,34.99,200,TechSupply Inc,2024-11-12
+6,Desk Chair Ergonomic,Furniture,199.99,35,OfficeFurnish Co,2024-10-15
+7,Standing Desk,Furniture,449.99,20,OfficeFurnish Co,2024-10-20
+8,Desk Lamp LED,Furniture,44.99,150,LightingPro,2024-11-08
+9,Webcam HD 1080p,Electronics,89.99,95,TechSupply Inc,2024-11-03
+10,Headphones Noise Cancelling,Electronics,149.99,75,AudioTech,2024-11-07
+11,Mouse Pad Large,Electronics,14.99,300,TechSupply Inc,2024-11-15
+12,HDMI Cable 6ft,Electronics,19.99,180,CableWorld,2024-11-02
+13,USB Cable 3pk,Electronics,12.99,220,CableWorld,2024-11-09
+14,Laptop Stand,Furniture,59.99,110,OfficeFurnish Co,2024-10-25
+15,Monitor Arm,Furniture,79.99,60,OfficeFurnish Co,2024-10-30
+16,Cable Management Box,Furniture,24.99,140,OfficeFurnish Co,2024-11-06
+17,Desk Organizer,Furniture,19.99,160,OfficeFurnish Co,2024-11-11
+18,Portable SSD 1TB,Electronics,119.99,90,StoragePro,2024-11-04
+19,External HDD 2TB,Electronics,79.99,85,StoragePro,2024-10-29
+20,USB Flash Drive 64GB,Electronics,15.99,250,StoragePro,2024-11-13
+21,Wireless Charger,Electronics,39.99,130,TechSupply Inc,2024-11-01
+22,Phone Stand,Furniture,12.99,200,OfficeFurnish Co,2024-11-14
+23,Bluetooth Speaker,Electronics,59.99,100,AudioTech,2024-10-27
+24,Microphone USB,Electronics,79.99,70,AudioTech,2024-11-05
+25,Graphics Tablet,Electronics,199.99,40,ArtTech,2024-10-22
+26,Stylus Pen,Electronics,29.99,180,ArtTech,2024-11-08
+27,Laptop Sleeve 15inch,Accessories,34.99,120,BagCo,2024-11-02
+28,Backpack Tech,Accessories,79.99,65,BagCo,2024-10-18
+29,Screen Cleaner Kit,Accessories,14.99,210,CleanPro,2024-11-12
+30,Anti-fatigue Mat,Furniture,49.99,55,OfficeFurnish Co,2024-10-26

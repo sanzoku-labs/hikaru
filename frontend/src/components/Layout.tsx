@@ -23,7 +23,7 @@ export function Layout({ children }: LayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background" data-testid="authenticated-layout">
       {/* Sidebar Navigation */}
       <Sidebar
         collapsed={sidebarCollapsed}
@@ -44,7 +44,7 @@ export function Layout({ children }: LayoutProps) {
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="gap-2">
+              <Button variant="ghost" className="gap-2" data-testid="user-avatar">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="bg-primary/10 text-primary font-medium">
                     {(user?.username?.[0] || user?.email?.[0] || 'U').toUpperCase()}
@@ -56,11 +56,11 @@ export function Layout({ children }: LayoutProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={() => navigate('/profile')}>
+              <DropdownMenuItem onClick={() => navigate('/profile')} data-testid="profile-button">
                 <UserIcon className="h-4 w-4 mr-2" />
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/settings')}>
+              <DropdownMenuItem onClick={() => navigate('/settings')} data-testid="settings-button">
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
               </DropdownMenuItem>
@@ -70,6 +70,7 @@ export function Layout({ children }: LayoutProps) {
                   logout()
                   navigate('/login')
                 }}
+                data-testid="logout-button"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout

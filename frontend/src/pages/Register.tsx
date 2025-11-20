@@ -91,7 +91,7 @@ export default function Register() {
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" data-testid="register-error">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
@@ -101,6 +101,8 @@ export default function Register() {
               </label>
               <Input
                 id="email"
+                name="email"
+                data-testid="email-input"
                 type="email"
                 placeholder="you@example.com"
                 value={email}
@@ -115,6 +117,8 @@ export default function Register() {
               </label>
               <Input
                 id="username"
+                name="username"
+                data-testid="username-input"
                 type="text"
                 placeholder="Choose a username"
                 value={username}
@@ -131,6 +135,8 @@ export default function Register() {
               </label>
               <Input
                 id="fullName"
+                name="full_name"
+                data-testid="fullname-input"
                 type="text"
                 placeholder="Your full name"
                 value={fullName}
@@ -144,6 +150,8 @@ export default function Register() {
               </label>
               <Input
                 id="password"
+                name="password"
+                data-testid="password-input"
                 type="password"
                 placeholder="Create a strong password"
                 value={password}
@@ -161,6 +169,8 @@ export default function Register() {
               </label>
               <Input
                 id="confirmPassword"
+                name="confirm_password"
+                data-testid="confirm-password-input"
                 type="password"
                 placeholder="Confirm your password"
                 value={confirmPassword}
@@ -171,12 +181,12 @@ export default function Register() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading} data-testid="register-submit">
               {isLoading ? "Creating Account..." : "Sign Up"}
             </Button>
             <p className="text-sm text-center text-gray-600">
               Already have an account?{" "}
-              <Link to="/login" className="text-blue-600 hover:underline">
+              <Link to="/login" className="text-blue-600 hover:underline" data-testid="login-link">
                 Sign in
               </Link>
             </p>

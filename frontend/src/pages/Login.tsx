@@ -57,7 +57,7 @@ export default function Login() {
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" data-testid="login-error">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
@@ -67,6 +67,8 @@ export default function Login() {
               </label>
               <Input
                 id="username"
+                name="username"
+                data-testid="username-input"
                 type="text"
                 placeholder="Enter your username or email"
                 value={username}
@@ -81,6 +83,8 @@ export default function Login() {
               </label>
               <Input
                 id="password"
+                name="password"
+                data-testid="password-input"
                 type="password"
                 placeholder="Enter your password"
                 value={password}
@@ -91,12 +95,12 @@ export default function Login() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading} data-testid="login-submit">
               {isLoading ? "Signing in..." : "Sign In"}
             </Button>
             <p className="text-sm text-center text-gray-600">
               Don't have an account?{" "}
-              <Link to="/register" className="text-blue-600 hover:underline">
+              <Link to="/register" className="text-blue-600 hover:underline" data-testid="register-link">
                 Sign up
               </Link>
             </p>

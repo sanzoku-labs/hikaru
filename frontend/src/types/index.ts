@@ -260,6 +260,7 @@ export interface MergeAnalyzeResponse {
 // Phase 7D: File Analysis Types
 export interface FileAnalyzeRequest {
   user_intent?: string;
+  sheet_name?: string; // For Excel files: which sheet to analyze
 }
 
 export interface FileAnalysisResponse {
@@ -279,6 +280,18 @@ export interface AnalysisHistoryItem {
   user_intent?: string;
   analyzed_at: string;
   has_global_summary: boolean;
+}
+
+// Multi-Sheet Excel Support Types
+export interface SheetInfo {
+  name: string;
+  index: number;
+  is_hidden: boolean;
+  row_count: number;
+  column_count: number;
+  preview?: Array<Record<string, any>>; // First 3 rows (optional)
+  has_numeric?: boolean; // Whether sheet has numeric columns
+  error?: string; // If sheet failed to load
 }
 
 export interface AnalysisHistoryResponse {

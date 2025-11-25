@@ -34,6 +34,7 @@ import type {
   AnalyticsResponse,
   ChartInsightRequest,
   ChartInsightResponse,
+  SheetInfo,
 } from "@/types";
 
 const API_BASE_URL =
@@ -612,11 +613,38 @@ export const api = {
     return response.json();
   },
 
+  // Multi-Sheet Excel Support
+  async getFileSheets(
+    projectId: number,
+    fileId: number,
+    preview: boolean = true,
+  ): Promise<SheetInfo[]> {
+    const response = await fetch(
+      `${API_BASE_URL}/api/projects/${projectId}/files/${fileId}/sheets?preview=${preview}`,
+      {
+        method: "GET",
+        headers: getAuthHeaders(),
+      },
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new ApiError(
+        error.detail || "Failed to get file sheets",
+        response.status,
+        error.detail,
+      );
+    }
+
+    return response.json();
+  },
+
   // Phase 7D: File Analysis
   async analyzeProjectFile(
     projectId: number,
     fileId: number,
     userIntent?: string,
+    sheetName?: string,
     save: boolean = true,
   ): Promise<FileAnalysisResponse> {
     const response = await fetch(
@@ -627,7 +655,10 @@ export const api = {
           "Content-Type": "application/json",
           ...getAuthHeaders(),
         },
-        body: JSON.stringify({ user_intent: userIntent }),
+        body: JSON.stringify({
+          user_intent: userIntent,
+          sheet_name: sheetName,
+        }),
       },
     );
 

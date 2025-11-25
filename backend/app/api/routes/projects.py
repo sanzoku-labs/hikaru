@@ -14,7 +14,7 @@ from typing import List
 
 import pandas as pd
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ProjectNotFoundError, ValidationError
@@ -39,6 +39,7 @@ from app.models.schemas import (
     ProjectUpdate,
     SavedAnalysisDetail,
     SavedAnalysisSummary,
+    SheetInfo,
 )
 from app.services.ai_service import AIService
 from app.services.chart_generator import ChartGenerator
@@ -637,6 +638,102 @@ async def download_project_file(
         )
 
 
+@router.get("/{project_id}/files/{file_id}/sheets", response_model=List[SheetInfo])
+async def get_file_sheets(
+    project_id: int,
+    file_id: int,
+    preview: bool = Query(True, description="Include data preview (first 3 rows)"),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Get list of all sheets in an Excel file with optional preview data.
+
+    Args:
+        project_id: Project ID
+        file_id: File ID
+        preview: If True, includes first 3 rows of data for each sheet
+        current_user: Authenticated user
+        db: Database session
+
+    Returns:
+        List of SheetInfo with sheet metadata and optional preview data
+
+    Raises:
+        HTTP 400: If file is not an Excel workbook
+        HTTP 404: If project or file not found
+        HTTP 500: If sheet detection fails
+    """
+    try:
+        project_service = ProjectService(db)
+
+        # Verify project exists and user owns it
+        project = project_service.get_project(project_id=project_id, user_id=current_user.id)
+
+        # Find file
+        file = (
+            db.query(FileModel)
+            .filter(FileModel.id == file_id, FileModel.project_id == project_id)
+            .first()
+        )
+
+        if not file:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"File {file_id} not found in project {project_id}",
+            )
+
+        # Check if file is Excel
+        if not file.filename.lower().endswith(('.xlsx', '.xls')):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File is not an Excel workbook",
+            )
+
+        # Check if file exists on disk
+        if not os.path.exists(file.file_path):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"File not found on disk: {file.file_path}",
+            )
+
+        # Get sheet metadata
+        processor = DataProcessor()
+        sheets = processor.get_excel_sheets(file.file_path)
+
+        # Optionally add preview data for each sheet
+        if preview:
+            file_ext = Path(file.filename).suffix.lstrip(".")
+            for sheet in sheets:
+                try:
+                    # Parse just this sheet
+                    df = processor.parse_file(file.file_path, file_ext, sheet_name=sheet['name'])
+
+                    # Add preview (first 3 rows)
+                    sheet['preview'] = df.head(3).to_dict('records')
+
+                    # Check if has numeric columns
+                    numeric_cols = df.select_dtypes(include=['number']).columns
+                    sheet['has_numeric'] = len(numeric_cols) > 0
+
+                except Exception as e:
+                    # If this sheet fails, add error but continue with other sheets
+                    sheet['error'] = f"Failed to load sheet: {str(e)}"
+                    sheet['preview'] = None
+                    sheet['has_numeric'] = False
+
+        return sheets
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get sheets for file {file_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get file sheets: {str(e)}",
+        )
+
+
 @router.post("/{project_id}/files/{file_id}/analyze", response_model=FileAnalysisResponse)
 async def analyze_project_file(
     project_id: int,
@@ -695,7 +792,8 @@ async def analyze_project_file(
                 detail=f"File not found on disk: {file.file_path}",
             )
 
-        df = processor.parse_file(file.file_path, file_ext)
+        # Parse file with optional sheet selection
+        df = processor.parse_file(file.file_path, file_ext, sheet_name=request.sheet_name)
 
         # Parse schema from stored JSON
         schema = processor.analyze_schema(df)
@@ -729,6 +827,7 @@ async def analyze_project_file(
                 file_id=file.id,
                 analysis_json=json.dumps(analysis_json_dict, cls=CustomJSONEncoder),
                 user_intent=request.user_intent,
+                sheet_name=request.sheet_name,  # Store which sheet was analyzed
             )
 
             db.add(file_analysis)

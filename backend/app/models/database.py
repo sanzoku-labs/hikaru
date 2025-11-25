@@ -139,6 +139,11 @@ class File(Base):
     schema_json = Column(Text, nullable=True)  # JSON string of column schema
     uploaded_at = Column(DateTime, default=utc_now, nullable=False)
 
+    # Excel sheet support
+    sheet_name = Column(String(255), nullable=True)  # For Excel files: which sheet
+    sheet_index = Column(Integer, nullable=True, default=0)  # Sheet index (0-based)
+    available_sheets_json = Column(Text, nullable=True)  # JSON array of sheet names
+
     # Analysis fields (for persistent analysis results)
     analysis_json = Column(
         Text, nullable=True
@@ -229,6 +234,7 @@ class FileAnalysis(Base):
     # Analysis content
     analysis_json = Column(Text, nullable=False)  # JSON: {charts, global_summary, schema}
     user_intent = Column(Text, nullable=True)  # User's intent for this analysis
+    sheet_name = Column(String(255), nullable=True)  # Which sheet was analyzed (for Excel)
 
     # Metadata
     created_at = Column(DateTime, default=utc_now, nullable=False)

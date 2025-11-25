@@ -413,6 +413,9 @@ class FileAnalyzeRequest(BaseModel):
     user_intent: Optional[str] = Field(
         None, max_length=500, description="User's intent or question for analysis"
     )
+    sheet_name: Optional[str] = Field(
+        None, max_length=255, description="For Excel files: which sheet to analyze"
+    )
 
 
 class FileAnalysisResponse(BaseModel):
@@ -446,6 +449,20 @@ class SavedAnalysisDetail(BaseModel):
     global_summary: Optional[str] = None
     user_intent: Optional[str] = None
     created_at: datetime
+
+
+# Multi-Sheet Excel Support Schemas
+class SheetInfo(BaseModel):
+    """Schema for Excel sheet metadata."""
+
+    name: str
+    index: int
+    is_hidden: bool
+    row_count: int
+    column_count: int
+    preview: Optional[List[Dict[str, Any]]] = None  # First 3 rows (optional)
+    has_numeric: Optional[bool] = None  # Whether sheet has numeric columns
+    error: Optional[str] = None  # If sheet failed to load
 
 
 class AnalysisListResponse(BaseModel):

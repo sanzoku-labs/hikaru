@@ -8,8 +8,14 @@ from app.models.schemas import ColumnInfo, DataSchema
 
 class DataProcessor:
     @staticmethod
-    def parse_file(file_path: str, file_extension: str) -> pd.DataFrame:
-        """Parse CSV or Excel file into DataFrame, supporting both US and European formats"""
+    def parse_file(file_path: str, file_extension: str, sheet_name: Optional[str | int] = None) -> pd.DataFrame:
+        """Parse CSV or Excel file into DataFrame, supporting both US and European formats
+
+        Args:
+            file_path: Path to the file
+            file_extension: File extension (csv, xlsx, xls)
+            sheet_name: For Excel files, the sheet name or index (0-based). Defaults to 0 (first sheet)
+        """
         if file_extension == "csv":
             # Try US format first (comma delimiter, period decimal)
             try:
@@ -40,9 +46,45 @@ class DataProcessor:
                     )
 
         elif file_extension in ["xlsx", "xls"]:
-            return pd.read_excel(file_path)
+            # Default to first sheet if not specified
+            sheet = sheet_name if sheet_name is not None else 0
+            return pd.read_excel(file_path, sheet_name=sheet)
         else:
             raise ValueError(f"Unsupported file extension: {file_extension}")
+
+    @staticmethod
+    def get_excel_sheets(file_path: str) -> List[Dict[str, Any]]:
+        """Get list of all sheets in an Excel file with metadata.
+
+        Args:
+            file_path: Path to the Excel file
+
+        Returns:
+            List of dicts containing sheet metadata: name, index, is_hidden, row_count, column_count
+        """
+        try:
+            import openpyxl
+        except ImportError:
+            raise ImportError("openpyxl is required for Excel sheet detection. Install with: pip install openpyxl")
+
+        try:
+            workbook = openpyxl.load_workbook(file_path, read_only=True, data_only=True)
+            sheets = []
+
+            for idx, sheet_name in enumerate(workbook.sheetnames):
+                sheet = workbook[sheet_name]
+                sheets.append({
+                    "name": sheet_name,
+                    "index": idx,
+                    "is_hidden": sheet.sheet_state == 'hidden',
+                    "row_count": sheet.max_row,
+                    "column_count": sheet.max_column,
+                })
+
+            workbook.close()
+            return sheets
+        except Exception as e:
+            raise ValueError(f"Failed to read Excel file sheets: {str(e)}")
 
     @staticmethod
     def validate_dataframe(df: pd.DataFrame) -> Tuple[bool, Optional[str]]:

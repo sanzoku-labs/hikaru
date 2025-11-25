@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { api } from "../services/api";
+import api from "../services/api";
 import type { FileAnalysisResponse, FileInProject, DataSchema, SheetInfo } from "../types";
 import { Layout } from "../components/Layout";
 import { Button } from "../components/ui/button";

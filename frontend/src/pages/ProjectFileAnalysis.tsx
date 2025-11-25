@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../services/api";
-import type { FileAnalysisResponse, FileInProject, DataSchema } from "../types";
+import type { FileAnalysisResponse, FileInProject, DataSchema, SheetInfo } from "../types";
 import { Layout } from "../components/Layout";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -38,6 +38,7 @@ import { ExportModal, ExportOptions } from "../components/charts/ExportModal";
 import { InsightCard } from "../components/insights/InsightCard";
 import { ChartCard } from "../components/ChartCard";
 import { AnalysisList } from "../components/AnalysisList";
+import { SheetSelector } from "../components/projects/SheetSelector";
 
 export default function ProjectFileAnalysis() {
   const { projectId, fileId } = useParams<{
@@ -57,6 +58,11 @@ export default function ProjectFileAnalysis() {
 
   // Export modal state
   const [exportModalOpen, setExportModalOpen] = useState(false);
+
+  // Multi-sheet Excel support
+  const [showSheetSelector, setShowSheetSelector] = useState(false);
+  const [selectedSheet, setSelectedSheet] = useState<string | null>(null);
+  const [availableSheets, setAvailableSheets] = useState<SheetInfo[]>([]);
 
   // Multi-analysis state (NEW: saved analyses from database)
   const [savedAnalyses, setSavedAnalyses] = useState<import("../types").SavedAnalysisSummary[]>([]);
@@ -87,6 +93,38 @@ export default function ProjectFileAnalysis() {
   useEffect(() => {
     loadFileData();
   }, [projectId, fileId]);
+
+  // Detect multi-sheet Excel files
+  useEffect(() => {
+    const detectSheets = async () => {
+      if (!fileMetadata || !projectId || !fileId) return;
+
+      // Only check for Excel files
+      if (!fileMetadata.filename.match(/\.(xlsx|xls)$/i)) {
+        setAvailableSheets([]);
+        return;
+      }
+
+      try {
+        const sheets = await api.getFileSheets(
+          parseInt(projectId),
+          parseInt(fileId),
+          false // Don't include preview initially for speed
+        );
+        setAvailableSheets(sheets);
+
+        // Auto-show selector if multiple sheets detected (only on first load)
+        if (sheets.length > 1 && !selectedSheet) {
+          setShowSheetSelector(true);
+        }
+      } catch (err) {
+        console.error('Failed to detect sheets:', err);
+        // Silently fail - not critical for workflow
+      }
+    };
+
+    detectSheets();
+  }, [fileMetadata, projectId, fileId]);
 
   // Warn user before leaving with unsaved analyses
   useEffect(() => {
@@ -154,6 +192,7 @@ export default function ProjectFileAnalysis() {
         parseInt(projectId),
         parseInt(fileId),
         userIntent || undefined,
+        selectedSheet || undefined,  // Pass selected sheet
         false  // Don't save to database
       );
 
@@ -481,10 +520,28 @@ export default function ProjectFileAnalysis() {
                   Saved
                 </Badge>
               )}
+
+              {/* Sheet indicator for multi-sheet Excel files */}
+              {selectedSheet && availableSheets.length > 1 && (
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300">
+                  Sheet: {selectedSheet}
+                </Badge>
+              )}
             </div>
           </div>
 
           <div className="flex items-center space-x-3">
+            {/* Change Sheet button (for multi-sheet Excel files) */}
+            {availableSheets.length > 1 && (
+              <Button
+                variant="outline"
+                onClick={() => setShowSheetSelector(true)}
+                className="border-blue-300 text-blue-700 hover:bg-blue-50"
+              >
+                Change Sheet
+              </Button>
+            )}
+
             {/* Save button (only for temporary analyses) */}
             {!isSaved && displayedAnalysis && (
               <Button
@@ -693,6 +750,26 @@ export default function ProjectFileAnalysis() {
           </>
         )}
       </div>
+
+      {/* Multi-Sheet Selector */}
+      <SheetSelector
+        projectId={parseInt(projectId!)}
+        fileId={parseInt(fileId!)}
+        open={showSheetSelector}
+        onSelectSheet={(sheetName) => {
+          setSelectedSheet(sheetName);
+          setShowSheetSelector(false);
+          // Auto-trigger re-analyze dialog after sheet selection
+          setShowReanalyzeDialog(true);
+        }}
+        onCancel={() => {
+          setShowSheetSelector(false);
+          // If no sheet was selected, default to first sheet
+          if (!selectedSheet) {
+            setSelectedSheet(null);
+          }
+        }}
+      />
 
       {/* Re-analyze Dialog */}
       <Dialog open={showReanalyzeDialog} onOpenChange={setShowReanalyzeDialog}>

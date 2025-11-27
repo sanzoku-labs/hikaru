@@ -1,24 +1,42 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AppProviders } from "./app/providers";
+import { ErrorBoundary } from "./shared/components/ErrorBoundary";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import { ProjectList } from "./pages/ProjectList";
-import { ProjectDetail } from "./pages/ProjectDetail";
-import ProjectFileAnalysis from "./pages/ProjectFileAnalysis";
-import { Analytics } from "./pages/Analytics";
-import { Comparisons } from "./pages/Comparisons";
-import { Merging } from "./pages/Merging";
-import { Chat } from "./pages/Chat";
+import { Skeleton } from "./components/ui/skeleton";
 import "./index.css";
+
+// Lazy load route components
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const ProjectListPage = lazy(() => import("./features/projects/components/ProjectList").then(m => ({ default: m.ProjectListPage })));
+const ProjectDetailPage = lazy(() => import("./features/projects/components/ProjectDetail").then(m => ({ default: m.ProjectDetailPage })));
+const FileAnalysisPage = lazy(() => import("./features/projects/components/FileAnalysis").then(m => ({ default: m.FileAnalysisPage })));
+const Analytics = lazy(() => import("./pages/Analytics").then(m => ({ default: m.Analytics })));
+const Comparisons = lazy(() => import("./pages/Comparisons").then(m => ({ default: m.Comparisons })));
+const Merging = lazy(() => import("./pages/Merging").then(m => ({ default: m.Merging })));
+const Chat = lazy(() => import("./pages/Chat").then(m => ({ default: m.Chat })));
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="container mx-auto px-4 py-8">
+    <Skeleton className="h-8 w-64 mb-6" />
+    <div className="space-y-4">
+      {[1, 2, 3].map((i) => (
+        <Skeleton key={i} className="h-24 w-full" />
+      ))}
+    </div>
+  </div>
+);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
+    <ErrorBoundary>
+      <AppProviders>
+        <BrowserRouter>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route
@@ -33,7 +51,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             path="/projects"
             element={
               <ProtectedRoute>
-                <ProjectList />
+                <ProjectListPage />
               </ProtectedRoute>
             }
           />
@@ -41,7 +59,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             path="/projects/:projectId/files/:fileId/analysis"
             element={
               <ProtectedRoute>
-                <ProjectFileAnalysis />
+                <FileAnalysisPage />
               </ProtectedRoute>
             }
           />
@@ -49,7 +67,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             path="/projects/:projectId"
             element={
               <ProtectedRoute>
-                <ProjectDetail />
+                <ProjectDetailPage />
               </ProtectedRoute>
             }
           />
@@ -85,9 +103,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
               </ProtectedRoute>
             }
           />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </AppProviders>
+    </ErrorBoundary>
   </React.StrictMode>,
 );

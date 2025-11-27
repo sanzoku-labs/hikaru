@@ -262,8 +262,8 @@ class ProjectFileUploadResponse(BaseModel):
     upload_id: str
     filename: str
     file_size: int
-    row_count: int
-    data_schema: DataSchema
+    row_count: Optional[int] = None  # Null for Excel files until analyzed
+    data_schema: Optional[DataSchema] = None  # Null for Excel files until analyzed
     uploaded_at: datetime
 
 

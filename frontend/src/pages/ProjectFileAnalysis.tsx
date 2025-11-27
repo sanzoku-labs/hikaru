@@ -221,6 +221,7 @@ export default function ProjectFileAnalysis() {
         parseInt(projectId),
         parseInt(fileId),
         displayedAnalysis.user_intent || undefined,
+        undefined,  // sheetName
         true  // Save to database
       );
 

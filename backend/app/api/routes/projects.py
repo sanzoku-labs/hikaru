@@ -402,17 +402,31 @@ async def upload_file_to_project(
         # Process file with DataProcessor
         processor = DataProcessor()
         file_ext = Path(file.filename).suffix.lstrip(".")
-        df = processor.parse_file(str(file_path), file_ext)
 
-        # Validate dataframe
-        is_valid, error_msg = processor.validate_dataframe(df)
-        if not is_valid:
-            if os.path.exists(file_path):
-                os.remove(file_path)
-            raise HTTPException(status_code=400, detail=error_msg)
-
-        # Generate schema
-        schema = processor.analyze_schema(df)
+        # For Excel files: only extract metadata, no DataFrame parsing
+        if file_ext in ["xlsx", "xls"]:
+            # Get sheet metadata using openpyxl (fast, read-only)
+            try:
+                sheet_list = processor.get_excel_sheets(str(file_path))
+                # Store basic file info, no data schema yet
+                row_count = None
+                schema = None
+                available_sheets_json = json.dumps(sheet_list)
+            except Exception as e:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                raise HTTPException(status_code=400, detail=f"Invalid Excel file: {str(e)}")
+        else:
+            # CSV: keep existing behavior (immediate validation)
+            df = processor.parse_file(str(file_path), file_ext)
+            is_valid, error_msg = processor.validate_dataframe(df)
+            if not is_valid:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                raise HTTPException(status_code=400, detail=error_msg)
+            schema = processor.analyze_schema(df)
+            row_count = len(df)
+            available_sheets_json = None
 
         # Create file record
         new_file = FileModel(
@@ -421,8 +435,9 @@ async def upload_file_to_project(
             upload_id=upload_id,
             file_path=str(file_path),
             file_size=os.path.getsize(file_path),
-            row_count=len(df),
-            schema_json=schema.model_dump_json(),
+            row_count=row_count,
+            schema_json=schema.model_dump_json() if schema else None,
+            available_sheets_json=available_sheets_json,
         )
 
         db.add(new_file)
@@ -438,7 +453,7 @@ async def upload_file_to_project(
             upload_id=upload_id,
             filename=file.filename,
             file_size=new_file.file_size,
-            row_count=new_file.row_count,
+            row_count=row_count,
             data_schema=schema,
             uploaded_at=new_file.uploaded_at,
         )
@@ -794,6 +809,16 @@ async def analyze_project_file(
 
         # Parse file with optional sheet selection
         df = processor.parse_file(file.file_path, file_ext, sheet_name=request.sheet_name)
+
+        # Validate the dataframe (check for sufficient data and numeric columns)
+        is_valid, error_msg = processor.validate_dataframe(df)
+        if not is_valid:
+            # Return a user-friendly error for insufficient data in this sheet
+            sheet_info = f" (sheet: {request.sheet_name})" if request.sheet_name else ""
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Cannot analyze this sheet{sheet_info}: {error_msg}. Please select a different sheet with sufficient data and at least one numeric column."
+            )
 
         # Parse schema from stored JSON
         schema = processor.analyze_schema(df)

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,7 +20,7 @@ interface ChartCardProps {
   fileId?: number // Optional file ID for generating advanced insights
 }
 
-export function ChartCard({ chart, fileId }: ChartCardProps) {
+export const ChartCard = memo(function ChartCard({ chart, fileId }: ChartCardProps) {
   const [advancedInsight, setAdvancedInsight] = useState<string | null>(null)
   const [isLoadingInsight, setIsLoadingInsight] = useState(false)
   const [insightError, setInsightError] = useState<string | null>(null)
@@ -282,4 +282,4 @@ export function ChartCard({ chart, fileId }: ChartCardProps) {
       </CardContent>
     </Card>
   )
-}
+});

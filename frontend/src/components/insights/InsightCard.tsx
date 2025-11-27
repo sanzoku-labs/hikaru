@@ -2,6 +2,7 @@
  * InsightCard - Colored AI insight card for 2x2 grid layout
  * Matches Mockup 1 (File Analysis) insights section
  */
+import { memo } from 'react';
 import { LucideIcon } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -37,7 +38,7 @@ const colorClasses = {
   },
 }
 
-export function InsightCard({
+export const InsightCard = memo(function InsightCard({
   title,
   description,
   icon: Icon,
@@ -61,4 +62,4 @@ export function InsightCard({
       </CardContent>
     </Card>
   )
-}
+});

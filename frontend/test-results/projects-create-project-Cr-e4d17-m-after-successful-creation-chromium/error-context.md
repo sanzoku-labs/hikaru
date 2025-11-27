@@ -1,0 +1,108 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - generic:
+      - complementary:
+        - generic:
+          - link:
+            - /url: /projects
+            - generic:
+              - img
+            - generic: Hikaru
+        - navigation:
+          - list:
+            - listitem:
+              - link:
+                - /url: /projects
+                - button:
+                  - img
+                  - generic: Projects
+            - listitem:
+              - link:
+                - /url: /analytics
+                - button:
+                  - img
+                  - generic: Analytics
+            - listitem:
+              - link:
+                - /url: /comparisons
+                - button:
+                  - img
+                  - generic: Comparisons
+            - listitem:
+              - link:
+                - /url: /merging
+                - button:
+                  - img
+                  - generic: Merging
+            - listitem:
+              - link:
+                - /url: /chat
+                - button:
+                  - img
+                  - generic: Q&A Chat
+            - listitem:
+              - link:
+                - /url: /exports
+                - button:
+                  - img
+                  - generic: Exports
+        - generic:
+          - button:
+            - img
+            - generic: Collapse
+        - generic:
+          - generic:
+            - generic:
+              - generic: U
+            - generic:
+              - paragraph: User
+              - paragraph: user@example.com
+      - generic:
+        - banner:
+          - generic:
+            - heading [level=2]: Hikaru
+            - paragraph: AI-Powered Data Analytics
+          - button:
+            - generic:
+              - generic: T
+            - generic: testuser_1763666655551_ia859
+        - main:
+          - generic:
+            - generic:
+              - generic:
+                - heading [level=1]: Projects
+                - paragraph: Manage multi-file workspaces for complex data analysis
+              - button [expanded]:
+                - img
+                - text: New Project
+            - generic:
+              - img
+              - heading [level=2]: No Projects Yet
+              - paragraph: Create your first project to start uploading and analyzing multiple data files together
+              - button:
+                - img
+                - text: Create Your First Project
+        - contentinfo: Powered by Sanzoku Labs
+  - dialog "Create New Project" [ref=e2]:
+    - generic [ref=e3]:
+      - heading "Create New Project" [level=2] [ref=e4]
+      - paragraph [ref=e5]: Create a workspace to upload and analyze multiple data files
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - text: Project Name *
+        - textbox "Project Name *" [active] [ref=e8]:
+          - /placeholder: e.g., Q4 Sales Analysis
+      - generic [ref=e9]:
+        - text: Description (Optional)
+        - textbox "Description (Optional)" [ref=e10]:
+          - /placeholder: Brief description of this project...
+      - generic [ref=e11]:
+        - button "Cancel" [ref=e12] [cursor=pointer]
+        - button "Create Project" [disabled]
+    - button "Close" [ref=e13] [cursor=pointer]:
+      - img [ref=e14]
+      - generic [ref=e17]: Close
+```

@@ -71,18 +71,16 @@ export function ProjectDetailView({
 
   if (fetchError || !project) {
     return (
-      <div className="max-w-6xl mx-auto">
-        <ErrorAlertView
-          title="Failed to load project"
-          message={fetchError || 'Project not found'}
-          onRetry={onBackClick}
-        />
-      </div>
+      <ErrorAlertView
+        title="Failed to load project"
+        message={fetchError || 'Project not found'}
+        onRetry={onBackClick}
+      />
     )
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div>
       {/* Header */}
       <PageHeaderView
         title={project.name}

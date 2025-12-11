@@ -54,7 +54,7 @@ export function ProjectsListView({
   deletingId,
 }: ProjectsListViewProps) {
   return (
-    <div className="max-w-6xl mx-auto">
+    <div>
       {/* Header */}
       <PageHeaderView
         title="Projects"

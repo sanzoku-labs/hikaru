@@ -56,21 +56,19 @@ export function ProjectFileAnalysisView({
 
   if (fetchError || !file) {
     return (
-      <div className="max-w-6xl mx-auto">
-        <ErrorAlertView
-          title="Failed to load file"
-          message={fetchError || 'File not found'}
-          onRetry={onBackClick}
-        />
-      </div>
+      <ErrorAlertView
+        title="Failed to load file"
+        message={fetchError || 'File not found'}
+        onRetry={onBackClick}
+      />
     )
   }
 
   const hasAnalysis = !!analysisData
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Header */}
+    <div>
+      {/* Header - full width */}
       <PageHeaderView
         title={file.filename}
         description={`${formatFileSize(file.file_size)} · ${file.data_schema?.row_count?.toLocaleString() || '?'} rows`}
@@ -130,9 +128,11 @@ export function ProjectFileAnalysisView({
         }
       />
 
-      {/* Re-analyze form */}
-      {showReanalyzeForm && (
-        <div className="mb-6 p-6 rounded-xl border bg-card animate-in-up">
+      {/* Content */}
+      <div>
+        {/* Re-analyze form */}
+        {showReanalyzeForm && (
+          <div className="mb-6 p-6 rounded-xl border bg-card animate-in-up">
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="reanalyze-intent" className="text-sm font-medium">
@@ -239,6 +239,7 @@ export function ProjectFileAnalysisView({
           )}
         </div>
       )}
+      </div>
     </div>
   )
 }

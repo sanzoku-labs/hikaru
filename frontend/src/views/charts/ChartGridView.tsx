@@ -6,48 +6,71 @@ import { BarChartView } from './BarChartView'
 import { PieChartView } from './PieChartView'
 import { ScatterChartView } from './ScatterChartView'
 import { useQuickChartInsight } from '@/services/api/mutations/useQuickChartInsight'
+import { useChartInsight } from '@/services/api/mutations/useChartInsight'
 import type { ChartData } from '@/types/api'
 
 interface ChartGridViewProps {
   charts: ChartData[]
-  uploadId?: string // Required for on-demand insight generation
+  uploadId?: string // For quick analysis (ephemeral uploads)
+  fileId?: number // For project files (persisted)
   className?: string
 }
 
-export function ChartGridView({ charts, uploadId, className }: ChartGridViewProps) {
+export function ChartGridView({ charts, uploadId, fileId, className }: ChartGridViewProps) {
   // Track insights per chart (by index) - allows overriding initial null insights
   const [chartInsights, setChartInsights] = useState<Record<number, string>>({})
   // Track loading state per chart
   const [loadingInsights, setLoadingInsights] = useState<Record<number, boolean>>({})
 
-  const insightMutation = useQuickChartInsight()
+  const quickInsightMutation = useQuickChartInsight()
+  const fileInsightMutation = useChartInsight()
 
   const handleGenerateInsight = useCallback(
     async (chart: ChartData, index: number) => {
-      if (!uploadId) return
+      // Must have either uploadId or fileId
+      if (!uploadId && !fileId) return
 
       setLoadingInsights((prev) => ({ ...prev, [index]: true }))
 
       try {
-        const result = await insightMutation.mutateAsync({
-          upload_id: uploadId,
-          chart_type: chart.chart_type,
-          chart_title: chart.title,
-          chart_data: chart.data,
-          x_column: chart.x_column,
-          y_column: chart.y_column,
-          category_column: chart.category_column,
-          value_column: chart.value_column,
-        })
+        let insight: string
 
-        setChartInsights((prev) => ({ ...prev, [index]: result.insight }))
+        if (fileId) {
+          // Project file insight generation
+          const result = await fileInsightMutation.mutateAsync({
+            file_id: fileId,
+            chart_type: chart.chart_type,
+            chart_title: chart.title,
+            chart_data: chart.data,
+            x_column: chart.x_column,
+            y_column: chart.y_column,
+            category_column: chart.category_column,
+            value_column: chart.value_column,
+          })
+          insight = result.insight
+        } else {
+          // Quick analysis insight generation
+          const result = await quickInsightMutation.mutateAsync({
+            upload_id: uploadId!,
+            chart_type: chart.chart_type,
+            chart_title: chart.title,
+            chart_data: chart.data,
+            x_column: chart.x_column,
+            y_column: chart.y_column,
+            category_column: chart.category_column,
+            value_column: chart.value_column,
+          })
+          insight = result.insight
+        }
+
+        setChartInsights((prev) => ({ ...prev, [index]: insight }))
       } catch (error) {
         console.error('Failed to generate insight:', error)
       } finally {
         setLoadingInsights((prev) => ({ ...prev, [index]: false }))
       }
     },
-    [uploadId, insightMutation]
+    [uploadId, fileId, quickInsightMutation, fileInsightMutation]
   )
 
   const renderChart = (chart: ChartData) => {
@@ -85,7 +108,7 @@ export function ChartGridView({ charts, uploadId, className }: ChartGridViewProp
             insight={insight}
             isLoadingInsight={isLoading}
             onGenerateInsight={
-              uploadId ? () => handleGenerateInsight(chart, index) : undefined
+              uploadId || fileId ? () => handleGenerateInsight(chart, index) : undefined
             }
           >
             {renderChart(chart)}

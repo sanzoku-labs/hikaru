@@ -125,10 +125,10 @@ export function ProjectsListView({
                 disabled={isDeleting && deletingId === project.id}
                 className={cn(
                   'absolute top-3 right-3 p-2 rounded-lg',
-                  'text-muted-foreground',
-                  'opacity-0 group-hover:opacity-100',
+                  'text-muted-foreground/50',
                   'transition-all duration-200',
                   'hover:bg-destructive/10 hover:text-destructive',
+                  'group-hover:text-muted-foreground',
                   'disabled:opacity-50'
                 )}
                 aria-label="Delete project"

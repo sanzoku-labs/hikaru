@@ -234,7 +234,7 @@ export function ProjectFileAnalysisView({
                   ({analysisData.charts.length} charts)
                 </span>
               </div>
-              <ChartGridView charts={analysisData.charts} />
+              <ChartGridView charts={analysisData.charts} fileId={file?.id} />
             </div>
           )}
         </div>

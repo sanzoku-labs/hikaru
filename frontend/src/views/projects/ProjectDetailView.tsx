@@ -122,6 +122,7 @@ export function ProjectDetailView({
         title={project.name}
         description={project.description || 'No description'}
         backButton={{ label: 'Back to Projects', onClick: onBackClick }}
+        compact
         actions={
           <div className="flex items-center gap-2">
             {hasMultipleFiles && (
@@ -447,7 +448,7 @@ export function ProjectDetailView({
                           ({analysisData.charts.length} charts)
                         </span>
                       </div>
-                      <ChartGridView charts={analysisData.charts} />
+                      <ChartGridView charts={analysisData.charts} fileId={selectedFile.id} />
                     </div>
                   )}
                 </div>

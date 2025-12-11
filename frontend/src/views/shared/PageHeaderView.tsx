@@ -10,6 +10,8 @@ interface PageHeaderViewProps {
   }
   actions?: React.ReactNode
   className?: string
+  /** Reduces spacing and text sizes for compact layouts */
+  compact?: boolean
 }
 
 export function PageHeaderView({
@@ -18,17 +20,19 @@ export function PageHeaderView({
   backButton,
   actions,
   className,
+  compact = false,
 }: PageHeaderViewProps) {
   return (
-    <header className={cn('mb-8 animate-in-up', className)}>
+    <header className={cn('animate-in-up', compact ? 'mb-4' : 'mb-8', className)}>
       {/* Back button */}
       {backButton && (
         <button
           onClick={backButton.onClick}
           className={cn(
-            'inline-flex items-center gap-1 mb-4 text-sm text-muted-foreground',
+            'inline-flex items-center gap-1 text-sm text-muted-foreground',
             'transition-colors duration-200 hover:text-foreground',
-            'group'
+            'group',
+            compact ? 'mb-2' : 'mb-4'
           )}
         >
           <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
@@ -38,14 +42,24 @@ export function PageHeaderView({
 
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          {/* Title with subtle gradient accent */}
-          <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
+          {/* Title */}
+          <h1
+            className={cn(
+              'font-semibold text-foreground tracking-tight',
+              compact ? 'text-lg sm:text-xl' : 'text-2xl sm:text-3xl'
+            )}
+          >
             {title}
           </h1>
 
           {/* Description */}
           {description && (
-            <p className="mt-2 text-muted-foreground leading-relaxed max-w-2xl">
+            <p
+              className={cn(
+                'text-muted-foreground leading-relaxed max-w-2xl',
+                compact ? 'mt-1 text-sm' : 'mt-2'
+              )}
+            >
               {description}
             </p>
           )}
@@ -60,7 +74,12 @@ export function PageHeaderView({
       </div>
 
       {/* Subtle divider with gradient */}
-      <div className="mt-6 h-px bg-gradient-to-r from-border via-border/50 to-transparent" />
+      <div
+        className={cn(
+          'h-px bg-gradient-to-r from-border via-border/50 to-transparent',
+          compact ? 'mt-3' : 'mt-6'
+        )}
+      />
     </header>
   )
 }

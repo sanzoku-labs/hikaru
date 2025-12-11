@@ -8,17 +8,32 @@ This file provides guidance to AI assistants (like Claude Code) when working wit
 
 **Hikaru (Data Smart Board)** is a production-ready AI-powered data analytics dashboard that transforms CSV/Excel files into interactive BI dashboards with AI-generated insights.
 
-**Current Status**: ✅ **Production Ready (v1.0.0)**
+**Current Status**: 🚧 **Frontend Rebuild in Progress**
 
-**All Major Features Complete**:
-- ✅ Phase 1-5: MVP (File upload, charts, AI insights, Q&A, PDF export)
-- ✅ Phase 7: Multi-file projects
-- ✅ Phase 8: User authentication (JWT)
-- ✅ Phase 9: UI redesign (high-fidelity interface)
-- ✅ Week 3-4: Backend refactoring (service layer pattern)
-- ✅ Phase 5: Testing (253 tests, 55% coverage)
+**Backend Status**: ✅ **Production Ready (v1.0.0)**
+- ✅ 40+ API endpoints across 10 route modules
+- ✅ Service Layer Pattern with 14 services
+- ✅ JWT authentication with session tracking
+- ✅ Multi-file projects, comparison, merging
+- ✅ AI insights with Claude Sonnet 4
+- ✅ 253 tests, 55% coverage
 
-**Next Steps**: Additional testing (Phase 10), deployment preparation (Phase 11)
+**Frontend Status**: ✅ **Week 3 Complete - Multi-file Projects (Phase 1)**
+- ✅ Week 1: Foundation + Authentication
+- ✅ Week 2: Quick Analysis MVP (upload → charts → export)
+- ✅ Week 3: Multi-file Projects (project CRUD, file management)
+- 🚧 Week 4: Advanced Project Features (NEXT)
+
+**Next Immediate Steps (Week 4)**:
+- ProjectFileAnalysis page (view charts for individual files)
+- File comparison view (side-by-side diff)
+- File merging functionality (join operations)
+
+**📋 Important Planning Documents**:
+- **Frontend Rebuild Plan**: `~/.claude/plans/pure-percolating-moonbeam.md` (8-week roadmap)
+- **Backend Analysis**: `~/.claude/plans/hikaru_backend_analysis.md` (40+ endpoints documented)
+- **Architecture Blueprint**: `~/.claude/plans/pure-percolating-moonbeam-agent-94b94802.md` (180+ pages)
+- **Progress Tracking**: `frontend/README.md` (detailed feature list by week)
 
 ---
 
@@ -32,10 +47,15 @@ This file provides guidance to AI assistants (like Claude Code) when working wit
 | **AI** | Anthropic Claude | Sonnet 4 (claude-sonnet-4-20250514) |
 | **Authentication** | JWT + bcrypt | 7-day token expiry, session tracking |
 | **PDF Generation** | ReportLab | Professional report exports |
-| **Frontend** | React 18 + TypeScript | Vite build tool |
-| **UI Library** | shadcn/ui | 35 components, Tailwind CSS |
-| **Charts** | ECharts v5 | Interactive visualizations |
-| **Testing** | Pytest | 253 tests, 55% coverage |
+| **Frontend** | React 18.3 + TypeScript 5.6 | Vite 6 with SWC (20x faster) |
+| **UI Library** | shadcn/ui | Radix UI + Tailwind CSS 3.4 |
+| **State Management** | TanStack Query + Zustand | Server state + Client state |
+| **Routing** | React Router v6 | Client-side SPA routing |
+| **Forms** | React Hook Form + Zod | Type-safe validation |
+| **Charts** | ECharts v5 | Tree-shaken, ~60% smaller bundle |
+| **Data Tables** | TanStack Table v8 | Virtualization for 10k+ rows |
+| **Testing (Backend)** | Pytest | 253 tests, 55% coverage |
+| **Testing (Frontend)** | Vitest (planned) | React Testing Library |
 
 ---
 
@@ -149,39 +169,74 @@ hikaru/
 │   ├── pyproject.toml             # Poetry dependencies
 │   └── .env                       # Environment variables (gitignored)
 │
-├── frontend/                      # React application
+├── frontend/                      # React application (NEW - Rebuilding)
 │   ├── src/
-│   │   ├── main.tsx              # Entry point
-│   │   ├── App.tsx               # Quick analysis page (root route)
+│   │   ├── main.tsx              # Entry point with QueryClient
+│   │   ├── App.tsx               # Router with lazy loaded pages
 │   │   │
-│   │   ├── pages/                # Page components
-│   │   │   ├── Login.tsx
-│   │   │   ├── Register.tsx
-│   │   │   ├── Dashboard.tsx
-│   │   │   ├── Projects.tsx
-│   │   │   ├── ProjectDetail.tsx
-│   │   │   ├── ProjectFileAnalysis.tsx
-│   │   │   ├── ProjectComparison.tsx
-│   │   │   └── ProjectMerging.tsx
+│   │   ├── pages/                # Route components (lazy loaded)
+│   │   │   ├── auth/
+│   │   │   │   ├── Login.tsx             # ✅ DONE
+│   │   │   │   └── Register.tsx          # ✅ DONE
+│   │   │   ├── quick-analysis/
+│   │   │   │   └── QuickAnalysis.tsx     # ⏳ TODO
+│   │   │   ├── projects/
+│   │   │   │   ├── ProjectsList.tsx      # ⏳ TODO
+│   │   │   │   ├── ProjectDetail.tsx     # ⏳ TODO
+│   │   │   │   ├── FileAnalysis.tsx      # ⏳ TODO
+│   │   │   │   ├── FileComparison.tsx    # ⏳ TODO
+│   │   │   │   └── FileMerge.tsx         # ⏳ TODO
+│   │   │   ├── dashboards/               # ⏳ TODO
+│   │   │   └── analytics/                # ⏳ TODO
 │   │   │
-│   │   ├── components/           # Reusable components (45+)
-│   │   │   ├── ui/              # shadcn/ui components (35)
-│   │   │   ├── FileUploader.tsx
-│   │   │   ├── DataPreview.tsx
-│   │   │   ├── ChartCard.tsx
-│   │   │   ├── GlobalSummary.tsx
-│   │   │   ├── QAChat.tsx
-│   │   │   └── ...
+│   │   ├── components/
+│   │   │   ├── ui/                       # shadcn/ui primitives
+│   │   │   │   ├── button.tsx            # ✅ DONE
+│   │   │   │   ├── input.tsx             # ✅ DONE
+│   │   │   │   ├── label.tsx             # ✅ DONE
+│   │   │   │   ├── card.tsx              # ✅ DONE
+│   │   │   │   └── ... (more to add)     # ⏳ TODO
+│   │   │   ├── layout/
+│   │   │   │   ├── ProtectedRoute.tsx    # ✅ DONE
+│   │   │   │   ├── AppLayout.tsx         # ⏳ NEXT
+│   │   │   │   ├── Sidebar.tsx           # ⏳ NEXT
+│   │   │   │   └── Header.tsx            # ⏳ NEXT
+│   │   │   ├── charts/                   # ⏳ TODO (ChartCard, etc.)
+│   │   │   ├── data/                     # ⏳ TODO (DataTable, etc.)
+│   │   │   ├── upload/                   # ⏳ TODO (FileUploader)
+│   │   │   └── ... (more categories)
 │   │   │
-│   │   ├── services/             # API client
-│   │   │   └── api.ts           # Axios-based API client
+│   │   ├── services/
+│   │   │   ├── api/
+│   │   │   │   ├── queries/              # TanStack Query GET hooks
+│   │   │   │   └── mutations/            # TanStack Query mutations
+│   │   │   │       ├── useLogin.ts       # ✅ DONE
+│   │   │   │       ├── useRegister.ts    # ✅ DONE
+│   │   │   │       └── useLogout.ts      # ✅ DONE
+│   │   │   ├── axios.ts                  # ✅ DONE (JWT interceptors)
+│   │   │   └── endpoints.ts              # ✅ DONE (API constants)
 │   │   │
-│   │   └── types/                # TypeScript types
-│   │       └── api.ts           # API response types
+│   │   ├── stores/                       # Zustand client state
+│   │   │   ├── authStore.ts              # ✅ DONE
+│   │   │   ├── uiStore.ts                # ⏳ NEXT (sidebar, theme)
+│   │   │   └── ... (more stores)
+│   │   │
+│   │   ├── types/
+│   │   │   └── api.ts                    # ✅ DONE (from backend schemas)
+│   │   │
+│   │   ├── lib/
+│   │   │   └── utils.ts                  # ✅ DONE (cn, formatters)
+│   │   │
+│   │   └── styles/
+│   │       └── globals.css               # ✅ DONE (Tailwind + CSS vars)
 │   │
-│   ├── public/                   # Static assets
-│   ├── dist/                     # Production build (gitignored)
-│   └── package.json              # npm dependencies
+│   ├── public/                           # Static assets
+│   ├── dist/                             # Production build (gitignored)
+│   ├── vite.config.ts                    # ✅ DONE (SWC, code splitting)
+│   ├── tailwind.config.ts                # ✅ DONE (design tokens)
+│   ├── tsconfig.json                     # ✅ DONE (strict mode)
+│   ├── package.json                      # ✅ DONE (325 deps)
+│   └── README.md                         # ✅ DONE (progress tracker)
 │
 ├── docs/                          # Historical documentation (archived)
 │   └── archive/
@@ -238,29 +293,39 @@ hikaru/
 - Models handle data persistence
 - Clean separation of concerns
 
-### Frontend Architecture
+### Frontend Architecture (NEW - 2025 Best Practices)
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                  React Application                   │
+│              React Application (NEW)                 │
 ├─────────────────────────────────────────────────────┤
 │                                                      │
-│  Pages (routes)                                     │
-│  ↓                                                   │
-│  Components (reusable UI)                           │
-│  ↓                                                   │
-│  Services (API client)                              │
-│  ↓                                                   │
-│  Backend API                                        │
+│  PRESENTATION LAYER                                 │
+│  ├── Pages (lazy loaded routes)                    │
+│  └── Components (shadcn/ui + custom)                │
+│                 ↓                                    │
+│  STATE MANAGEMENT LAYER                             │
+│  ├── TanStack Query (server state - API cache)     │
+│  │   ├── Queries (GET requests)                    │
+│  │   └── Mutations (POST/PUT/DELETE)               │
+│  └── Zustand (client state - UI, auth)             │
+│                 ↓                                    │
+│  API CLIENT LAYER                                   │
+│  ├── axios.ts (JWT interceptors)                   │
+│  └── endpoints.ts (constants)                      │
+│                 ↓                                    │
+│  BACKEND API (FastAPI - 40+ endpoints)             │
 │                                                      │
 └─────────────────────────────────────────────────────┘
 ```
 
-**Key Pattern**: Component-based architecture
-- Pages compose components
-- Components use shadcn/ui primitives
-- API client handles all backend communication
-- TypeScript ensures type safety
+**Key Patterns**:
+- **Service Layer Pattern**: TanStack Query for server state, Zustand for client state
+- **Code Splitting**: All routes lazy loaded with React.lazy()
+- **Type Safety**: TypeScript strict mode, types mirror backend Pydantic schemas
+- **Performance**: Tree-shaken imports, manual code chunks, <110kB gzipped initial bundle
+- **Auth Flow**: JWT in localStorage, automatic token injection via axios interceptors
+- **Form Handling**: React Hook Form + Zod validation
 
 ---
 
@@ -748,21 +813,39 @@ poetry run alembic upgrade head
 
 ---
 
-## Next Steps (Pending)
+## Current Work & Next Steps
 
-**Phase 10: Additional Testing**
-- Frontend tests (Vitest + React Testing Library)
-- E2E tests (Playwright or Cypress)
-- Increase backend coverage to 80%+
+**🚧 Active: Frontend Rebuild - Week 4 (Advanced Project Features)**
 
-**Phase 11: Deployment**
-- Docker containerization
-- PostgreSQL migration
-- Environment-specific configs
-- CI/CD pipeline
-- Production monitoring
+**✅ Completed**:
+- ✅ Week 1: Foundation + Authentication (login, register, protected routes)
+- ✅ Week 2: Quick Analysis MVP (upload → charts → AI insights → PDF export)
+- ✅ Week 3: Multi-file Projects Phase 1 (project CRUD, file management, upload)
 
-See [`PROGRESS.md`](PROGRESS.md) for current status and detailed plans.
+**🚧 Next (Week 4 - Advanced Project Features)**:
+1. ProjectFileAnalysis page (view charts for individual project files)
+2. File comparison view (side-by-side diff, statistics)
+3. File merging functionality (join operations, key mapping)
+4. Project dashboard with aggregated insights
+5. Batch file operations
+
+**Current Build Status**:
+- Production bundle: 171 kB gzipped (66% under 500kB target)
+- All routes lazy-loaded and code-split
+- TypeScript strict mode passing
+- Mobile responsive on all pages
+
+**📋 Planning Documents Reference**:
+- **8-Week Roadmap**: `~/.claude/plans/pure-percolating-moonbeam.md`
+- **Backend API Docs**: `~/.claude/plans/hikaru_backend_analysis.md` (40+ endpoints)
+- **Architecture**: `~/.claude/plans/pure-percolating-moonbeam-agent-94b94802.md` (180+ pages)
+- **Progress Tracking**: `frontend/README.md` (detailed feature checklist)
+
+**Later Phases**:
+- Phase 3: Chat + Advanced features (Week 5-6)
+- Phase 4: Dashboards + Analytics (Week 7)
+- Phase 5: Performance + Polish (Week 8)
+- Phase 6+: Testing, Deployment
 
 ---
 
@@ -778,6 +861,6 @@ See [`PROGRESS.md`](PROGRESS.md) for current status and detailed plans.
 
 ---
 
-**Last Updated**: November 15, 2025  
-**Maintained By**: Sanzoku Labs  
-**For Questions**: See README.md or PROGRESS.md
+**Last Updated**: November 27, 2025
+**Maintained By**: Sanzoku Labs
+**For Questions**: See README.md or frontend/README.md

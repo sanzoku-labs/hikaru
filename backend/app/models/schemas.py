@@ -119,6 +119,12 @@ class AnalyzeResponse(BaseModel):
     global_summary: Optional[str] = None  # Phase 3: Overall AI summary
 
 
+class AnalyzeRequest(BaseModel):
+    """Request schema for analyzing uploaded data."""
+
+    user_intent: Optional[str] = None  # Optional: What the user wants to analyze
+
+
 # Phase 4: Q&A Interface Schemas
 class QueryRequest(BaseModel):
     upload_id: str

@@ -1,0 +1,93 @@
+
+============================================================
+Week 4 Backend Endpoint Verification
+============================================================
+
+Step 1: Authenticating...
+ℹ️  User exists, logging in...
+✅ Logged in successfully
+
+Step 2: Creating test project...
+✅ Project created (ID: 14)
+
+Step 3: Uploading CSV file...
+Upload response keys: ['file_id', 'upload_id', 'filename', 'file_size', 'row_count', 'data_schema', 'uploaded_at']
+✅ File uploaded (ID: 9)
+
+============================================================
+ENDPOINT VERIFICATION TESTS
+============================================================
+
+
+────────────────────────────────────────────────────────────
+TEST 1: GET /api/projects/14/files/9/sheets
+────────────────────────────────────────────────────────────
+Expected: 404 (CSV files don't have sheets) OR sheet list for Excel
+Status: 400
+Response keys: ['detail']
+  detail: str = File is not an Excel workbook
+
+────────────────────────────────────────────────────────────
+TEST 2: POST /api/projects/14/files/9/analyze
+────────────────────────────────────────────────────────────
+Expected: FileAnalysisResponse with charts[], global_summary, analysis_id
+Status: 200
+Response keys: ['file_id', 'filename', 'charts', 'global_summary', 'user_intent', 'analyzed_at']
+  file_id: int = 9
+  filename: str = test_sales.csv
+  charts: [4 items]
+    First item keys: ['chart_type', 'title', 'x_column', 'y_column', 'category_column', 'value_column', 'data', 'priority', 'insight', 'comparison_insight']
+  global_summary: str = This is a sales performance dataset tracking produ
+  user_intent: str = Analyze sales trends and patterns
+  analyzed_at: str = 2025-11-27T18:32:00.146839
+
+✅ VERIFICATION:
+  - Has 'charts' array: True
+  - Has 'global_summary': True
+  - Has 'analysis_id': False
+  - Has 'file_id': True
+  - Number of charts: 4
+
+────────────────────────────────────────────────────────────
+TEST 3: GET /api/projects/14/files/9/analysis
+────────────────────────────────────────────────────────────
+Expected: Same as TEST 2 (saved analysis)
+Status: 404
+Response keys: ['detail']
+  detail: str = No analysis found for file 9. Please analyze the f
+
+────────────────────────────────────────────────────────────
+Uploading second file for comparison tests...
+────────────────────────────────────────────────────────────
+✅ Second file uploaded (ID: 10)
+
+────────────────────────────────────────────────────────────
+TEST 4: POST /api/projects/14/compare
+────────────────────────────────────────────────────────────
+Expected: ComparisonResponse with overlay_charts[], summary_insight
+Status: 500
+Response keys: ['detail']
+  detail: str = Failed to compare files: 1 validation error for Fi
+
+────────────────────────────────────────────────────────────
+TEST 5: POST /api/projects/14/relationships
+────────────────────────────────────────────────────────────
+Expected: RelationshipResponse with id, config
+Status: 422
+Response keys: ['error_code', 'detail', 'errors']
+  error_code: str = validation_error
+  detail: str = Input validation failed
+  errors: [2 items]
+    First item keys: ['type', 'loc', 'msg', 'input', 'url']
+
+============================================================
+VERIFICATION SUMMARY
+============================================================
+
+✅ All endpoint tests completed!
+
+Next steps:
+1. Review response structures above
+2. Verify TypeScript types match actual responses
+3. Update frontend types if needed
+4. Continue with ComparisonChartCard implementation

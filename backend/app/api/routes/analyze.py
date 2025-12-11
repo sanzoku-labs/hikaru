@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.middleware.auth import get_current_active_user
 from app.models.database import User
-from app.models.schemas import AnalyzeResponse
+from app.models.schemas import AnalyzeRequest, AnalyzeResponse
 from app.services.analysis_service import AnalysisService
 from app.services.upload_service import UploadService
 
@@ -16,12 +16,10 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["analyze"])
 
 
-@router.get("/analyze/{upload_id}", response_model=AnalyzeResponse)
+@router.post("/analyze/{upload_id}", response_model=AnalyzeResponse)
 async def analyze_data(
     upload_id: str,
-    user_intent: Optional[str] = Query(
-        None, description="Optional: What the user wants to analyze"
-    ),
+    request: AnalyzeRequest,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
@@ -52,14 +50,14 @@ async def analyze_data(
         filename = upload_data["filename"]
 
         logger.info(
-            f"Starting analysis for upload_id={upload_id}, filename={filename}, user_intent={user_intent}"
+            f"Starting analysis for upload_id={upload_id}, filename={filename}, user_intent={request.user_intent}"
         )
         logger.info(f"Dataset: {schema.row_count} rows, {len(schema.columns)} columns")
 
         # Use AnalysisService for complete analysis workflow
         analysis_service = AnalysisService()
         result = analysis_service.perform_full_analysis(
-            df=df, schema=schema, user_intent=user_intent, max_charts=4
+            df=df, schema=schema, user_intent=request.user_intent, max_charts=4
         )
 
         logger.info(

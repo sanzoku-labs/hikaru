@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { apiClient } from '@/services/axios'
 import { ENDPOINTS } from '@/services/endpoints'
 
@@ -14,7 +15,7 @@ export const useExportPDF = () => {
         ENDPOINTS.QUICK.EXPORT,
         { upload_id, filename },
         {
-          responseType: 'blob', // Important for file download
+          responseType: 'blob',
         }
       )
       return response.data
@@ -29,6 +30,10 @@ export const useExportPDF = () => {
       link.click()
       link.parentNode?.removeChild(link)
       window.URL.revokeObjectURL(url)
+      toast.success('PDF exported')
+    },
+    onError: () => {
+      toast.error('Failed to export PDF')
     },
   })
 }

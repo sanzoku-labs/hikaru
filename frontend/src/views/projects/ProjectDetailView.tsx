@@ -11,15 +11,29 @@ import {
   RotateCcw,
   CheckCircle2,
   MessageSquare,
+  ChevronDown,
+  Layers,
+  LayoutDashboard,
+  FolderOpen,
+  Grid2X2,
 } from 'lucide-react'
 import { PageHeaderView, EmptyStateView, LoadingSpinnerView, ErrorAlertView } from '@/views/shared'
 import { AnalysisFormView, GlobalSummaryView, DataSummaryView } from '@/views/analysis'
 import { ChartGridView } from '@/views/charts'
 import { ChatPanelView } from '@/views/chat'
+import { DashboardsListView } from '@/views/dashboards'
+import { ProjectOverviewView } from './ProjectOverviewView'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import type { ProjectDetailResponse, ProjectFileResponse, FileAnalysisResponse, ChatMessage } from '@/types/api'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import type { ProjectDetailResponse, ProjectFileResponse, FileAnalysisResponse, ChatMessage, DashboardResponse } from '@/types/api'
 
 interface ProjectDetailViewProps {
   // Data
@@ -71,6 +85,14 @@ interface ProjectDetailViewProps {
   onChatToggle: () => void
   onChatClose: () => void
   onChatSend: (message: string) => void
+
+  // Dashboards
+  dashboards: DashboardResponse[]
+  isLoadingDashboards: boolean
+  onViewDashboard: (dashboardId: number) => void
+  onDeleteDashboard: (dashboardId: number) => void
+  isDeletingDashboard: number | null | undefined
+
 }
 
 export function ProjectDetailView({
@@ -111,6 +133,12 @@ export function ProjectDetailView({
   onChatToggle,
   onChatClose,
   onChatSend,
+  // Dashboards
+  dashboards,
+  isLoadingDashboards,
+  onViewDashboard,
+  onDeleteDashboard,
+  isDeletingDashboard,
 }: ProjectDetailViewProps) {
   const files = project?.files || []
   const hasMultipleFiles = files.length >= 2
@@ -143,41 +171,90 @@ export function ProjectDetailView({
         backButton={{ label: 'Back to Projects', onClick: onBackClick }}
         compact
         actions={
-          <div className="flex items-center gap-2">
-            {hasMultipleFiles && (
-              <>
+          hasMultipleFiles ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <button
-                  onClick={onCompareClick}
                   className={cn(
                     'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
                     'bg-secondary text-secondary-foreground font-medium text-sm',
                     'transition-colors hover:bg-secondary/80'
                   )}
                 >
-                  <GitCompare className="h-4 w-4" />
-                  Compare
+                  <Layers className="h-4 w-4" />
+                  Multi-file
+                  <ChevronDown className="h-4 w-4 opacity-50" />
                 </button>
-                <button
-                  onClick={onMergeClick}
-                  className={cn(
-                    'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
-                    'bg-secondary text-secondary-foreground font-medium text-sm',
-                    'transition-colors hover:bg-secondary/80'
-                  )}
-                >
-                  <Merge className="h-4 w-4" />
-                  Merge
-                </button>
-              </>
-            )}
-          </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={onCompareClick} className="cursor-pointer">
+                  <GitCompare className="h-4 w-4 mr-2" />
+                  Compare Files
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onMergeClick} className="cursor-pointer">
+                  <Merge className="h-4 w-4 mr-2" />
+                  Merge Files
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null
         }
       />
 
-      {/* Split Layout */}
-      <div className="flex-1 flex min-h-0">
-        {/* Left Panel - File List */}
-        <div className="w-72 flex-shrink-0 flex flex-col pr-6">
+      {/* Tabs */}
+      <Tabs defaultValue="overview" className="flex-1 flex flex-col min-h-0">
+        <div className="border-b border-border px-0">
+          <TabsList className="h-10 bg-transparent p-0 gap-4">
+            <TabsTrigger
+              value="overview"
+              className="relative h-10 rounded-none border-b-2 border-transparent bg-transparent px-0 pb-3 pt-2 font-medium text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+            >
+              <LayoutDashboard className="h-4 w-4 mr-2" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger
+              value="files"
+              className="relative h-10 rounded-none border-b-2 border-transparent bg-transparent px-0 pb-3 pt-2 font-medium text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+            >
+              <FolderOpen className="h-4 w-4 mr-2" />
+              Files
+              {files.length > 0 && (
+                <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-muted">
+                  {files.length}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger
+              value="dashboards"
+              className="relative h-10 rounded-none border-b-2 border-transparent bg-transparent px-0 pb-3 pt-2 font-medium text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+            >
+              <Grid2X2 className="h-4 w-4 mr-2" />
+              Dashboards
+              {dashboards.length > 0 && (
+                <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-muted">
+                  {dashboards.length}
+                </span>
+              )}
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="flex-1 overflow-y-auto mt-6">
+          <ProjectOverviewView
+            files={files}
+            projectName={project.name}
+            projectDescription={project.description || undefined}
+            createdAt={project.created_at}
+          />
+        </TabsContent>
+
+        {/* Files Tab */}
+        <TabsContent value="files" className="flex-1 flex min-h-0 mt-6">
+          {/* Split Layout */}
+          <div className="flex-1 flex min-h-0">
+            {/* Left Panel - File List */}
+            <div className="w-72 flex-shrink-0 flex flex-col pr-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-muted-foreground">
               Files ({files.length})
@@ -491,6 +568,19 @@ export function ProjectDetailView({
           )}
         </div>
       </div>
+      </TabsContent>
+
+        {/* Dashboards Tab */}
+        <TabsContent value="dashboards" className="flex-1 overflow-y-auto mt-6">
+          <DashboardsListView
+            dashboards={dashboards}
+            isLoading={isLoadingDashboards}
+            onView={onViewDashboard}
+            onDelete={onDeleteDashboard}
+            isDeleting={isDeletingDashboard}
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* Chat Panel */}
       <ChatPanelView

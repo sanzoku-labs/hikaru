@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { apiClient } from '@/services/axios'
 import { ENDPOINTS } from '@/services/endpoints'
 import type { RelationshipCreate, RelationshipResponse } from '@/types/api'
@@ -15,10 +16,13 @@ export const useCreateRelationship = (projectId: number) => {
       return response
     },
     onSuccess: () => {
-      // Invalidate relationships query
       queryClient.invalidateQueries({
         queryKey: ['projects', projectId, 'relationships'],
       })
+      toast.success('Merge relationship created')
+    },
+    onError: () => {
+      toast.error('Failed to create merge relationship')
     },
   })
 }

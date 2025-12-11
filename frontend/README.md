@@ -230,14 +230,25 @@ Core project management features implemented:
 - File list with schema preview
 - Navigation and routing
 
-## Next Steps (Week 4: Advanced Project Features)
+### ✅ Week 4: Advanced Project Features (In Progress)
+- Project Overview tab with aggregated statistics dashboard
+- Stats cards (total files, rows, columns, analysis coverage)
+- File type distribution visualization
+- Recent activity feed
+- Tabbed interface (Overview | Files)
+- File comparison view with overlay charts
+- File merging wizard (3-step: Join Type → Map Keys → Review)
+- OverlayChartView for comparison visualizations
+- Multi-file dropdown menu (Compare, Merge)
+- Q&A Chat panel for AI-powered data questions
 
-### Phase 2: File Analysis & Comparison
-- [ ] ProjectFileAnalysis page (view charts for individual files)
-- [ ] File comparison view (side-by-side diff)
-- [ ] File merging functionality (join operations)
-- [ ] Project dashboard with aggregated insights
-- [ ] Batch file operations
+## Next Steps (Week 5: Chat & Advanced Features)
+
+### Phase 3: Chat & Sharing
+- [ ] Batch file operations (select multiple, delete, analyze)
+- [ ] Dashboard builder (pin charts, custom layouts)
+- [ ] Share analysis via link
+- [ ] Saved analysis history
 
 ## Development Notes
 
@@ -267,5 +278,5 @@ Ensure backend is running at `http://localhost:8000` and CORS is configured.
 
 ---
 
-**Last Updated**: November 27, 2025
-**Status**: Week 3 Multi-file Projects (Phase 1) Complete ✅
+**Last Updated**: December 11, 2025
+**Status**: Week 4 Advanced Project Features (In Progress) 🚧

@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { apiClient } from '@/services/axios'
 import { ENDPOINTS } from '@/services/endpoints'
 
@@ -11,6 +12,10 @@ export const useDeleteProject = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
+      toast.success('Project deleted')
+    },
+    onError: () => {
+      toast.error('Failed to delete project')
     },
   })
 }

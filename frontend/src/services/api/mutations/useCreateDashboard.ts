@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { apiClient } from '@/services/axios'
 import { ENDPOINTS } from '@/services/endpoints'
 import type { DashboardCreate, DashboardResponse } from '@/types/api'
@@ -14,9 +15,12 @@ export const useCreateDashboard = (projectId: number) => {
       )
       return response.data
     },
-    onSuccess: () => {
-      // Invalidate dashboards list for this project
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'dashboards'] })
+      toast.success(`Dashboard "${data.name}" saved`)
+    },
+    onError: () => {
+      toast.error('Failed to save dashboard')
     },
   })
 }

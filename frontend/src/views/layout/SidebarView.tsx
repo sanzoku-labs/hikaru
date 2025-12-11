@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import {
   Zap,
   FolderKanban,
+  BarChart3,
   ChevronLeft,
   ChevronRight,
   Sparkles,
@@ -29,6 +30,11 @@ const navItems: NavItem[] = [
     label: 'Projects',
     path: '/projects',
     icon: <FolderKanban className="h-5 w-5" />,
+  },
+  {
+    label: 'Analytics',
+    path: '/analytics',
+    icon: <BarChart3 className="h-5 w-5" />,
   },
 ]
 

@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { apiClient } from '@/services/axios'
 import { ENDPOINTS } from '@/services/endpoints'
 import { useAuthStore } from '@/stores/authStore'
@@ -17,6 +18,10 @@ export const useLogin = () => {
     },
     onSuccess: (data) => {
       setAuth(data.user, data.access_token)
+      toast.success(`Welcome back, ${data.user.username}`)
+    },
+    onError: () => {
+      toast.error('Invalid credentials')
     },
   })
 }

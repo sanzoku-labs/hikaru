@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { apiClient } from '@/services/axios'
 import { ENDPOINTS } from '@/services/endpoints'
 import type { ProjectFileUploadResponse } from '@/types/api'
@@ -22,8 +23,12 @@ export const useUploadProjectFile = (projectId: number) => {
       )
       return response.data
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId] })
+      toast.success(`File "${data.filename}" uploaded`)
+    },
+    onError: () => {
+      toast.error('Failed to upload file')
     },
   })
 }

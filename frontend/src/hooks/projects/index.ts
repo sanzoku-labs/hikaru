@@ -1,2 +1,6 @@
 export { useProjectsListFlow } from './useProjectsListFlow'
 export { useProjectDetailFlow } from './useProjectDetailFlow'
+export { useFileComparisonFlow } from './useFileComparisonFlow'
+export { useFileMergeFlow } from './useFileMergeFlow'
+export type { ComparisonType } from './useFileComparisonFlow'
+export type { JoinType, MergeStep } from './useFileMergeFlow'

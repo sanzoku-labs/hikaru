@@ -1,10 +1,13 @@
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useProjectDetailFlow } from '@/hooks/projects/useProjectDetailFlow'
 import { useChatFlow } from '@/hooks/chat'
+import { useDashboards } from '@/services/api/queries/useDashboards'
+import { useDeleteDashboard } from '@/services/api/mutations/useDeleteDashboard'
 import { ProjectDetailView } from '@/views/projects'
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>()
+  const navigate = useNavigate()
   const numericProjectId = Number(projectId) || 0
 
   const {
@@ -38,6 +41,18 @@ export default function ProjectDetailPage() {
     navigateBack,
     isAnalyzing,
   } = useProjectDetailFlow(numericProjectId)
+
+  // Dashboards for this project
+  const { data: dashboardsData, isLoading: isLoadingDashboards } = useDashboards(numericProjectId)
+  const deleteDashboardMutation = useDeleteDashboard(numericProjectId)
+
+  const handleViewDashboard = (dashboardId: number) => {
+    navigate(`/projects/${projectId}/dashboards/${dashboardId}`)
+  }
+
+  const handleDeleteDashboard = (dashboardId: number) => {
+    deleteDashboardMutation.mutate(dashboardId)
+  }
 
   // Chat for the selected file (uses the file's upload_id)
   const chat = useChatFlow({
@@ -91,6 +106,12 @@ export default function ProjectDetailPage() {
       onChatToggle={chat.toggleChat}
       onChatClose={chat.closeChat}
       onChatSend={chat.sendMessage}
+      // Dashboard props
+      dashboards={dashboardsData?.dashboards || []}
+      isLoadingDashboards={isLoadingDashboards}
+      onViewDashboard={handleViewDashboard}
+      onDeleteDashboard={handleDeleteDashboard}
+      isDeletingDashboard={deleteDashboardMutation.isPending ? deleteDashboardMutation.variables : null}
     />
   )
 }

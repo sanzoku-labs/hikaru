@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { apiClient } from '@/services/axios'
 import { ENDPOINTS } from '@/services/endpoints'
 import type { MergeAnalyzeRequest, MergeAnalyzeResponse } from '@/types/api'
@@ -14,11 +15,14 @@ export const useMergeAnalyze = (projectId: number) => {
       )
       return response
     },
-    onSuccess: () => {
-      // Invalidate project details to refresh merge status
+    onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: ['projects', projectId],
       })
+      toast.success(`Merge complete: ${data.merged_row_count.toLocaleString()} rows`)
+    },
+    onError: () => {
+      toast.error('Failed to merge files')
     },
   })
 }

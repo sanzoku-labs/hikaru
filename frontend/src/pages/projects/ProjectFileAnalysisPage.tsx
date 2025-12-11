@@ -13,7 +13,11 @@ export default function ProjectFileAnalysisPage() {
     analysisData,
     isLoading,
     fetchError,
+    showReanalyzeForm,
+    userIntent,
     handleAnalyze,
+    handleUserIntentChange,
+    handleToggleReanalyze,
     navigateBack,
     isAnalyzing,
     analysisError,
@@ -26,7 +30,11 @@ export default function ProjectFileAnalysisPage() {
       analysisData={analysisData}
       isLoading={isLoading}
       fetchError={fetchError}
+      showReanalyzeForm={showReanalyzeForm}
+      userIntent={userIntent}
       onAnalyze={handleAnalyze}
+      onUserIntentChange={handleUserIntentChange}
+      onToggleReanalyze={handleToggleReanalyze}
       onBackClick={navigateBack}
       isAnalyzing={isAnalyzing}
       analysisError={analysisError}

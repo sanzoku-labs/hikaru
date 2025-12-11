@@ -1,9 +1,11 @@
 import { cn } from '@/lib/utils'
 import { formatFileSize } from '@/lib/utils'
-import { FileSpreadsheet, Sparkles, Play } from 'lucide-react'
+import { FileSpreadsheet, Sparkles, Play, RotateCcw, X } from 'lucide-react'
 import { PageHeaderView, LoadingSpinnerView, ErrorAlertView } from '@/views/shared'
-import { GlobalSummaryView, DataPreviewView } from '@/views/analysis'
+import { GlobalSummaryView, DataSummaryView } from '@/views/analysis'
 import { ChartGridView } from '@/views/charts'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 import type { ProjectFileResponse, FileAnalysisResponse } from '@/types/api'
 
 interface ProjectFileAnalysisViewProps {
@@ -14,8 +16,14 @@ interface ProjectFileAnalysisViewProps {
   isLoading: boolean
   fetchError: string | null
 
+  // Re-analyze form state
+  showReanalyzeForm: boolean
+  userIntent: string
+
   // Handlers
   onAnalyze: () => void
+  onUserIntentChange: (intent: string) => void
+  onToggleReanalyze: () => void
   onBackClick: () => void
 
   // Status
@@ -29,7 +37,11 @@ export function ProjectFileAnalysisView({
   analysisData,
   isLoading,
   fetchError,
+  showReanalyzeForm,
+  userIntent,
   onAnalyze,
+  onUserIntentChange,
+  onToggleReanalyze,
   onBackClick,
   isAnalyzing,
   analysisError,
@@ -64,15 +76,85 @@ export function ProjectFileAnalysisView({
         description={`${formatFileSize(file.file_size)} · ${file.data_schema?.row_count?.toLocaleString() || '?'} rows`}
         backButton={{ label: `Back to ${projectName}`, onClick: onBackClick }}
         actions={
-          !hasAnalysis && (
+          <div className="flex items-center gap-2">
+            {hasAnalysis && (
+              <button
+                onClick={onToggleReanalyze}
+                disabled={isAnalyzing}
+                className={cn(
+                  'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
+                  'bg-secondary text-secondary-foreground font-medium text-sm',
+                  'transition-colors hover:bg-secondary/80',
+                  'disabled:opacity-50 disabled:cursor-not-allowed'
+                )}
+              >
+                {showReanalyzeForm ? (
+                  <>
+                    <X className="h-4 w-4" />
+                    Cancel
+                  </>
+                ) : (
+                  <>
+                    <RotateCcw className="h-4 w-4" />
+                    Re-analyze
+                  </>
+                )}
+              </button>
+            )}
+            {!hasAnalysis && (
+              <button
+                onClick={() => onAnalyze()}
+                disabled={isAnalyzing}
+                className={cn(
+                  'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
+                  'bg-primary text-primary-foreground font-medium text-sm',
+                  'transition-all duration-200',
+                  'hover:bg-primary/90 hover:glow-primary-sm',
+                  'disabled:opacity-50 disabled:cursor-not-allowed'
+                )}
+              >
+                {isAnalyzing ? (
+                  <>
+                    <span className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4" />
+                    Analyze File
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        }
+      />
+
+      {/* Re-analyze form */}
+      {showReanalyzeForm && (
+        <div className="mb-6 p-6 rounded-xl border bg-card animate-in-up">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="reanalyze-intent" className="text-sm font-medium">
+                What would you like to learn from this data?
+                <span className="text-muted-foreground font-normal ml-1">(optional)</span>
+              </Label>
+              <Textarea
+                id="reanalyze-intent"
+                placeholder="e.g., Focus on trends over time, or Compare categories..."
+                value={userIntent}
+                onChange={(e) => onUserIntentChange(e.target.value)}
+                className="min-h-[80px] resize-none"
+              />
+            </div>
             <button
-              onClick={onAnalyze}
+              onClick={() => onAnalyze()}
               disabled={isAnalyzing}
               className={cn(
                 'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
                 'bg-primary text-primary-foreground font-medium text-sm',
                 'transition-all duration-200',
-                'hover:bg-primary/90 hover:glow-primary-sm',
+                'hover:bg-primary/90',
                 'disabled:opacity-50 disabled:cursor-not-allowed'
               )}
             >
@@ -83,27 +165,27 @@ export function ProjectFileAnalysisView({
                 </>
               ) : (
                 <>
-                  <Play className="h-4 w-4" />
-                  Analyze File
+                  <Sparkles className="h-4 w-4" />
+                  Run Analysis
                 </>
               )}
             </button>
-          )
-        }
-      />
+          </div>
+        </div>
+      )}
 
       {/* Analysis error */}
       {analysisError && (
         <ErrorAlertView
           title="Analysis failed"
           message={analysisError}
-          onRetry={onAnalyze}
+          onRetry={() => onAnalyze()}
           className="mb-6"
         />
       )}
 
       {/* Analyzing state */}
-      {isAnalyzing && (
+      {isAnalyzing && !showReanalyzeForm && (
         <div className="py-12">
           <LoadingSpinnerView size="lg" label="Analyzing your data and generating insights..." />
         </div>
@@ -125,16 +207,16 @@ export function ProjectFileAnalysisView({
       )}
 
       {/* Analysis results */}
-      {hasAnalysis && (
+      {hasAnalysis && !showReanalyzeForm && (
         <div className="space-y-8 pb-8">
           {/* Global AI Summary */}
           {analysisData.global_summary && (
             <GlobalSummaryView summary={analysisData.global_summary} />
           )}
 
-          {/* Data schema preview (if available) */}
+          {/* Data summary (collapsed by default) */}
           {file.data_schema && (
-            <DataPreviewView
+            <DataSummaryView
               fileName={file.filename}
               dataSchema={file.data_schema}
             />

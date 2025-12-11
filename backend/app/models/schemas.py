@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+import json
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, computed_field, field_validator
 
 # ===== Phase 8: Authentication Schemas =====
 
@@ -230,12 +231,23 @@ class FileInProject(BaseModel):
     upload_id: str
     file_size: int
     row_count: Optional[int]
-    data_schema_json: Optional[str]
+    data_schema_json: Optional[str] = None
     uploaded_at: datetime
     has_analysis: bool = False  # Whether analysis has been performed
     analyzed_at: Optional[datetime] = None  # When analysis was last run
 
     model_config = ConfigDict(from_attributes=True)
+
+    @computed_field
+    @property
+    def data_schema(self) -> Optional["DataSchema"]:
+        """Parse data_schema_json into DataSchema object."""
+        if self.data_schema_json:
+            try:
+                return DataSchema(**json.loads(self.data_schema_json))
+            except (json.JSONDecodeError, TypeError):
+                return None
+        return None
 
 
 class ProjectResponse(BaseModel):

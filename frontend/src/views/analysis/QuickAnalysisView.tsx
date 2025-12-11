@@ -1,8 +1,8 @@
 import { cn } from '@/lib/utils'
 import { Download, RotateCcw, Sparkles } from 'lucide-react'
-import { FileUploaderView } from './FileUploaderView'
+import { AnalysisFormView } from './AnalysisFormView'
 import { UploadProgressView } from './UploadProgressView'
-import { DataPreviewView } from './DataPreviewView'
+import { DataSummaryView } from './DataSummaryView'
 import { GlobalSummaryView } from './GlobalSummaryView'
 import { ChartGridView } from '@/views/charts'
 import { PageHeaderView } from '@/views/shared'
@@ -13,31 +13,41 @@ interface QuickAnalysisViewProps {
   // State
   stage: UploadStage
   selectedFile: File | null
+  userIntent: string
   uploadData: UploadResponse | null
   analysisData: AnalyzeResponse | null
   error: string | null
 
   // Handlers
   onFileSelect: (file: File) => void
+  onFileRemove: () => void
+  onUserIntentChange: (intent: string) => void
+  onSubmit: () => void
   onReset: () => void
   onExport: () => void
 
   // Status
   isExporting: boolean
+  canSubmit: boolean
 }
 
 export function QuickAnalysisView({
   stage,
   selectedFile,
+  userIntent,
   uploadData,
   analysisData,
   error,
   onFileSelect,
+  onFileRemove,
+  onUserIntentChange,
+  onSubmit,
   onReset,
   onExport,
   isExporting,
+  canSubmit,
 }: QuickAnalysisViewProps) {
-  const showUploader = stage === 'idle'
+  const showForm = stage === 'idle'
   const showProgress = stage !== 'idle' && stage !== 'complete'
   const showResults = stage === 'complete' && analysisData
 
@@ -92,10 +102,19 @@ export function QuickAnalysisView({
         }
       />
 
-      {/* Upload zone */}
-      {showUploader && (
+      {/* Analysis form */}
+      {showForm && (
         <div className="py-8">
-          <FileUploaderView onFileSelect={onFileSelect} error={error} />
+          <AnalysisFormView
+            selectedFile={selectedFile}
+            userIntent={userIntent}
+            error={error}
+            canSubmit={canSubmit}
+            onFileSelect={onFileSelect}
+            onFileRemove={onFileRemove}
+            onUserIntentChange={onUserIntentChange}
+            onSubmit={onSubmit}
+          />
         </div>
       )}
 
@@ -119,9 +138,9 @@ export function QuickAnalysisView({
             <GlobalSummaryView summary={analysisData.global_summary} />
           )}
 
-          {/* Data schema preview */}
+          {/* Data summary (collapsed by default) */}
           {uploadData?.data_schema && (
-            <DataPreviewView
+            <DataSummaryView
               fileName={uploadData.filename}
               dataSchema={uploadData.data_schema}
             />
@@ -139,7 +158,7 @@ export function QuickAnalysisView({
                   ({analysisData.charts.length} charts)
                 </span>
               </div>
-              <ChartGridView charts={analysisData.charts} />
+              <ChartGridView charts={analysisData.charts} uploadId={uploadData?.upload_id} />
             </div>
           )}
         </div>

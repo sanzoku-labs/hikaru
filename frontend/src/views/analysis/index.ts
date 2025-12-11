@@ -1,5 +1,7 @@
 export { QuickAnalysisView } from './QuickAnalysisView'
+export { AnalysisFormView } from './AnalysisFormView'
 export { FileUploaderView } from './FileUploaderView'
 export { UploadProgressView } from './UploadProgressView'
 export { DataPreviewView } from './DataPreviewView'
+export { DataSummaryView } from './DataSummaryView'
 export { GlobalSummaryView } from './GlobalSummaryView'

@@ -541,6 +541,19 @@ class ChartInsightRequest(BaseModel):
     value_column: Optional[str] = None
 
 
+class QuickChartInsightRequest(BaseModel):
+    """Request schema for generating chart insight in quick analysis (no file_id required)."""
+
+    upload_id: str
+    chart_type: Literal["line", "bar", "pie", "scatter"]
+    chart_title: str
+    chart_data: List[Dict[str, Any]]  # Chart data points
+    x_column: Optional[str] = None
+    y_column: Optional[str] = None
+    category_column: Optional[str] = None
+    value_column: Optional[str] = None
+
+
 class ChartInsightResponse(BaseModel):
     """Response schema for chart insight."""
 

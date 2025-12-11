@@ -322,6 +322,17 @@ export interface ChartInsightRequest {
   value_column?: string
 }
 
+export interface QuickChartInsightRequest {
+  upload_id: string
+  chart_type: ChartType
+  chart_title: string
+  chart_data: Record<string, any>[]
+  x_column?: string
+  y_column?: string
+  category_column?: string
+  value_column?: string
+}
+
 export interface ChartInsightResponse {
   insight: string
   insight_type: 'basic' | 'advanced'

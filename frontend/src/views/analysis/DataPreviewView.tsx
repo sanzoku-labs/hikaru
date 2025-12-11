@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 interface DataPreviewViewProps {
   fileName?: string
   dataSchema: DataSchema
+  showHeader?: boolean
 }
 
 function getColumnIcon(type: string) {
@@ -32,18 +33,23 @@ function getColumnTypeColor(type: string) {
   }
 }
 
-export function DataPreviewView({ dataSchema }: DataPreviewViewProps) {
+export function DataPreviewView({
+  dataSchema,
+  showHeader = true,
+}: DataPreviewViewProps) {
   return (
     <div className="w-full animate-in-up">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-lg font-semibold text-foreground">Data Schema</h3>
-          <p className="text-sm text-muted-foreground">
-            {dataSchema.row_count.toLocaleString()} rows · {dataSchema.columns.length} columns
-          </p>
+      {/* Header - conditionally shown */}
+      {showHeader && (
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-lg font-semibold text-foreground">Data Schema</h3>
+            <p className="text-sm text-muted-foreground">
+              {dataSchema.row_count.toLocaleString()} rows · {dataSchema.columns.length} columns
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Schema cards grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">

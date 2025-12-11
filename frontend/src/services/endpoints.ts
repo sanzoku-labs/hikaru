@@ -12,6 +12,7 @@ export const ENDPOINTS = {
   QUICK: {
     UPLOAD: '/api/upload',
     ANALYZE: (uploadId: string) => `/api/analyze/${uploadId}`,
+    CHART_INSIGHT: (uploadId: string) => `/api/analyze/${uploadId}/chart-insight`,
     EXPORT: '/api/export',
   },
 

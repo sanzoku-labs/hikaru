@@ -171,33 +171,41 @@ class AnalysisService:
         schema: DataSchema,
         user_intent: Optional[str] = None,
         max_charts: int = 4,
+        include_chart_insights: bool = False,
     ) -> Dict[str, Any]:
         """
-        Perform complete analysis: generate charts, add insights, and create global summary.
+        Perform complete analysis: generate charts, optionally add insights, and create global summary.
 
         Args:
             df: DataFrame to analyze
             schema: Data schema
             user_intent: Optional user intent
             max_charts: Maximum number of charts to generate
+            include_chart_insights: Whether to generate per-chart AI insights (default: False).
+                                   Set to False for faster initial analysis - insights can be
+                                   requested on-demand via /api/charts/insight endpoint.
 
         Returns:
             Dictionary with 'charts' and 'global_summary' keys
         """
         logger.info(
-            f"Starting full analysis (user_intent: {user_intent}, max_charts: {max_charts})"
+            f"Starting full analysis (user_intent: {user_intent}, max_charts: {max_charts}, "
+            f"include_chart_insights: {include_chart_insights})"
         )
 
         # Step 1: Generate charts
         charts = self.generate_charts(df, schema, user_intent, max_charts)
         logger.info(f"Generated {len(charts)} charts")
 
-        # Step 2: Add insights to charts
-        charts_with_insights = self.add_insights_to_charts(charts, schema)
-        logger.info(f"Added insights to {len(charts_with_insights)} charts")
+        # Step 2: Optionally add insights to charts (skipped by default for faster response)
+        if include_chart_insights:
+            charts = self.add_insights_to_charts(charts, schema)
+            logger.info(f"Added insights to {len(charts)} charts")
+        else:
+            logger.info("Skipping per-chart insights (available on-demand)")
 
         # Step 3: Generate global summary
-        global_summary = self.generate_global_summary(charts_with_insights, schema, user_intent)
+        global_summary = self.generate_global_summary(charts, schema, user_intent)
 
         if global_summary:
             logger.info("Full analysis complete with global summary")
@@ -205,6 +213,6 @@ class AnalysisService:
             logger.info("Full analysis complete (no global summary)")
 
         return {
-            "charts": charts_with_insights,
+            "charts": charts,
             "global_summary": global_summary,
         }

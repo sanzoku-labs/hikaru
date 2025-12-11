@@ -10,15 +10,21 @@ export interface UseProjectDetailFlowReturn {
   isLoading: boolean
   fetchError: string | null
 
-  // Upload state
+  // Upload form state
   showUpload: boolean
+  selectedFile: File | null
+  userIntent: string
   isUploading: boolean
   uploadError: string | null
+  canSubmit: boolean
 
   // Handlers
   toggleUpload: () => void
-  handleFileUpload: (file: File) => Promise<void>
-  navigateToFileAnalysis: (fileId: number) => void
+  handleFileSelect: (file: File) => void
+  handleFileRemove: () => void
+  handleUserIntentChange: (intent: string) => void
+  handleUploadSubmit: () => Promise<void>
+  navigateToFileAnalysis: (fileId: number, userIntent?: string) => void
   navigateToCompare: () => void
   navigateToMerge: () => void
   navigateBack: () => void
@@ -30,27 +36,55 @@ export function useProjectDetailFlow(projectId: number): UseProjectDetailFlowRet
   const uploadMutation = useUploadProjectFile(projectId)
 
   const [showUpload, setShowUpload] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [userIntent, setUserIntent] = useState('')
   const [uploadError, setUploadError] = useState<string | null>(null)
 
   const toggleUpload = useCallback(() => {
     setShowUpload((prev) => !prev)
+    setSelectedFile(null)
+    setUserIntent('')
     setUploadError(null)
   }, [])
 
-  const handleFileUpload = useCallback(async (file: File) => {
+  const handleFileSelect = useCallback((file: File) => {
+    setSelectedFile(file)
+    setUploadError(null)
+  }, [])
+
+  const handleFileRemove = useCallback(() => {
+    setSelectedFile(null)
+    setUploadError(null)
+  }, [])
+
+  const handleUserIntentChange = useCallback((intent: string) => {
+    setUserIntent(intent)
+  }, [])
+
+  const handleUploadSubmit = useCallback(async () => {
+    if (!selectedFile) return
+
     setUploadError(null)
     try {
-      await uploadMutation.mutateAsync(file)
-      setShowUpload(false) // Close upload zone after success
+      const result = await uploadMutation.mutateAsync(selectedFile)
+      setShowUpload(false)
+      setSelectedFile(null)
+      // Navigate to analysis with user intent
+      navigate(`/projects/${projectId}/files/${result.id}/analyze`, {
+        state: { userIntent: userIntent.trim() || null },
+      })
+      setUserIntent('')
     } catch (err) {
       setUploadError(
         err instanceof Error ? err.message : 'Failed to upload file'
       )
     }
-  }, [uploadMutation])
+  }, [selectedFile, userIntent, uploadMutation, navigate, projectId])
 
-  const navigateToFileAnalysis = useCallback((fileId: number) => {
-    navigate(`/projects/${projectId}/files/${fileId}/analyze`)
+  const navigateToFileAnalysis = useCallback((fileId: number, intent?: string) => {
+    navigate(`/projects/${projectId}/files/${fileId}/analyze`, {
+      state: intent ? { userIntent: intent } : undefined,
+    })
   }, [navigate, projectId])
 
   const navigateToCompare = useCallback(() => {
@@ -72,10 +106,16 @@ export function useProjectDetailFlow(projectId: number): UseProjectDetailFlowRet
       ? (projectQuery.error as Error).message
       : null,
     showUpload,
+    selectedFile,
+    userIntent,
     isUploading: uploadMutation.isPending,
     uploadError,
+    canSubmit: selectedFile !== null && !uploadMutation.isPending,
     toggleUpload,
-    handleFileUpload,
+    handleFileSelect,
+    handleFileRemove,
+    handleUserIntentChange,
+    handleUploadSubmit,
     navigateToFileAnalysis,
     navigateToCompare,
     navigateToMerge,

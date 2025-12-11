@@ -9,7 +9,7 @@ import {
   X,
 } from 'lucide-react'
 import { PageHeaderView, EmptyStateView, LoadingSpinnerView, ErrorAlertView } from '@/views/shared'
-import { FileUploaderView } from '@/views/analysis'
+import { AnalysisFormView } from '@/views/analysis'
 import type { ProjectDetailResponse } from '@/types/api'
 
 interface ProjectDetailViewProps {
@@ -18,14 +18,20 @@ interface ProjectDetailViewProps {
   isLoading: boolean
   fetchError: string | null
 
-  // Upload state
+  // Upload form state
   showUpload: boolean
+  selectedFile: File | null
+  userIntent: string
   isUploading: boolean
   uploadError: string | null
+  canSubmit: boolean
 
   // Handlers
   onToggleUpload: () => void
-  onFileUpload: (file: File) => void
+  onFileSelect: (file: File) => void
+  onFileRemove: () => void
+  onUserIntentChange: (intent: string) => void
+  onUploadSubmit: () => void
   onFileClick: (fileId: number) => void
   onCompareClick: () => void
   onMergeClick: () => void
@@ -37,10 +43,16 @@ export function ProjectDetailView({
   isLoading,
   fetchError,
   showUpload,
+  selectedFile,
+  userIntent,
   isUploading,
   uploadError,
+  canSubmit,
   onToggleUpload,
-  onFileUpload,
+  onFileSelect,
+  onFileRemove,
+  onUserIntentChange,
+  onUploadSubmit,
   onFileClick,
   onCompareClick,
   onMergeClick,
@@ -129,19 +141,20 @@ export function ProjectDetailView({
         }
       />
 
-      {/* Upload zone */}
+      {/* Upload form */}
       {showUpload && (
         <div className="mb-8 animate-in-up">
-          <FileUploaderView
-            onFileSelect={onFileUpload}
-            disabled={isUploading}
+          <AnalysisFormView
+            selectedFile={selectedFile}
+            userIntent={userIntent}
             error={uploadError}
+            canSubmit={canSubmit && !isUploading}
+            onFileSelect={onFileSelect}
+            onFileRemove={onFileRemove}
+            onUserIntentChange={onUserIntentChange}
+            onSubmit={onUploadSubmit}
+            submitLabel={isUploading ? 'Uploading...' : 'Upload & Analyze'}
           />
-          {isUploading && (
-            <div className="mt-4 flex justify-center">
-              <LoadingSpinnerView size="sm" label="Uploading file..." />
-            </div>
-          )}
         </div>
       )}
 

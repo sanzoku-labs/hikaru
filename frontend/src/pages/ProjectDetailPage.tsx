@@ -11,10 +11,16 @@ export default function ProjectDetailPage() {
     isLoading,
     fetchError,
     showUpload,
+    selectedFile,
+    userIntent,
     isUploading,
     uploadError,
+    canSubmit,
     toggleUpload,
-    handleFileUpload,
+    handleFileSelect,
+    handleFileRemove,
+    handleUserIntentChange,
+    handleUploadSubmit,
     navigateToFileAnalysis,
     navigateToCompare,
     navigateToMerge,
@@ -27,10 +33,16 @@ export default function ProjectDetailPage() {
       isLoading={isLoading}
       fetchError={fetchError}
       showUpload={showUpload}
+      selectedFile={selectedFile}
+      userIntent={userIntent}
       isUploading={isUploading}
       uploadError={uploadError}
+      canSubmit={canSubmit}
       onToggleUpload={toggleUpload}
-      onFileUpload={handleFileUpload}
+      onFileSelect={handleFileSelect}
+      onFileRemove={handleFileRemove}
+      onUserIntentChange={handleUserIntentChange}
+      onUploadSubmit={handleUploadSubmit}
       onFileClick={navigateToFileAnalysis}
       onCompareClick={navigateToCompare}
       onMergeClick={navigateToMerge}

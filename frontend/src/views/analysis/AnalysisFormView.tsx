@@ -13,6 +13,7 @@ interface AnalysisFormViewProps {
   onFileRemove: () => void
   onUserIntentChange: (intent: string) => void
   onSubmit: () => void
+  submitLabel?: string
 }
 
 const MAX_SIZE_MB = 30
@@ -33,6 +34,7 @@ export function AnalysisFormView({
   onFileRemove,
   onUserIntentChange,
   onSubmit,
+  submitLabel = 'Analyze Data',
 }: AnalysisFormViewProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
@@ -263,7 +265,7 @@ export function AnalysisFormView({
         )}
       >
         <Sparkles className="h-4 w-4" />
-        Analyze Data
+        {submitLabel}
         <ArrowRight className="h-4 w-4" />
       </button>
     </form>

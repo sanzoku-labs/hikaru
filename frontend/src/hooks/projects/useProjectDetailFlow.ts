@@ -36,7 +36,7 @@ export interface UseProjectDetailFlowReturn {
   handleAnalyze: (intent?: string) => Promise<void>
   handleReanalyzeIntentChange: (intent: string) => void
   toggleReanalyzeForm: () => void
-  toggleUpload: () => void
+  toggleUpload: (open?: boolean) => void
   handleUploadFileSelect: (file: File) => void
   handleUploadFileRemove: () => void
   handleUploadIntentChange: (intent: string) => void
@@ -128,11 +128,13 @@ export function useProjectDetailFlow(projectId: number): UseProjectDetailFlowRet
     setReanalyzeIntent('')
   }, [])
 
-  const toggleUpload = useCallback(() => {
-    setShowUpload((prev) => !prev)
-    setUploadFile(null)
-    setUploadIntent('')
-    setUploadError(null)
+  const toggleUpload = useCallback((open?: boolean) => {
+    setShowUpload((prev) => open ?? !prev)
+    if (!open) {
+      setUploadFile(null)
+      setUploadIntent('')
+      setUploadError(null)
+    }
   }, [])
 
   const handleUploadFileSelect = useCallback((file: File) => {

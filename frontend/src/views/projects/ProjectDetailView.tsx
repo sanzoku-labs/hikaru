@@ -16,6 +16,7 @@ import { AnalysisFormView, GlobalSummaryView, DataSummaryView } from '@/views/an
 import { ChartGridView } from '@/views/charts'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import type { ProjectDetailResponse, ProjectFileResponse, FileAnalysisResponse } from '@/types/api'
 
 interface ProjectDetailViewProps {
@@ -48,7 +49,7 @@ interface ProjectDetailViewProps {
   onAnalyze: (intent?: string) => void
   onReanalyzeIntentChange: (intent: string) => void
   onToggleReanalyzeForm: () => void
-  onToggleUpload: () => void
+  onToggleUpload: (open?: boolean) => void
   onUploadFileSelect: (file: File) => void
   onUploadFileRemove: () => void
   onUploadIntentChange: (intent: string) => void
@@ -161,45 +162,52 @@ export function ProjectDetailView({
             <h3 className="text-sm font-medium text-muted-foreground">
               Files ({files.length})
             </h3>
-            <button
-              onClick={onToggleUpload}
-              className={cn(
-                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm',
-                showUpload
-                  ? 'bg-muted text-muted-foreground'
-                  : 'bg-primary text-primary-foreground hover:bg-primary/90'
-              )}
-            >
-              {showUpload ? (
-                <>
-                  <X className="h-3.5 w-3.5" />
-                  Cancel
-                </>
-              ) : (
-                <>
-                  <Plus className="h-3.5 w-3.5" />
-                  Add
-                </>
-              )}
-            </button>
+            <Popover open={showUpload} onOpenChange={onToggleUpload}>
+              <PopoverTrigger asChild>
+                <button
+                  className={cn(
+                    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm',
+                    showUpload
+                      ? 'bg-muted text-muted-foreground'
+                      : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  )}
+                >
+                  {showUpload ? (
+                    <>
+                      <X className="h-3.5 w-3.5" />
+                      Cancel
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-3.5 w-3.5" />
+                      Add
+                    </>
+                  )}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-96 p-4">
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-sm">Add File</h4>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Upload a CSV or Excel file to analyze
+                    </p>
+                  </div>
+                  <AnalysisFormView
+                    selectedFile={uploadFile}
+                    userIntent={uploadIntent}
+                    error={uploadError}
+                    canSubmit={canSubmit && !isUploading}
+                    onFileSelect={onUploadFileSelect}
+                    onFileRemove={onUploadFileRemove}
+                    onUserIntentChange={onUploadIntentChange}
+                    onSubmit={onUploadSubmit}
+                    submitLabel={isUploading ? 'Uploading...' : 'Upload File'}
+                  />
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
-
-          {/* Upload Form (inline in left panel) */}
-          {showUpload && (
-            <div className="mb-4 p-4 rounded-xl border bg-card animate-in-up">
-              <AnalysisFormView
-                selectedFile={uploadFile}
-                userIntent={uploadIntent}
-                error={uploadError}
-                canSubmit={canSubmit && !isUploading}
-                onFileSelect={onUploadFileSelect}
-                onFileRemove={onUploadFileRemove}
-                onUserIntentChange={onUploadIntentChange}
-                onSubmit={onUploadSubmit}
-                submitLabel={isUploading ? 'Uploading...' : 'Upload File'}
-              />
-            </div>
-          )}
 
           {/* Empty state */}
           {files.length === 0 && !showUpload && (

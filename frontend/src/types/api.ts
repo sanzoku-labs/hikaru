@@ -109,6 +109,8 @@ export interface ProjectFileResponse {
   upload_id: string
   uploaded_at: string
   data_schema?: DataSchema
+  has_analysis?: boolean
+  analyzed_at?: string
 }
 
 export interface ProjectDetailResponse extends ProjectResponse {

@@ -1,8 +1,10 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProjectDetail } from '@/services/api/queries/useProjectDetail'
 import { useUploadProjectFile } from '@/services/api/mutations/useUploadProjectFile'
-import type { ProjectDetailResponse } from '@/types/api'
+import { useFileAnalysis } from '@/services/api/queries/useFileAnalysis'
+import { useAnalyzeProjectFile } from '@/services/api/mutations/useAnalyzeProjectFile'
+import type { ProjectDetailResponse, ProjectFileResponse, FileAnalysisResponse } from '@/types/api'
 
 export interface UseProjectDetailFlowReturn {
   // Data
@@ -10,24 +12,41 @@ export interface UseProjectDetailFlowReturn {
   isLoading: boolean
   fetchError: string | null
 
+  // Selected file & analysis
+  selectedFileId: number | null
+  selectedFile: ProjectFileResponse | null
+  analysisData: FileAnalysisResponse | null
+  isLoadingAnalysis: boolean
+  analysisError: string | null
+
+  // Re-analyze state
+  showReanalyzeForm: boolean
+  reanalyzeIntent: string
+
   // Upload form state
   showUpload: boolean
-  selectedFile: File | null
-  userIntent: string
+  uploadFile: File | null
+  uploadIntent: string
   isUploading: boolean
   uploadError: string | null
   canSubmit: boolean
 
   // Handlers
+  selectFile: (fileId: number) => void
+  handleAnalyze: (intent?: string) => Promise<void>
+  handleReanalyzeIntentChange: (intent: string) => void
+  toggleReanalyzeForm: () => void
   toggleUpload: () => void
-  handleFileSelect: (file: File) => void
-  handleFileRemove: () => void
-  handleUserIntentChange: (intent: string) => void
+  handleUploadFileSelect: (file: File) => void
+  handleUploadFileRemove: () => void
+  handleUploadIntentChange: (intent: string) => void
   handleUploadSubmit: () => Promise<void>
-  navigateToFileAnalysis: (fileId: number, userIntent?: string) => void
   navigateToCompare: () => void
   navigateToMerge: () => void
   navigateBack: () => void
+
+  // Status
+  isAnalyzing: boolean
 }
 
 export function useProjectDetailFlow(projectId: number): UseProjectDetailFlowReturn {
@@ -35,57 +54,119 @@ export function useProjectDetailFlow(projectId: number): UseProjectDetailFlowRet
   const projectQuery = useProjectDetail(projectId)
   const uploadMutation = useUploadProjectFile(projectId)
 
+  // Selected file state
+  const [selectedFileId, setSelectedFileId] = useState<number | null>(null)
+  const [localAnalysisData, setLocalAnalysisData] = useState<FileAnalysisResponse | null>(null)
+  const [analysisError, setAnalysisError] = useState<string | null>(null)
+  const [showReanalyzeForm, setShowReanalyzeForm] = useState(false)
+  const [reanalyzeIntent, setReanalyzeIntent] = useState('')
+
+  // Upload form state
   const [showUpload, setShowUpload] = useState(false)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [userIntent, setUserIntent] = useState('')
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [uploadIntent, setUploadIntent] = useState('')
   const [uploadError, setUploadError] = useState<string | null>(null)
+
+  // Fetch analysis for selected file
+  const existingAnalysisQuery = useFileAnalysis(
+    selectedFileId ? projectId : undefined,
+    selectedFileId || undefined
+  )
+  const analyzeMutation = useAnalyzeProjectFile(projectId, selectedFileId || 0)
+
+  // Find selected file from project files
+  const selectedFile = projectQuery.data?.files?.find((f) => f.id === selectedFileId) || null
+
+  // Use existing analysis or local state from new analysis
+  const analysisData = localAnalysisData || existingAnalysisQuery.data || null
+
+  // Auto-select first file when project loads
+  useEffect(() => {
+    const files = projectQuery.data?.files
+    const firstFile = files?.[0]
+    if (firstFile && !selectedFileId) {
+      setSelectedFileId(firstFile.id)
+    }
+  }, [projectQuery.data?.files, selectedFileId])
+
+  // Reset local analysis when file changes
+  useEffect(() => {
+    setLocalAnalysisData(null)
+    setAnalysisError(null)
+    setShowReanalyzeForm(false)
+    setReanalyzeIntent('')
+  }, [selectedFileId])
+
+  const selectFile = useCallback((fileId: number) => {
+    setSelectedFileId(fileId)
+    setShowUpload(false)
+  }, [])
+
+  const handleAnalyze = useCallback(async (intent?: string) => {
+    if (!selectedFileId) return
+    setAnalysisError(null)
+    try {
+      const result = await analyzeMutation.mutateAsync({
+        user_intent: intent || reanalyzeIntent || undefined,
+      })
+      setLocalAnalysisData(result)
+      setShowReanalyzeForm(false)
+      setReanalyzeIntent('')
+    } catch (err) {
+      setAnalysisError(
+        err instanceof Error ? err.message : 'Failed to analyze file'
+      )
+    }
+  }, [selectedFileId, analyzeMutation, reanalyzeIntent])
+
+  const handleReanalyzeIntentChange = useCallback((intent: string) => {
+    setReanalyzeIntent(intent)
+  }, [])
+
+  const toggleReanalyzeForm = useCallback(() => {
+    setShowReanalyzeForm((prev) => !prev)
+    setReanalyzeIntent('')
+  }, [])
 
   const toggleUpload = useCallback(() => {
     setShowUpload((prev) => !prev)
-    setSelectedFile(null)
-    setUserIntent('')
+    setUploadFile(null)
+    setUploadIntent('')
     setUploadError(null)
   }, [])
 
-  const handleFileSelect = useCallback((file: File) => {
-    setSelectedFile(file)
+  const handleUploadFileSelect = useCallback((file: File) => {
+    setUploadFile(file)
     setUploadError(null)
   }, [])
 
-  const handleFileRemove = useCallback(() => {
-    setSelectedFile(null)
+  const handleUploadFileRemove = useCallback(() => {
+    setUploadFile(null)
     setUploadError(null)
   }, [])
 
-  const handleUserIntentChange = useCallback((intent: string) => {
-    setUserIntent(intent)
+  const handleUploadIntentChange = useCallback((intent: string) => {
+    setUploadIntent(intent)
   }, [])
 
   const handleUploadSubmit = useCallback(async () => {
-    if (!selectedFile) return
+    if (!uploadFile) return
 
     setUploadError(null)
     try {
-      const result = await uploadMutation.mutateAsync(selectedFile)
+      const result = await uploadMutation.mutateAsync(uploadFile)
       setShowUpload(false)
-      setSelectedFile(null)
-      // Navigate to analysis with user intent
-      navigate(`/projects/${projectId}/files/${result.id}/analyze`, {
-        state: { userIntent: userIntent.trim() || null },
-      })
-      setUserIntent('')
+      setUploadFile(null)
+      setUploadIntent('')
+      // Select the newly uploaded file
+      setSelectedFileId(result.id)
+      // Analysis will be triggered via the useEffect or user can click analyze
     } catch (err) {
       setUploadError(
         err instanceof Error ? err.message : 'Failed to upload file'
       )
     }
-  }, [selectedFile, userIntent, uploadMutation, navigate, projectId])
-
-  const navigateToFileAnalysis = useCallback((fileId: number, intent?: string) => {
-    navigate(`/projects/${projectId}/files/${fileId}/analyze`, {
-      state: intent ? { userIntent: intent } : undefined,
-    })
-  }, [navigate, projectId])
+  }, [uploadFile, uploadMutation])
 
   const navigateToCompare = useCallback(() => {
     navigate(`/projects/${projectId}/compare`)
@@ -105,20 +186,41 @@ export function useProjectDetailFlow(projectId: number): UseProjectDetailFlowRet
     fetchError: projectQuery.error
       ? (projectQuery.error as Error).message
       : null,
-    showUpload,
+
+    // Selected file & analysis
+    selectedFileId,
     selectedFile,
-    userIntent,
+    analysisData,
+    isLoadingAnalysis: existingAnalysisQuery.isLoading,
+    analysisError,
+
+    // Re-analyze state
+    showReanalyzeForm,
+    reanalyzeIntent,
+
+    // Upload form state
+    showUpload,
+    uploadFile,
+    uploadIntent,
     isUploading: uploadMutation.isPending,
     uploadError,
-    canSubmit: selectedFile !== null && !uploadMutation.isPending,
+    canSubmit: uploadFile !== null && !uploadMutation.isPending,
+
+    // Handlers
+    selectFile,
+    handleAnalyze,
+    handleReanalyzeIntentChange,
+    toggleReanalyzeForm,
     toggleUpload,
-    handleFileSelect,
-    handleFileRemove,
-    handleUserIntentChange,
+    handleUploadFileSelect,
+    handleUploadFileRemove,
+    handleUploadIntentChange,
     handleUploadSubmit,
-    navigateToFileAnalysis,
     navigateToCompare,
     navigateToMerge,
     navigateBack,
+
+    // Status
+    isAnalyzing: analyzeMutation.isPending,
   }
 }

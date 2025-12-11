@@ -10,21 +10,32 @@ export default function ProjectDetailPage() {
     project,
     isLoading,
     fetchError,
-    showUpload,
+    selectedFileId,
     selectedFile,
-    userIntent,
+    analysisData,
+    isLoadingAnalysis,
+    analysisError,
+    showReanalyzeForm,
+    reanalyzeIntent,
+    showUpload,
+    uploadFile,
+    uploadIntent,
     isUploading,
     uploadError,
     canSubmit,
+    selectFile,
+    handleAnalyze,
+    handleReanalyzeIntentChange,
+    toggleReanalyzeForm,
     toggleUpload,
-    handleFileSelect,
-    handleFileRemove,
-    handleUserIntentChange,
+    handleUploadFileSelect,
+    handleUploadFileRemove,
+    handleUploadIntentChange,
     handleUploadSubmit,
-    navigateToFileAnalysis,
     navigateToCompare,
     navigateToMerge,
     navigateBack,
+    isAnalyzing,
   } = useProjectDetailFlow(numericProjectId)
 
   return (
@@ -32,21 +43,32 @@ export default function ProjectDetailPage() {
       project={project}
       isLoading={isLoading}
       fetchError={fetchError}
-      showUpload={showUpload}
+      selectedFileId={selectedFileId}
       selectedFile={selectedFile}
-      userIntent={userIntent}
+      analysisData={analysisData}
+      isLoadingAnalysis={isLoadingAnalysis}
+      analysisError={analysisError}
+      showReanalyzeForm={showReanalyzeForm}
+      reanalyzeIntent={reanalyzeIntent}
+      showUpload={showUpload}
+      uploadFile={uploadFile}
+      uploadIntent={uploadIntent}
       isUploading={isUploading}
       uploadError={uploadError}
       canSubmit={canSubmit}
+      onSelectFile={selectFile}
+      onAnalyze={handleAnalyze}
+      onReanalyzeIntentChange={handleReanalyzeIntentChange}
+      onToggleReanalyzeForm={toggleReanalyzeForm}
       onToggleUpload={toggleUpload}
-      onFileSelect={handleFileSelect}
-      onFileRemove={handleFileRemove}
-      onUserIntentChange={handleUserIntentChange}
+      onUploadFileSelect={handleUploadFileSelect}
+      onUploadFileRemove={handleUploadFileRemove}
+      onUploadIntentChange={handleUploadIntentChange}
       onUploadSubmit={handleUploadSubmit}
-      onFileClick={navigateToFileAnalysis}
       onCompareClick={navigateToCompare}
       onMergeClick={navigateToMerge}
       onBackClick={navigateBack}
+      isAnalyzing={isAnalyzing}
     />
   )
 }

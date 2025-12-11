@@ -26,13 +26,11 @@ const CHART_COLORS = {
 
 export function PieChartView({ chartData }: PieChartViewProps) {
   const option = useMemo(() => {
-    const categoryColumn = chartData.category_column || ''
-    const valueColumn = chartData.value_column || ''
-
+    // Backend returns pie data as: { name: string, value: number }
     const pieData =
       chartData.data?.map((d, i) => ({
-        name: String(d[categoryColumn]),
-        value: Number(d[valueColumn]),
+        name: String(d.name ?? d[chartData.category_column || '']),
+        value: Number(d.value ?? d[chartData.value_column || '']),
         itemStyle: {
           color: PIE_COLORS[i % PIE_COLORS.length],
         },

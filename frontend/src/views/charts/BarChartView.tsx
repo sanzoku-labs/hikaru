@@ -20,11 +20,9 @@ const CHART_COLORS = {
 
 export function BarChartView({ chartData }: BarChartViewProps) {
   const option = useMemo(() => {
-    const categoryColumn = chartData.category_column || chartData.x_column || ''
-    const valueColumn = chartData.value_column || chartData.y_column || ''
-
-    const categories = chartData.data?.map((d) => d[categoryColumn]) || []
-    const values = chartData.data?.map((d) => d[valueColumn]) || []
+    // Backend returns bar data as: { category: string, value: number }
+    const categories = chartData.data?.map((d) => d.category ?? d[chartData.category_column || '']) || []
+    const values = chartData.data?.map((d) => d.value ?? d[chartData.value_column || '']) || []
 
     return {
       tooltip: {

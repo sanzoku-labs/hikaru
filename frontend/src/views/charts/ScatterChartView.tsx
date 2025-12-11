@@ -19,8 +19,12 @@ export function ScatterChartView({ chartData }: ScatterChartViewProps) {
     const xColumn = chartData.x_column || ''
     const yColumn = chartData.y_column || ''
 
+    // Backend returns scatter data as: { x: number, y: number }
     const scatterData =
-      chartData.data?.map((d) => [Number(d[xColumn]), Number(d[yColumn])]) || []
+      chartData.data?.map((d) => [
+        Number(d.x ?? d[xColumn]),
+        Number(d.y ?? d[yColumn])
+      ]) || []
 
     return {
       tooltip: {

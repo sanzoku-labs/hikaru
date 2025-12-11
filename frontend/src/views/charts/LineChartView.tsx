@@ -20,8 +20,9 @@ const CHART_COLORS = {
 
 export function LineChartView({ chartData }: LineChartViewProps) {
   const option = useMemo(() => {
-    const xData = chartData.data?.map((d) => d[chartData.x_column || '']) || []
-    const yData = chartData.data?.map((d) => d[chartData.y_column || '']) || []
+    // Backend returns line data as: { x: value, y: value } or column-based
+    const xData = chartData.data?.map((d) => d.x ?? d[chartData.x_column || '']) || []
+    const yData = chartData.data?.map((d) => d.y ?? d[chartData.y_column || '']) || []
 
     return {
       tooltip: {

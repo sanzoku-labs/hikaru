@@ -10,14 +10,16 @@ import {
   Play,
   RotateCcw,
   CheckCircle2,
+  MessageSquare,
 } from 'lucide-react'
 import { PageHeaderView, EmptyStateView, LoadingSpinnerView, ErrorAlertView } from '@/views/shared'
 import { AnalysisFormView, GlobalSummaryView, DataSummaryView } from '@/views/analysis'
 import { ChartGridView } from '@/views/charts'
+import { ChatPanelView } from '@/views/chat'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import type { ProjectDetailResponse, ProjectFileResponse, FileAnalysisResponse } from '@/types/api'
+import type { ProjectDetailResponse, ProjectFileResponse, FileAnalysisResponse, ChatMessage } from '@/types/api'
 
 interface ProjectDetailViewProps {
   // Data
@@ -60,6 +62,15 @@ interface ProjectDetailViewProps {
 
   // Status
   isAnalyzing: boolean
+
+  // Chat
+  chatOpen: boolean
+  chatMessages: ChatMessage[]
+  chatLoading: boolean
+  canChat: boolean
+  onChatToggle: () => void
+  onChatClose: () => void
+  onChatSend: (message: string) => void
 }
 
 export function ProjectDetailView({
@@ -92,6 +103,14 @@ export function ProjectDetailView({
   onMergeClick,
   onBackClick,
   isAnalyzing,
+  // Chat
+  chatOpen,
+  chatMessages,
+  chatLoading,
+  canChat,
+  onChatToggle,
+  onChatClose,
+  onChatSend,
 }: ProjectDetailViewProps) {
   const files = project?.files || []
   const hasMultipleFiles = files.length >= 2
@@ -287,28 +306,43 @@ export function ProjectDetailView({
                 </div>
                 <div className="flex items-center gap-2">
                   {hasAnalysis && (
-                    <button
-                      onClick={onToggleReanalyzeForm}
-                      disabled={isAnalyzing}
-                      className={cn(
-                        'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
-                        'bg-secondary text-secondary-foreground font-medium text-sm',
-                        'transition-colors hover:bg-secondary/80',
-                        'disabled:opacity-50 disabled:cursor-not-allowed'
-                      )}
-                    >
-                      {showReanalyzeForm ? (
-                        <>
-                          <X className="h-4 w-4" />
-                          Cancel
-                        </>
-                      ) : (
-                        <>
-                          <RotateCcw className="h-4 w-4" />
-                          Re-analyze
-                        </>
-                      )}
-                    </button>
+                    <>
+                      <button
+                        onClick={onChatToggle}
+                        disabled={!canChat}
+                        className={cn(
+                          'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
+                          'bg-secondary text-secondary-foreground font-medium text-sm',
+                          'transition-colors hover:bg-secondary/80',
+                          'disabled:opacity-50 disabled:cursor-not-allowed'
+                        )}
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        Ask AI
+                      </button>
+                      <button
+                        onClick={onToggleReanalyzeForm}
+                        disabled={isAnalyzing}
+                        className={cn(
+                          'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
+                          'bg-secondary text-secondary-foreground font-medium text-sm',
+                          'transition-colors hover:bg-secondary/80',
+                          'disabled:opacity-50 disabled:cursor-not-allowed'
+                        )}
+                      >
+                        {showReanalyzeForm ? (
+                          <>
+                            <X className="h-4 w-4" />
+                            Cancel
+                          </>
+                        ) : (
+                          <>
+                            <RotateCcw className="h-4 w-4" />
+                            Re-analyze
+                          </>
+                        )}
+                      </button>
+                    </>
                   )}
                   {!hasAnalysis && (
                     <button
@@ -457,6 +491,16 @@ export function ProjectDetailView({
           )}
         </div>
       </div>
+
+      {/* Chat Panel */}
+      <ChatPanelView
+        isOpen={chatOpen}
+        onClose={onChatClose}
+        messages={chatMessages}
+        onSendMessage={onChatSend}
+        isLoading={chatLoading}
+        disabled={!canChat}
+      />
     </div>
   )
 }

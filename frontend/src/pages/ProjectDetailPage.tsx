@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { useProjectDetailFlow } from '@/hooks/projects/useProjectDetailFlow'
+import { useChatFlow } from '@/hooks/chat'
 import { ProjectDetailView } from '@/views/projects'
 
 export default function ProjectDetailPage() {
@@ -38,6 +39,19 @@ export default function ProjectDetailPage() {
     isAnalyzing,
   } = useProjectDetailFlow(numericProjectId)
 
+  // Chat for the selected file (uses the file's upload_id)
+  const chat = useChatFlow({
+    uploadId: selectedFile?.upload_id || null,
+  })
+
+  // Clear chat when selecting a different file
+  const handleSelectFile = (fileId: number) => {
+    if (fileId !== selectedFileId) {
+      chat.clearChat()
+    }
+    selectFile(fileId)
+  }
+
   return (
     <ProjectDetailView
       project={project}
@@ -56,7 +70,7 @@ export default function ProjectDetailPage() {
       isUploading={isUploading}
       uploadError={uploadError}
       canSubmit={canSubmit}
-      onSelectFile={selectFile}
+      onSelectFile={handleSelectFile}
       onAnalyze={handleAnalyze}
       onReanalyzeIntentChange={handleReanalyzeIntentChange}
       onToggleReanalyzeForm={toggleReanalyzeForm}
@@ -69,6 +83,14 @@ export default function ProjectDetailPage() {
       onMergeClick={navigateToMerge}
       onBackClick={navigateBack}
       isAnalyzing={isAnalyzing}
+      // Chat props
+      chatOpen={chat.isOpen}
+      chatMessages={chat.messages}
+      chatLoading={chat.isLoading}
+      canChat={chat.canChat && !!analysisData}
+      onChatToggle={chat.toggleChat}
+      onChatClose={chat.closeChat}
+      onChatSend={chat.sendMessage}
     />
   )
 }

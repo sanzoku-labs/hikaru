@@ -6,8 +6,13 @@ interface ScatterChartViewProps {
   chartData: ChartData
 }
 
-// Hikaru primary color
-const PRIMARY_COLOR = 'hsl(38, 92%, 55%)'
+// Hikaru color palette - hex for ECharts compatibility
+const CHART_COLORS = {
+  primary: '#F5A623',
+  background: '#0F1218',
+  border: '#1E2330',
+  text: '#9CA3AF',
+}
 
 export function ScatterChartView({ chartData }: ScatterChartViewProps) {
   const option = useMemo(() => {
@@ -20,10 +25,10 @@ export function ScatterChartView({ chartData }: ScatterChartViewProps) {
     return {
       tooltip: {
         trigger: 'item',
-        backgroundColor: 'hsl(220, 25%, 9%)',
-        borderColor: 'hsl(220, 20%, 16%)',
+        backgroundColor: CHART_COLORS.background,
+        borderColor: CHART_COLORS.border,
         textStyle: {
-          color: 'hsl(40, 15%, 95%)',
+          color: '#F5F5F5',
           fontSize: 12,
         },
         formatter: (params: any) => {
@@ -44,18 +49,18 @@ export function ScatterChartView({ chartData }: ScatterChartViewProps) {
         nameLocation: 'middle',
         nameGap: 30,
         nameTextStyle: {
-          color: 'hsl(220, 10%, 55%)',
+          color: CHART_COLORS.text,
           fontSize: 11,
         },
         axisLine: {
-          lineStyle: { color: 'hsl(220, 20%, 25%)' },
+          lineStyle: { color: CHART_COLORS.border },
         },
         axisLabel: {
-          color: 'hsl(220, 10%, 55%)',
+          color: CHART_COLORS.text,
           fontSize: 11,
         },
         splitLine: {
-          lineStyle: { color: 'hsl(220, 20%, 16%)', type: 'dashed' },
+          lineStyle: { color: CHART_COLORS.border, type: 'dashed' },
         },
       },
       yAxis: {
@@ -64,16 +69,16 @@ export function ScatterChartView({ chartData }: ScatterChartViewProps) {
         nameLocation: 'middle',
         nameGap: 45,
         nameTextStyle: {
-          color: 'hsl(220, 10%, 55%)',
+          color: CHART_COLORS.text,
           fontSize: 11,
         },
         axisLine: { show: false },
         axisLabel: {
-          color: 'hsl(220, 10%, 55%)',
+          color: CHART_COLORS.text,
           fontSize: 11,
         },
         splitLine: {
-          lineStyle: { color: 'hsl(220, 20%, 16%)', type: 'dashed' },
+          lineStyle: { color: CHART_COLORS.border, type: 'dashed' },
         },
       },
       series: [
@@ -82,14 +87,14 @@ export function ScatterChartView({ chartData }: ScatterChartViewProps) {
           data: scatterData,
           symbolSize: 10,
           itemStyle: {
-            color: PRIMARY_COLOR,
+            color: CHART_COLORS.primary,
             opacity: 0.8,
           },
           emphasis: {
             itemStyle: {
               opacity: 1,
               shadowBlur: 15,
-              shadowColor: `${PRIMARY_COLOR}80`,
+              shadowColor: 'rgba(245, 166, 35, 0.5)',
               borderColor: 'white',
               borderWidth: 2,
             },
@@ -98,8 +103,8 @@ export function ScatterChartView({ chartData }: ScatterChartViewProps) {
         },
       ],
       animation: true,
-      animationDuration: 800,
-      animationEasing: 'cubicOut',
+      animationDuration: 600,
+      animationEasing: 'cubicInOut',
     }
   }, [chartData])
 

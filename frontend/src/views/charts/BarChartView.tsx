@@ -6,14 +6,17 @@ interface BarChartViewProps {
   chartData: ChartData
 }
 
-// Hikaru color palette
-const CHART_COLORS = [
-  'hsl(38, 92%, 55%)',    // Primary amber
-  'hsl(32, 95%, 50%)',    // Accent gold
-  'hsl(199, 89%, 48%)',   // Info blue
-  'hsl(142, 71%, 45%)',   // Success green
-  'hsl(262, 83%, 58%)',   // Purple
-]
+// Hikaru color palette - hex for ECharts compatibility
+const CHART_COLORS = {
+  primary: '#F5A623',
+  accent: '#E8941C',
+  info: '#0EA5E9',
+  success: '#22C55E',
+  purple: '#8B5CF6',
+  background: '#0F1218',
+  border: '#1E2330',
+  text: '#9CA3AF',
+}
 
 export function BarChartView({ chartData }: BarChartViewProps) {
   const option = useMemo(() => {
@@ -26,16 +29,16 @@ export function BarChartView({ chartData }: BarChartViewProps) {
     return {
       tooltip: {
         trigger: 'axis',
-        backgroundColor: 'hsl(220, 25%, 9%)',
-        borderColor: 'hsl(220, 20%, 16%)',
+        backgroundColor: CHART_COLORS.background,
+        borderColor: CHART_COLORS.border,
         textStyle: {
-          color: 'hsl(40, 15%, 95%)',
+          color: '#F5F5F5',
           fontSize: 12,
         },
         axisPointer: {
           type: 'shadow',
           shadowStyle: {
-            color: `${CHART_COLORS[0]}15`,
+            color: 'rgba(245, 166, 35, 0.08)',
           },
         },
       },
@@ -50,10 +53,10 @@ export function BarChartView({ chartData }: BarChartViewProps) {
         type: 'category',
         data: categories,
         axisLine: {
-          lineStyle: { color: 'hsl(220, 20%, 25%)' },
+          lineStyle: { color: CHART_COLORS.border },
         },
         axisLabel: {
-          color: 'hsl(220, 10%, 55%)',
+          color: CHART_COLORS.text,
           fontSize: 11,
           rotate: categories.length > 6 ? 45 : 0,
           interval: 0,
@@ -64,11 +67,11 @@ export function BarChartView({ chartData }: BarChartViewProps) {
         type: 'value',
         axisLine: { show: false },
         axisLabel: {
-          color: 'hsl(220, 10%, 55%)',
+          color: CHART_COLORS.text,
           fontSize: 11,
         },
         splitLine: {
-          lineStyle: { color: 'hsl(220, 20%, 16%)', type: 'dashed' },
+          lineStyle: { color: CHART_COLORS.border, type: 'dashed' },
         },
       },
       series: [
@@ -85,8 +88,8 @@ export function BarChartView({ chartData }: BarChartViewProps) {
               x2: 0,
               y2: 1,
               colorStops: [
-                { offset: 0, color: CHART_COLORS[0] },
-                { offset: 1, color: CHART_COLORS[1] },
+                { offset: 0, color: CHART_COLORS.primary },
+                { offset: 1, color: CHART_COLORS.accent },
               ],
             },
             borderRadius: [6, 6, 0, 0],
@@ -94,14 +97,14 @@ export function BarChartView({ chartData }: BarChartViewProps) {
           emphasis: {
             itemStyle: {
               shadowBlur: 15,
-              shadowColor: `${CHART_COLORS[0]}60`,
+              shadowColor: 'rgba(245, 166, 35, 0.4)',
             },
           },
         },
       ],
       animation: true,
-      animationDuration: 800,
-      animationEasing: 'cubicOut',
+      animationDuration: 600,
+      animationEasing: 'cubicInOut',
     }
   }, [chartData])
 

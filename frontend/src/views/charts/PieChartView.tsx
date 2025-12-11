@@ -6,17 +6,23 @@ interface PieChartViewProps {
   chartData: ChartData
 }
 
-// Hikaru color palette - gradient progression
-const CHART_COLORS = [
-  'hsl(38, 92%, 55%)',    // Primary amber
-  'hsl(32, 95%, 50%)',    // Accent gold
-  'hsl(199, 89%, 48%)',   // Info blue
-  'hsl(142, 71%, 45%)',   // Success green
-  'hsl(262, 83%, 58%)',   // Purple
-  'hsl(0, 72%, 51%)',     // Red
-  'hsl(25, 95%, 53%)',    // Orange
-  'hsl(173, 80%, 40%)',   // Teal
+// Hikaru color palette - hex for ECharts compatibility
+const PIE_COLORS = [
+  '#F5A623',  // Primary amber
+  '#E8941C',  // Accent gold
+  '#0EA5E9',  // Info blue
+  '#22C55E',  // Success green
+  '#8B5CF6',  // Purple
+  '#EF4444',  // Red
+  '#F97316',  // Orange
+  '#14B8A6',  // Teal
 ]
+
+const CHART_COLORS = {
+  background: '#0F1218',
+  border: '#1E2330',
+  text: '#9CA3AF',
+}
 
 export function PieChartView({ chartData }: PieChartViewProps) {
   const option = useMemo(() => {
@@ -28,17 +34,17 @@ export function PieChartView({ chartData }: PieChartViewProps) {
         name: String(d[categoryColumn]),
         value: Number(d[valueColumn]),
         itemStyle: {
-          color: CHART_COLORS[i % CHART_COLORS.length],
+          color: PIE_COLORS[i % PIE_COLORS.length],
         },
       })) || []
 
     return {
       tooltip: {
         trigger: 'item',
-        backgroundColor: 'hsl(220, 25%, 9%)',
-        borderColor: 'hsl(220, 20%, 16%)',
+        backgroundColor: CHART_COLORS.background,
+        borderColor: CHART_COLORS.border,
         textStyle: {
-          color: 'hsl(40, 15%, 95%)',
+          color: '#F5F5F5',
           fontSize: 12,
         },
         formatter: '{b}: {c} ({d}%)',
@@ -49,25 +55,25 @@ export function PieChartView({ chartData }: PieChartViewProps) {
         bottom: 0,
         left: 'center',
         textStyle: {
-          color: 'hsl(220, 10%, 55%)',
+          color: CHART_COLORS.text,
           fontSize: 11,
         },
         pageTextStyle: {
-          color: 'hsl(220, 10%, 55%)',
+          color: CHART_COLORS.text,
         },
-        pageIconColor: 'hsl(38, 92%, 55%)',
-        pageIconInactiveColor: 'hsl(220, 20%, 30%)',
+        pageIconColor: PIE_COLORS[0],
+        pageIconInactiveColor: '#374151',
       },
       series: [
         {
           type: 'pie',
-          radius: ['45%', '70%'], // Donut chart
+          radius: ['45%', '70%'],
           center: ['50%', '45%'],
           avoidLabelOverlap: true,
           padAngle: 2,
           itemStyle: {
             borderRadius: 6,
-            borderColor: 'hsl(220, 25%, 9%)',
+            borderColor: CHART_COLORS.background,
             borderWidth: 2,
           },
           label: {
@@ -78,7 +84,7 @@ export function PieChartView({ chartData }: PieChartViewProps) {
               show: true,
               fontSize: 14,
               fontWeight: 600,
-              color: 'hsl(40, 15%, 95%)',
+              color: '#F5F5F5',
             },
             itemStyle: {
               shadowBlur: 20,
@@ -92,8 +98,8 @@ export function PieChartView({ chartData }: PieChartViewProps) {
         },
       ],
       animation: true,
-      animationDuration: 800,
-      animationEasing: 'cubicOut',
+      animationDuration: 600,
+      animationEasing: 'cubicInOut',
     }
   }, [chartData])
 

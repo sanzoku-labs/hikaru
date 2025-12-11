@@ -6,14 +6,17 @@ interface LineChartViewProps {
   chartData: ChartData
 }
 
-// Hikaru color palette - warm amber tones
-const CHART_COLORS = [
-  'hsl(38, 92%, 55%)',    // Primary amber
-  'hsl(32, 95%, 50%)',    // Accent gold
-  'hsl(199, 89%, 48%)',   // Info blue
-  'hsl(142, 71%, 45%)',   // Success green
-  'hsl(262, 83%, 58%)',   // Purple
-]
+// Hikaru color palette - warm amber tones (hex for ECharts compatibility)
+const CHART_COLORS = {
+  primary: '#F5A623',     // Primary amber
+  accent: '#E8941C',      // Accent gold
+  info: '#0EA5E9',        // Info blue
+  success: '#22C55E',     // Success green
+  purple: '#8B5CF6',      // Purple
+  background: '#0F1218',  // Dark background
+  border: '#1E2330',      // Border color
+  text: '#9CA3AF',        // Muted text
+}
 
 export function LineChartView({ chartData }: LineChartViewProps) {
   const option = useMemo(() => {
@@ -23,16 +26,16 @@ export function LineChartView({ chartData }: LineChartViewProps) {
     return {
       tooltip: {
         trigger: 'axis',
-        backgroundColor: 'hsl(220, 25%, 9%)',
-        borderColor: 'hsl(220, 20%, 16%)',
+        backgroundColor: CHART_COLORS.background,
+        borderColor: CHART_COLORS.border,
         textStyle: {
-          color: 'hsl(40, 15%, 95%)',
+          color: '#F5F5F5',
           fontSize: 12,
         },
         axisPointer: {
           type: 'cross',
           lineStyle: {
-            color: CHART_COLORS[0],
+            color: CHART_COLORS.primary,
             opacity: 0.3,
           },
         },
@@ -48,10 +51,10 @@ export function LineChartView({ chartData }: LineChartViewProps) {
         type: 'category',
         data: xData,
         axisLine: {
-          lineStyle: { color: 'hsl(220, 20%, 25%)' },
+          lineStyle: { color: CHART_COLORS.border },
         },
         axisLabel: {
-          color: 'hsl(220, 10%, 55%)',
+          color: CHART_COLORS.text,
           fontSize: 11,
           rotate: xData.length > 10 ? 45 : 0,
         },
@@ -61,11 +64,11 @@ export function LineChartView({ chartData }: LineChartViewProps) {
         type: 'value',
         axisLine: { show: false },
         axisLabel: {
-          color: 'hsl(220, 10%, 55%)',
+          color: CHART_COLORS.text,
           fontSize: 11,
         },
         splitLine: {
-          lineStyle: { color: 'hsl(220, 20%, 16%)', type: 'dashed' },
+          lineStyle: { color: CHART_COLORS.border, type: 'dashed' },
         },
       },
       series: [
@@ -76,13 +79,13 @@ export function LineChartView({ chartData }: LineChartViewProps) {
           symbol: 'circle',
           symbolSize: 6,
           lineStyle: {
-            color: CHART_COLORS[0],
+            color: CHART_COLORS.primary,
             width: 3,
           },
           itemStyle: {
-            color: CHART_COLORS[0],
+            color: CHART_COLORS.primary,
             borderWidth: 2,
-            borderColor: 'hsl(220, 25%, 9%)',
+            borderColor: CHART_COLORS.background,
           },
           areaStyle: {
             color: {
@@ -92,8 +95,8 @@ export function LineChartView({ chartData }: LineChartViewProps) {
               x2: 0,
               y2: 1,
               colorStops: [
-                { offset: 0, color: `${CHART_COLORS[0]}40` },
-                { offset: 1, color: `${CHART_COLORS[0]}05` },
+                { offset: 0, color: 'rgba(245, 166, 35, 0.25)' },
+                { offset: 1, color: 'rgba(245, 166, 35, 0.02)' },
               ],
             },
           },
@@ -101,14 +104,14 @@ export function LineChartView({ chartData }: LineChartViewProps) {
             focus: 'series',
             itemStyle: {
               shadowBlur: 10,
-              shadowColor: `${CHART_COLORS[0]}80`,
+              shadowColor: 'rgba(245, 166, 35, 0.5)',
             },
           },
         },
       ],
       animation: true,
-      animationDuration: 800,
-      animationEasing: 'cubicOut',
+      animationDuration: 600,
+      animationEasing: 'cubicInOut',
     }
   }, [chartData])
 

@@ -154,9 +154,9 @@ export function ProjectDetailView({
       />
 
       {/* Split Layout */}
-      <div className="flex-1 flex gap-6 min-h-0">
+      <div className="flex-1 flex min-h-0">
         {/* Left Panel - File List */}
-        <div className="w-72 flex-shrink-0 flex flex-col">
+        <div className="w-72 flex-shrink-0 flex flex-col pr-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-muted-foreground">
               Files ({files.length})
@@ -253,8 +253,11 @@ export function ProjectDetailView({
           )}
         </div>
 
+        {/* Vertical Separator */}
+        <div className="w-px bg-border flex-shrink-0" />
+
         {/* Right Panel - Analysis Content */}
-        <div className="flex-1 min-w-0 overflow-y-auto">
+        <div className="flex-1 min-w-0 overflow-y-auto pl-6">
           {/* No file selected */}
           {!selectedFile && files.length > 0 && (
             <div className="h-full flex items-center justify-center">

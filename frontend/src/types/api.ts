@@ -113,6 +113,16 @@ export interface ProjectFileResponse {
   analyzed_at?: string
 }
 
+export interface ProjectFileUploadResponse {
+  file_id: number
+  upload_id: string
+  filename: string
+  file_size: number
+  row_count?: number
+  data_schema?: DataSchema
+  uploaded_at: string
+}
+
 export interface ProjectDetailResponse extends ProjectResponse {
   files: ProjectFileResponse[]
 }

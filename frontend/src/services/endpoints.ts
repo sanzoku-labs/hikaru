@@ -23,7 +23,7 @@ export const ENDPOINTS = {
     DETAIL: (id: number) => `/api/projects/${id}`,
     UPDATE: (id: number) => `/api/projects/${id}`,
     DELETE: (id: number) => `/api/projects/${id}`,
-    UPLOAD_FILE: (id: number) => `/api/projects/${id}/upload`,
+    UPLOAD_FILE: (id: number) => `/api/projects/${id}/files`,
     DELETE_FILE: (projectId: number, fileId: number) => `/api/projects/${projectId}/files/${fileId}`,
 
     // File Analysis

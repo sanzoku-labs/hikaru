@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/services/axios'
 import { ENDPOINTS } from '@/services/endpoints'
-import type { ProjectFileResponse } from '@/types/api'
+import type { ProjectFileUploadResponse } from '@/types/api'
 
 export const useUploadProjectFile = (projectId: number) => {
   const queryClient = useQueryClient()
@@ -11,7 +11,7 @@ export const useUploadProjectFile = (projectId: number) => {
       const formData = new FormData()
       formData.append('file', file)
 
-      const response = await apiClient.post<ProjectFileResponse>(
+      const response = await apiClient.post<ProjectFileUploadResponse>(
         ENDPOINTS.PROJECTS.UPLOAD_FILE(projectId),
         formData,
         {

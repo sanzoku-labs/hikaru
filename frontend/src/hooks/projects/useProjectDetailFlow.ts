@@ -161,7 +161,7 @@ export function useProjectDetailFlow(projectId: number): UseProjectDetailFlowRet
       setUploadFile(null)
       setUploadIntent('')
       // Select the newly uploaded file
-      setSelectedFileId(result.id)
+      setSelectedFileId(result.file_id)
       // Analysis will be triggered via the useEffect or user can click analyze
     } catch (err) {
       setUploadError(

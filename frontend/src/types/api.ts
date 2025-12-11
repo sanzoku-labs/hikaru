@@ -372,6 +372,28 @@ export interface ActivityEvent {
   timestamp: string
 }
 
+// ===== Q&A CHAT TYPES =====
+export interface QueryRequest {
+  upload_id: string
+  question: string
+  conversation_id?: string // For tracking conversation context
+}
+
+export interface QueryResponse {
+  answer: string
+  conversation_id: string
+  timestamp: string
+  chart?: ChartData // AI-generated chart if requested
+}
+
+export interface ChatMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: string
+  chart?: ChartData // For assistant messages that include charts
+}
+
 // ===== API RESPONSE WRAPPER =====
 export type ApiResponse<T> = {
   data: T

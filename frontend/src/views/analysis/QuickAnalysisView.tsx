@@ -1,13 +1,14 @@
 import { cn } from '@/lib/utils'
-import { Download, RotateCcw, Sparkles } from 'lucide-react'
+import { Download, RotateCcw, Sparkles, MessageSquare } from 'lucide-react'
 import { AnalysisFormView } from './AnalysisFormView'
 import { UploadProgressView } from './UploadProgressView'
 import { DataSummaryView } from './DataSummaryView'
 import { GlobalSummaryView } from './GlobalSummaryView'
 import { ChartGridView } from '@/views/charts'
+import { ChatPanelView } from '@/views/chat'
 import { PageHeaderView } from '@/views/shared'
 import type { UploadStage } from '@/hooks/analysis/useQuickAnalysisFlow'
-import type { UploadResponse, AnalyzeResponse } from '@/types/api'
+import type { UploadResponse, AnalyzeResponse, ChatMessage } from '@/types/api'
 
 interface QuickAnalysisViewProps {
   // State
@@ -29,6 +30,15 @@ interface QuickAnalysisViewProps {
   // Status
   isExporting: boolean
   canSubmit: boolean
+
+  // Chat
+  chatOpen: boolean
+  chatMessages: ChatMessage[]
+  chatLoading: boolean
+  canChat: boolean
+  onChatToggle: () => void
+  onChatClose: () => void
+  onChatSend: (message: string) => void
 }
 
 export function QuickAnalysisView({
@@ -46,6 +56,14 @@ export function QuickAnalysisView({
   onExport,
   isExporting,
   canSubmit,
+  // Chat
+  chatOpen,
+  chatMessages,
+  chatLoading,
+  canChat,
+  onChatToggle,
+  onChatClose,
+  onChatSend,
 }: QuickAnalysisViewProps) {
   const showForm = stage === 'idle'
   const showProgress = stage !== 'idle' && stage !== 'complete'
@@ -61,29 +79,45 @@ export function QuickAnalysisView({
           stage !== 'idle' && (
             <div className="flex items-center gap-2">
               {showResults && (
-                <button
-                  onClick={onExport}
-                  disabled={isExporting}
-                  className={cn(
-                    'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
-                    'bg-primary text-primary-foreground font-medium text-sm',
-                    'transition-all duration-200',
-                    'hover:bg-primary/90 hover:glow-primary-sm',
-                    'disabled:opacity-50 disabled:cursor-not-allowed'
-                  )}
-                >
-                  {isExporting ? (
-                    <>
-                      <span className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                      Exporting...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="h-4 w-4" />
-                      Export PDF
-                    </>
-                  )}
-                </button>
+                <>
+                  <button
+                    onClick={onChatToggle}
+                    disabled={!canChat}
+                    className={cn(
+                      'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
+                      'bg-secondary text-secondary-foreground font-medium text-sm',
+                      'transition-all duration-200',
+                      'hover:bg-secondary/80',
+                      'disabled:opacity-50 disabled:cursor-not-allowed'
+                    )}
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Ask AI
+                  </button>
+                  <button
+                    onClick={onExport}
+                    disabled={isExporting}
+                    className={cn(
+                      'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
+                      'bg-primary text-primary-foreground font-medium text-sm',
+                      'transition-all duration-200',
+                      'hover:bg-primary/90 hover:glow-primary-sm',
+                      'disabled:opacity-50 disabled:cursor-not-allowed'
+                    )}
+                  >
+                    {isExporting ? (
+                      <>
+                        <span className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                        Exporting...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-4 w-4" />
+                        Export PDF
+                      </>
+                    )}
+                  </button>
+                </>
               )}
               <button
                 onClick={onReset}
@@ -163,6 +197,16 @@ export function QuickAnalysisView({
           )}
         </div>
       )}
+
+      {/* Chat Panel */}
+      <ChatPanelView
+        isOpen={chatOpen}
+        onClose={onChatClose}
+        messages={chatMessages}
+        onSendMessage={onChatSend}
+        isLoading={chatLoading}
+        disabled={!canChat}
+      />
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { useQuickAnalysisFlow } from '@/hooks/analysis'
+import { useChatFlow } from '@/hooks/chat'
 import { QuickAnalysisView } from '@/views/analysis'
 
 export default function QuickAnalysisPage() {
@@ -19,6 +20,16 @@ export default function QuickAnalysisPage() {
     canSubmit,
   } = useQuickAnalysisFlow()
 
+  const chat = useChatFlow({
+    uploadId: uploadData?.upload_id || null,
+  })
+
+  // Clear chat when starting a new analysis
+  const handleResetWithChat = () => {
+    chat.clearChat()
+    handleReset()
+  }
+
   return (
     <QuickAnalysisView
       stage={stage}
@@ -31,10 +42,18 @@ export default function QuickAnalysisPage() {
       onFileRemove={handleFileRemove}
       onUserIntentChange={handleUserIntentChange}
       onSubmit={handleSubmit}
-      onReset={handleReset}
+      onReset={handleResetWithChat}
       onExport={handleExport}
       isExporting={isExporting}
       canSubmit={canSubmit}
+      // Chat props
+      chatOpen={chat.isOpen}
+      chatMessages={chat.messages}
+      chatLoading={chat.isLoading}
+      canChat={chat.canChat}
+      onChatToggle={chat.toggleChat}
+      onChatClose={chat.closeChat}
+      onChatSend={chat.sendMessage}
     />
   )
 }

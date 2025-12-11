@@ -16,6 +16,9 @@ export const ENDPOINTS = {
     EXPORT: '/api/export',
   },
 
+  // Q&A Chat
+  QUERY: '/api/query',
+
   // Projects
   PROJECTS: {
     LIST: '/api/projects',

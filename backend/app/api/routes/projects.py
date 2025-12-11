@@ -891,7 +891,7 @@ async def get_project_file_analysis(
     db: Session = Depends(get_db),
 ):
     """
-    Get saved analysis results for a file in a project.
+    Get the latest saved analysis results for a file in a project.
 
     Args:
         project_id: Project ID
@@ -906,6 +906,9 @@ async def get_project_file_analysis(
         HTTP 404: If project, file, or analysis not found
     """
     try:
+        from app.models.database import FileAnalysis
+        from app.models.schemas import ChartData
+
         project_service = ProjectService(db)
 
         # Verify project exists and user owns it
@@ -924,33 +927,37 @@ async def get_project_file_analysis(
                 detail=f"File {file_id} not found in project {project_id}",
             )
 
-        # Check if analysis exists
-        if not file.analysis_json:
+        # Get the latest analysis from FileAnalysis table
+        latest_analysis = (
+            db.query(FileAnalysis)
+            .filter(FileAnalysis.file_id == file_id)
+            .order_by(FileAnalysis.created_at.desc())
+            .first()
+        )
+
+        if not latest_analysis:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"No analysis found for file {file_id}. Please analyze the file first.",
             )
 
         # Parse stored analysis
-        analysis_data = json.loads(file.analysis_json)
-
-        # Import ChartData for deserialization
-        from app.models.schemas import ChartData
-
-        charts = [ChartData(**chart) for chart in analysis_data["charts"]]
+        analysis_data = json.loads(latest_analysis.analysis_json)
+        charts = [ChartData(**chart) for chart in analysis_data.get("charts", [])]
 
         return FileAnalysisResponse(
             file_id=file.id,
             filename=file.filename,
             charts=charts,
             global_summary=analysis_data.get("global_summary"),
-            user_intent=file.user_intent,
-            analyzed_at=file.analysis_timestamp,
+            user_intent=latest_analysis.user_intent,
+            analyzed_at=latest_analysis.created_at,
         )
 
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Failed to retrieve analysis for file {file_id}: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve analysis: {str(e)}",

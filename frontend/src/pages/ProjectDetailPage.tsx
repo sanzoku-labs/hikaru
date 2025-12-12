@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useProjectDetailFlow } from '@/hooks/projects/useProjectDetailFlow'
 import { useChatFlow } from '@/hooks/chat'
 import { useDashboards } from '@/services/api/queries/useDashboards'
 import { useDeleteDashboard } from '@/services/api/mutations/useDeleteDashboard'
+import { useDeleteProjectFile } from '@/services/api/mutations/useDeleteProjectFile'
+import { useUpdateProject } from '@/services/api/mutations/useUpdateProject'
 import { ProjectDetailView } from '@/views/projects'
 
 export default function ProjectDetailPage() {
@@ -52,6 +55,32 @@ export default function ProjectDetailPage() {
 
   const handleDeleteDashboard = (dashboardId: number) => {
     deleteDashboardMutation.mutate(dashboardId)
+  }
+
+  // File deletion
+  const deleteFileMutation = useDeleteProjectFile(numericProjectId)
+
+  const handleDeleteFile = (fileId: number) => {
+    // If deleting the currently selected file, clear selection
+    if (fileId === selectedFileId) {
+      selectFile(0) // Deselect
+    }
+    deleteFileMutation.mutate(fileId)
+  }
+
+  // Project editing
+  const [showEditProject, setShowEditProject] = useState(false)
+  const updateProjectMutation = useUpdateProject(numericProjectId)
+
+  const handleUpdateProject = (name: string, description: string) => {
+    updateProjectMutation.mutate(
+      { name, description },
+      {
+        onSuccess: () => {
+          setShowEditProject(false)
+        },
+      }
+    )
   }
 
   // Chat for the selected file (uses the file's upload_id)
@@ -112,6 +141,15 @@ export default function ProjectDetailPage() {
       onViewDashboard={handleViewDashboard}
       onDeleteDashboard={handleDeleteDashboard}
       isDeletingDashboard={deleteDashboardMutation.isPending ? deleteDashboardMutation.variables : null}
+      // File deletion props
+      onDeleteFile={handleDeleteFile}
+      isDeletingFile={deleteFileMutation.isPending ? deleteFileMutation.variables : null}
+      // Project editing props
+      showEditProject={showEditProject}
+      isUpdatingProject={updateProjectMutation.isPending}
+      onOpenEditProject={() => setShowEditProject(true)}
+      onCloseEditProject={() => setShowEditProject(false)}
+      onUpdateProject={handleUpdateProject}
     />
   )
 }

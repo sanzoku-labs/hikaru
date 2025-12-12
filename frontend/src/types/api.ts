@@ -91,6 +91,11 @@ export interface ProjectCreate {
   description?: string
 }
 
+export interface ProjectUpdate {
+  name?: string
+  description?: string
+}
+
 export interface ProjectResponse {
   id: number
   name: string

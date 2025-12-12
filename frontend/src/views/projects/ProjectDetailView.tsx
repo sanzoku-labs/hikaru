@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { formatFileSize, formatDate } from '@/lib/utils'
 import {
@@ -16,6 +17,8 @@ import {
   LayoutDashboard,
   FolderOpen,
   Grid2X2,
+  Trash2,
+  Pencil,
 } from 'lucide-react'
 import { PageHeaderView, EmptyStateView, LoadingSpinnerView, ErrorAlertView } from '@/views/shared'
 import { AnalysisFormView, GlobalSummaryView, DataSummaryView } from '@/views/analysis'
@@ -33,6 +36,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import type { ProjectDetailResponse, ProjectFileResponse, FileAnalysisResponse, ChatMessage, DashboardResponse } from '@/types/api'
 
 interface ProjectDetailViewProps {
@@ -93,6 +105,16 @@ interface ProjectDetailViewProps {
   onDeleteDashboard: (dashboardId: number) => void
   isDeletingDashboard: number | null | undefined
 
+  // File deletion
+  onDeleteFile: (fileId: number) => void
+  isDeletingFile: number | null | undefined
+
+  // Project editing
+  showEditProject: boolean
+  isUpdatingProject: boolean
+  onOpenEditProject: () => void
+  onCloseEditProject: () => void
+  onUpdateProject: (name: string, description: string) => void
 }
 
 export function ProjectDetailView({
@@ -139,10 +161,31 @@ export function ProjectDetailView({
   onViewDashboard,
   onDeleteDashboard,
   isDeletingDashboard,
+  // File deletion
+  onDeleteFile,
+  isDeletingFile,
+  // Project editing
+  showEditProject,
+  isUpdatingProject,
+  onOpenEditProject,
+  onCloseEditProject,
+  onUpdateProject,
 }: ProjectDetailViewProps) {
   const files = project?.files || []
   const hasMultipleFiles = files.length >= 2
   const hasAnalysis = !!analysisData
+
+  // Edit project form state
+  const [editName, setEditName] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+
+  // Sync form when dialog opens
+  useEffect(() => {
+    if (showEditProject && project) {
+      setEditName(project.name)
+      setEditDescription(project.description || '')
+    }
+  }, [showEditProject, project])
 
   if (isLoading) {
     return (
@@ -171,33 +214,47 @@ export function ProjectDetailView({
         backButton={{ label: 'Back to Projects', onClick: onBackClick }}
         compact
         actions={
-          hasMultipleFiles ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className={cn(
-                    'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
-                    'bg-secondary text-secondary-foreground font-medium text-sm',
-                    'transition-colors hover:bg-secondary/80'
-                  )}
-                >
-                  <Layers className="h-4 w-4" />
-                  Multi-file
-                  <ChevronDown className="h-4 w-4 opacity-50" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={onCompareClick} className="cursor-pointer">
-                  <GitCompare className="h-4 w-4 mr-2" />
-                  Compare Files
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onMergeClick} className="cursor-pointer">
-                  <Merge className="h-4 w-4 mr-2" />
-                  Merge Files
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : null
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onOpenEditProject}
+              className={cn(
+                'inline-flex items-center gap-2 px-3 py-2 rounded-lg',
+                'bg-secondary text-secondary-foreground font-medium text-sm',
+                'transition-colors hover:bg-secondary/80'
+              )}
+              title="Edit project"
+            >
+              <Pencil className="h-4 w-4" />
+              Edit
+            </button>
+            {hasMultipleFiles && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={cn(
+                      'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
+                      'bg-secondary text-secondary-foreground font-medium text-sm',
+                      'transition-colors hover:bg-secondary/80'
+                    )}
+                  >
+                    <Layers className="h-4 w-4" />
+                    Multi-file
+                    <ChevronDown className="h-4 w-4 opacity-50" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={onCompareClick} className="cursor-pointer">
+                    <GitCompare className="h-4 w-4 mr-2" />
+                    Compare Files
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={onMergeClick} className="cursor-pointer">
+                    <Merge className="h-4 w-4 mr-2" />
+                    Merge Files
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
         }
       />
 
@@ -322,11 +379,11 @@ export function ProjectDetailView({
           {files.length > 0 && (
             <div className="flex-1 overflow-y-auto space-y-1.5">
               {files.map((file) => (
-                <button
+                <div
                   key={file.id}
                   onClick={() => onSelectFile(file.id)}
                   className={cn(
-                    'w-full flex items-center gap-3 p-3 rounded-lg text-left',
+                    'w-full flex items-center gap-3 p-3 rounded-lg text-left cursor-pointer group',
                     'transition-all duration-200',
                     selectedFileId === file.id
                       ? 'bg-primary/10 border border-primary/30'
@@ -352,7 +409,30 @@ export function ProjectDetailView({
                   {file.has_analysis && (
                     <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
                   )}
-                </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (confirm(`Delete "${file.filename}"? This cannot be undone.`)) {
+                        onDeleteFile(file.id)
+                      }
+                    }}
+                    disabled={isDeletingFile === file.id}
+                    className={cn(
+                      'p-1.5 rounded-md opacity-0 group-hover:opacity-100',
+                      'text-muted-foreground hover:text-destructive hover:bg-destructive/10',
+                      'transition-all duration-200',
+                      'disabled:opacity-50 disabled:cursor-not-allowed',
+                      isDeletingFile === file.id && 'opacity-100'
+                    )}
+                    title="Delete file"
+                  >
+                    {isDeletingFile === file.id ? (
+                      <span className="h-4 w-4 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin block" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               ))}
             </div>
           )}
@@ -591,6 +671,70 @@ export function ProjectDetailView({
         isLoading={chatLoading}
         disabled={!canChat}
       />
+
+      {/* Edit Project Dialog */}
+      <Dialog open={showEditProject} onOpenChange={(open) => !open && onCloseEditProject()}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Project</DialogTitle>
+            <DialogDescription>
+              Update your project's name and description.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Name</Label>
+              <Input
+                id="edit-name"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Project name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                placeholder="Optional description"
+                className="min-h-[80px] resize-none"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <button
+              onClick={onCloseEditProject}
+              className={cn(
+                'px-4 py-2 rounded-lg text-sm font-medium',
+                'bg-secondary text-secondary-foreground',
+                'hover:bg-secondary/80 transition-colors'
+              )}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => onUpdateProject(editName, editDescription)}
+              disabled={isUpdatingProject || !editName.trim()}
+              className={cn(
+                'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium',
+                'bg-primary text-primary-foreground',
+                'hover:bg-primary/90 transition-colors',
+                'disabled:opacity-50 disabled:cursor-not-allowed'
+              )}
+            >
+              {isUpdatingProject ? (
+                <>
+                  <span className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Changes'
+              )}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

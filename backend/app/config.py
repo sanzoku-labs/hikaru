@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     # File Upload
     max_file_size_mb: int = 30
     allowed_extensions: str | List[str] = "csv,xlsx"
+    upload_dir: str = "./storage"
 
     # AI
     anthropic_api_key: str = ""

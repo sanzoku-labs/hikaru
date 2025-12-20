@@ -399,6 +399,226 @@ export interface ChatMessage {
   chart?: ChartData // For assistant messages that include charts
 }
 
+// ===== HISTORY TYPES =====
+export interface HistoryItem {
+  analysis_id: number
+  file_id: number
+  filename: string
+  project_id: number
+  project_name: string
+  charts_count: number
+  user_intent: string | null
+  first_insight: string | null
+  created_at: string
+}
+
+export interface HistoryResponse {
+  items: HistoryItem[]
+  total: number
+  page: number
+  page_size: number
+  has_more: boolean
+}
+
+export interface HistoryFilters {
+  project_id?: number
+  search?: string
+  date_from?: string
+  date_to?: string
+  page?: number
+  page_size?: number
+}
+
+// ===== AI ASSISTANT TYPES =====
+export interface FileContext {
+  file_id: number
+  filename: string
+  project_id: number
+  project_name: string
+}
+
+export interface AssistantQueryRequest {
+  file_ids: number[]
+  question: string
+  conversation_id?: string
+}
+
+export interface AssistantQueryResponse {
+  answer: string
+  conversation_id: string
+  timestamp: string
+  chart: ChartData | null
+  files_used: FileContext[]
+}
+
+export interface ConversationSummary {
+  conversation_id: string
+  title: string | null
+  file_context: FileContext[]
+  message_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface ConversationListResponse {
+  conversations: ConversationSummary[]
+  total: number
+}
+
+export interface ConversationMessageDetail {
+  id: number
+  role: 'user' | 'assistant'
+  content: string
+  chart: ChartData | null
+  created_at: string
+}
+
+export interface ConversationDetailResponse {
+  conversation_id: string
+  title: string | null
+  file_context: FileContext[]
+  messages: ConversationMessageDetail[]
+  created_at: string
+  updated_at: string
+}
+
+// ===== REPORTS TYPES =====
+export interface ReportTemplate {
+  id: string
+  name: string
+  description: string
+  category: 'summary' | 'detailed' | 'comparison' | 'custom'
+  sections: string[]
+  estimated_pages: number
+  icon: string
+}
+
+export interface ReportTemplateListResponse {
+  templates: ReportTemplate[]
+  total: number
+}
+
+export interface ReportGenerateRequest {
+  template_id: string
+  project_id?: number
+  file_ids?: number[]
+  title?: string
+  include_raw_data?: boolean
+  date_range_start?: string
+  date_range_end?: string
+}
+
+export interface GeneratedReport {
+  report_id: string
+  template_id: string
+  template_name: string
+  title: string
+  project_id: number | null
+  file_count: number
+  page_count: number
+  file_size: number
+  download_url: string
+  preview_url: string | null
+  created_at: string
+  expires_at: string
+}
+
+export interface ReportGenerateResponse {
+  report: GeneratedReport
+  generation_time_ms: number
+}
+
+export interface ReportListResponse {
+  reports: GeneratedReport[]
+  total: number
+}
+
+// ===== INTEGRATIONS TYPES =====
+export interface IntegrationProvider {
+  id: string
+  name: string
+  description: string
+  icon: string
+  scopes: string[]
+  is_available: boolean
+}
+
+export interface IntegrationProviderListResponse {
+  providers: IntegrationProvider[]
+  total: number
+}
+
+export interface IntegrationResponse {
+  id: number
+  provider: string
+  provider_account_id: string | null
+  provider_email: string | null
+  is_active: boolean
+  created_at: string
+  last_used_at: string | null
+}
+
+export interface IntegrationListResponse {
+  integrations: IntegrationResponse[]
+  total: number
+}
+
+export interface OAuthInitiateResponse {
+  auth_url: string
+  state: string
+}
+
+export interface IntegrationCreate {
+  provider: string
+  code: string
+  redirect_uri: string
+}
+
+export interface ProviderFile {
+  id: string
+  name: string
+  mime_type: string | null
+  size: number | null
+  modified_at: string | null
+  is_folder: boolean
+  parent_id: string | null
+  icon: string | null
+  can_import: boolean
+}
+
+export interface ProviderFolder {
+  id: string
+  name: string
+  path: string
+}
+
+export interface ProviderBrowseResponse {
+  integration_id: number
+  provider: string
+  current_folder: ProviderFolder | null
+  breadcrumbs: ProviderFolder[]
+  files: ProviderFile[]
+  folders: ProviderFile[]
+  has_more: boolean
+  next_page_token: string | null
+}
+
+export interface ImportFromProviderRequest {
+  integration_id: number
+  file_id: string
+  target_project_id: number
+}
+
+export interface ImportFromProviderResponse {
+  file_id: number
+  filename: string
+  project_id: number
+  row_count: number | null
+  data_schema: DataSchema | null
+  import_source: string
+  provider_file_id: string
+}
+
 // ===== API RESPONSE WRAPPER =====
 export type ApiResponse<T> = {
   data: T

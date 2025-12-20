@@ -244,3 +244,77 @@ class FileAnalysis(Base):
 
     def __repr__(self):
         return f"<FileAnalysis(id={self.id}, file_id={self.file_id}, created_at={self.created_at})>"
+
+
+class Conversation(Base):
+    """Conversation model for AI Assistant cross-file queries."""
+
+    __tablename__ = "conversations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    conversation_id = Column(String(36), unique=True, index=True, nullable=False)  # UUID
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    title = Column(String(255), nullable=True)  # Auto-generated or user-set
+    file_context_json = Column(Text, nullable=True)  # JSON array of {file_id, filename, project_name}
+    created_at = Column(DateTime, default=utc_now, nullable=False)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
+
+    # Relationships
+    user = relationship("User", backref="conversations")
+    messages = relationship(
+        "ConversationMessage", back_populates="conversation", cascade="all, delete-orphan"
+    )
+
+    def __repr__(self):
+        return f"<Conversation(id={self.id}, conversation_id={self.conversation_id}, title={self.title})>"
+
+
+class ConversationMessage(Base):
+    """ConversationMessage model for storing individual messages in AI conversations."""
+
+    __tablename__ = "conversation_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    conversation_id = Column(Integer, ForeignKey("conversations.id"), nullable=False)
+    role = Column(String(20), nullable=False)  # 'user' or 'assistant'
+    content = Column(Text, nullable=False)
+    chart_json = Column(Text, nullable=True)  # JSON for any chart generated in response
+    created_at = Column(DateTime, default=utc_now, nullable=False)
+
+    # Relationships
+    conversation = relationship("Conversation", back_populates="messages")
+
+    def __repr__(self):
+        return f"<ConversationMessage(id={self.id}, role={self.role}, conversation_id={self.conversation_id})>"
+
+
+class Integration(Base):
+    """Integration model for third-party data source connections."""
+
+    __tablename__ = "integrations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    # Provider info
+    provider = Column(String(50), nullable=False)  # 'google_sheets', 'airtable', 'notion', 'dropbox'
+    provider_account_id = Column(String(255), nullable=True)  # User ID on provider side
+    provider_email = Column(String(255), nullable=True)  # Email on provider side
+
+    # OAuth tokens (encrypted in production)
+    access_token = Column(Text, nullable=False)
+    refresh_token = Column(Text, nullable=True)
+    token_expires_at = Column(DateTime, nullable=True)
+
+    # Metadata
+    scopes = Column(Text, nullable=True)  # JSON array of granted scopes
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
+    last_used_at = Column(DateTime, nullable=True)
+
+    # Relationships
+    user = relationship("User", backref="integrations")
+
+    def __repr__(self):
+        return f"<Integration(id={self.id}, provider={self.provider}, user_id={self.user_id})>"

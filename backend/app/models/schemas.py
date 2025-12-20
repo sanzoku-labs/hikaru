@@ -575,3 +575,276 @@ class ChartInsightResponse(BaseModel):
     generated_at: datetime
     model_version: str
     cached: bool = False  # Whether this was retrieved from cache/db
+
+
+# ===== History Feature Schemas =====
+
+
+class HistoryItem(BaseModel):
+    """Schema for a single history entry (analysis)."""
+
+    analysis_id: int
+    file_id: int
+    filename: str
+    project_id: int
+    project_name: str
+    charts_count: int
+    user_intent: Optional[str] = None
+    first_insight: Optional[str] = None
+    created_at: datetime
+
+
+class HistoryResponse(BaseModel):
+    """Response schema for paginated history."""
+
+    items: List[HistoryItem]
+    total: int
+    page: int
+    page_size: int
+    has_more: bool
+
+
+# ===== AI Assistant Feature Schemas =====
+
+
+class FileContext(BaseModel):
+    """Schema for file context in AI Assistant queries."""
+
+    file_id: int
+    filename: str
+    project_id: int
+    project_name: str
+
+
+class AssistantQueryRequest(BaseModel):
+    """Request schema for AI Assistant cross-file query."""
+
+    file_ids: List[int] = Field(..., min_length=1, max_length=5, description="File IDs to query (max 5)")
+    question: str = Field(..., min_length=1, max_length=2000)
+    conversation_id: Optional[str] = Field(None, description="Existing conversation ID to continue")
+
+
+class AssistantQueryResponse(BaseModel):
+    """Response schema for AI Assistant query."""
+
+    answer: str
+    conversation_id: str
+    timestamp: datetime
+    chart: Optional[ChartData] = None
+    files_used: List[FileContext]
+
+
+class ConversationSummary(BaseModel):
+    """Summary of a conversation for list view."""
+
+    conversation_id: str
+    title: Optional[str] = None
+    file_context: List[FileContext]
+    message_count: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class ConversationListResponse(BaseModel):
+    """Response schema for listing conversations."""
+
+    conversations: List[ConversationSummary]
+    total: int
+
+
+class ConversationMessageDetail(BaseModel):
+    """Detail of a single message in conversation."""
+
+    id: int
+    role: Literal["user", "assistant"]
+    content: str
+    chart: Optional[ChartData] = None
+    created_at: datetime
+
+
+class ConversationDetailResponse(BaseModel):
+    """Response schema for conversation detail."""
+
+    conversation_id: str
+    title: Optional[str] = None
+    file_context: List[FileContext]
+    messages: List[ConversationMessageDetail]
+    created_at: datetime
+    updated_at: datetime
+
+
+# ===== Reports Feature Schemas =====
+
+
+class ReportTemplate(BaseModel):
+    """Schema for a report template."""
+
+    id: str  # e.g., "weekly_summary", "executive_brief"
+    name: str
+    description: str
+    category: Literal["summary", "detailed", "comparison", "custom"]
+    sections: List[str]  # e.g., ["overview", "charts", "insights", "recommendations"]
+    estimated_pages: int
+    icon: str  # Icon name for UI
+
+
+class ReportTemplateListResponse(BaseModel):
+    """Response schema for listing available report templates."""
+
+    templates: List[ReportTemplate]
+    total: int
+
+
+class ReportGenerateRequest(BaseModel):
+    """Request schema for generating a report."""
+
+    template_id: str
+    project_id: Optional[int] = None
+    file_ids: Optional[List[int]] = None
+    title: Optional[str] = None  # Custom title override
+    include_raw_data: bool = False
+    date_range_start: Optional[str] = None  # ISO date for filtering
+    date_range_end: Optional[str] = None
+
+
+class GeneratedReport(BaseModel):
+    """Schema for a generated report."""
+
+    report_id: str
+    template_id: str
+    template_name: str
+    title: str
+    project_id: Optional[int] = None
+    file_count: int
+    page_count: int
+    file_size: int  # bytes
+    download_url: str
+    preview_url: Optional[str] = None
+    created_at: datetime
+    expires_at: datetime
+
+
+class ReportGenerateResponse(BaseModel):
+    """Response schema for report generation."""
+
+    report: GeneratedReport
+    generation_time_ms: int
+
+
+class ReportListResponse(BaseModel):
+    """Response schema for listing generated reports."""
+
+    reports: List[GeneratedReport]
+    total: int
+
+
+# ===== Integrations Feature Schemas =====
+
+
+class IntegrationProvider(BaseModel):
+    """Schema for available integration provider info."""
+
+    id: str  # e.g., "google_sheets", "airtable", "notion"
+    name: str  # e.g., "Google Sheets"
+    description: str
+    icon: str  # Icon name for UI
+    scopes: List[str]  # Required OAuth scopes
+    is_available: bool = True  # Whether the provider is configured
+
+
+class IntegrationProviderListResponse(BaseModel):
+    """Response schema for listing available integration providers."""
+
+    providers: List[IntegrationProvider]
+    total: int
+
+
+class IntegrationCreate(BaseModel):
+    """Request schema for creating an integration (OAuth callback)."""
+
+    provider: str
+    code: str  # OAuth authorization code
+    redirect_uri: str  # OAuth redirect URI used in the flow
+
+
+class IntegrationResponse(BaseModel):
+    """Response schema for a connected integration."""
+
+    id: int
+    provider: str
+    provider_account_id: Optional[str] = None
+    provider_email: Optional[str] = None
+    is_active: bool
+    created_at: datetime
+    last_used_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class IntegrationListResponse(BaseModel):
+    """Response schema for listing user's integrations."""
+
+    integrations: List[IntegrationResponse]
+    total: int
+
+
+class OAuthInitiateResponse(BaseModel):
+    """Response schema for OAuth flow initiation."""
+
+    auth_url: str
+    state: str  # CSRF protection token
+
+
+class ProviderFile(BaseModel):
+    """Schema for a file in an integration provider."""
+
+    id: str  # Provider-specific file ID
+    name: str
+    mime_type: Optional[str] = None
+    size: Optional[int] = None
+    modified_at: Optional[datetime] = None
+    is_folder: bool = False
+    parent_id: Optional[str] = None
+    icon: Optional[str] = None  # File type icon
+    can_import: bool = True  # Whether this file can be imported
+
+
+class ProviderFolder(BaseModel):
+    """Schema for a folder in an integration provider."""
+
+    id: str
+    name: str
+    path: str  # Full path for breadcrumbs
+
+
+class ProviderBrowseResponse(BaseModel):
+    """Response schema for browsing provider files."""
+
+    integration_id: int
+    provider: str
+    current_folder: Optional[ProviderFolder] = None
+    breadcrumbs: List[ProviderFolder] = []
+    files: List[ProviderFile]
+    folders: List[ProviderFile]  # Items with is_folder=True
+    has_more: bool = False
+    next_page_token: Optional[str] = None
+
+
+class ImportFromProviderRequest(BaseModel):
+    """Request schema for importing a file from an integration."""
+
+    integration_id: int
+    file_id: str  # Provider-specific file ID
+    target_project_id: int
+
+
+class ImportFromProviderResponse(BaseModel):
+    """Response schema for file import from integration."""
+
+    file_id: int  # New file ID in our system
+    filename: str
+    project_id: int
+    row_count: Optional[int] = None
+    data_schema: Optional[DataSchema] = None
+    import_source: str  # e.g., "google_sheets"
+    provider_file_id: str  # Original file ID in provider

@@ -2,11 +2,15 @@ import { cn } from '@/lib/utils'
 import { Link, useLocation } from 'react-router-dom'
 import {
   Zap,
+  MessageSquare,
   FolderKanban,
   BarChart3,
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  Clock,
+  FileText,
+  Link2,
 } from 'lucide-react'
 
 interface NavItem {
@@ -27,9 +31,29 @@ const navItems: NavItem[] = [
     icon: <Zap className="h-5 w-5" />,
   },
   {
+    label: 'AI Assistant',
+    path: '/assistant',
+    icon: <MessageSquare className="h-5 w-5" />,
+  },
+  {
     label: 'Projects',
     path: '/projects',
     icon: <FolderKanban className="h-5 w-5" />,
+  },
+  {
+    label: 'Reports',
+    path: '/reports',
+    icon: <FileText className="h-5 w-5" />,
+  },
+  {
+    label: 'Integrations',
+    path: '/integrations',
+    icon: <Link2 className="h-5 w-5" />,
+  },
+  {
+    label: 'History',
+    path: '/history',
+    icon: <Clock className="h-5 w-5" />,
   },
   {
     label: 'Analytics',

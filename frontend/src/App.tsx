@@ -11,13 +11,21 @@ import { useUIStore } from '@/stores/uiStore'
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'))
 const QuickAnalysisPage = lazy(() => import('@/pages/QuickAnalysisPage'))
+const AssistantPage = lazy(() => import('@/pages/AssistantPage'))
 const ProjectsPage = lazy(() => import('@/pages/ProjectsPage'))
 const ProjectDetailPage = lazy(() => import('@/pages/ProjectDetailPage'))
 const ProjectFileAnalysisPage = lazy(() => import('@/pages/projects/ProjectFileAnalysisPage'))
 const FileComparisonPage = lazy(() => import('@/pages/projects/FileComparisonPage'))
 const FileMergePage = lazy(() => import('@/pages/projects/FileMergePage'))
 const AnalyticsPage = lazy(() => import('@/pages/AnalyticsPage'))
+const HistoryPage = lazy(() => import('@/pages/HistoryPage'))
 const DashboardPage = lazy(() => import('@/pages/projects/DashboardPage'))
+const ReportsPage = lazy(() =>
+  import('@/pages/ReportsPage').then((m) => ({ default: m.ReportsPage }))
+)
+const IntegrationsPage = lazy(() =>
+  import('@/pages/IntegrationsPage').then((m) => ({ default: m.IntegrationsPage }))
+)
 
 // Full-page loading fallback
 function PageLoader() {
@@ -69,6 +77,15 @@ export default function App() {
               element={
                 <ProtectedRouteWithErrorBoundary>
                   <QuickAnalysisPage />
+                </ProtectedRouteWithErrorBoundary>
+              }
+            />
+
+            <Route
+              path="/assistant"
+              element={
+                <ProtectedRouteWithErrorBoundary>
+                  <AssistantPage />
                 </ProtectedRouteWithErrorBoundary>
               }
             />
@@ -128,10 +145,37 @@ export default function App() {
             />
 
             <Route
+              path="/history"
+              element={
+                <ProtectedRouteWithErrorBoundary>
+                  <HistoryPage />
+                </ProtectedRouteWithErrorBoundary>
+              }
+            />
+
+            <Route
               path="/projects/:projectId/dashboards/:dashboardId"
               element={
                 <ProtectedRouteWithErrorBoundary>
                   <DashboardPage />
+                </ProtectedRouteWithErrorBoundary>
+              }
+            />
+
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRouteWithErrorBoundary>
+                  <ReportsPage />
+                </ProtectedRouteWithErrorBoundary>
+              }
+            />
+
+            <Route
+              path="/integrations"
+              element={
+                <ProtectedRouteWithErrorBoundary>
+                  <IntegrationsPage />
                 </ProtectedRouteWithErrorBoundary>
               }
             />

@@ -6,14 +6,18 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.api.routes import (
     analyze,
     analytics,
+    assistant,
     auth,
     compare,
     dashboards,
     export,
+    history,
     insights,
+    integrations,
     merge,
     projects,
     query,
+    reports,
     upload,
 )
 from app.config import settings
@@ -58,6 +62,10 @@ app.include_router(merge.router)  # Phase 7C: File merging
 app.include_router(dashboards.router)  # Phase 7E: Dashboard management
 app.include_router(analytics.router)  # Analytics dashboard
 app.include_router(insights.router)  # Phase 10: Advanced chart insights
+app.include_router(history.router)  # History: Browse all analyses
+app.include_router(assistant.router)  # AI Assistant: Cross-file queries
+app.include_router(reports.router)  # Reports: Template gallery and generation
+app.include_router(integrations.router)  # Integrations: Third-party data sources
 
 
 @app.get("/health")

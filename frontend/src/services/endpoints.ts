@@ -56,6 +56,11 @@ export const ENDPOINTS = {
     GLOBAL: '/api/analytics', // GET - Global analytics across all projects
   },
 
+  // History
+  HISTORY: {
+    LIST: '/api/history', // GET - Paginated analysis history with filters
+  },
+
   // Dashboards
   DASHBOARDS: {
     LIST: (projectId: number) => `/api/projects/${projectId}/dashboards`, // GET, POST
@@ -66,5 +71,32 @@ export const ENDPOINTS = {
   // Chart Insights
   CHARTS: {
     INSIGHT: '/api/charts/insight', // POST - Generate advanced insight for a chart
+  },
+
+  // AI Assistant
+  ASSISTANT: {
+    QUERY: '/api/assistant/query', // POST - Query across multiple files
+    CONVERSATIONS: '/api/assistant/conversations', // GET - List conversations
+    CONVERSATION: (id: string) => `/api/assistant/conversations/${id}`, // GET, DELETE
+  },
+
+  // Reports
+  REPORTS: {
+    TEMPLATES: '/api/reports/templates', // GET - List available templates
+    GENERATE: '/api/reports/generate', // POST - Generate a report
+    LIST: '/api/reports', // GET - List generated reports
+    DOWNLOAD: (reportId: string) => `/api/reports/${reportId}/download`, // GET - Download PDF
+    DELETE: (reportId: string) => `/api/reports/${reportId}`, // DELETE - Delete report
+  },
+
+  // Integrations
+  INTEGRATIONS: {
+    PROVIDERS: '/api/integrations/providers', // GET - List available providers
+    LIST: '/api/integrations', // GET - List connected integrations
+    OAUTH_INITIATE: (provider: string) => `/api/integrations/${provider}/oauth/initiate`, // POST
+    OAUTH_CALLBACK: (provider: string) => `/api/integrations/${provider}/oauth/callback`, // POST
+    DISCONNECT: (integrationId: number) => `/api/integrations/${integrationId}`, // DELETE
+    BROWSE: (integrationId: number) => `/api/integrations/${integrationId}/browse`, // GET
+    IMPORT: '/api/integrations/import', // POST - Import file from provider
   },
 } as const

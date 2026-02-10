@@ -18,7 +18,7 @@ from app.models.schemas import (
 )
 from app.services.ai_assistant_service import AIAssistantService
 
-router = APIRouter()
+router = APIRouter(prefix="/api", tags=["assistant"])
 
 
 @router.post("/assistant/query", response_model=AssistantQueryResponse)

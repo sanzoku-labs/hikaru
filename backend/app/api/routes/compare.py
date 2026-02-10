@@ -4,7 +4,6 @@ File comparison API endpoints for Phase 7B.
 Handles comparing two files within a project.
 """
 import json
-from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session

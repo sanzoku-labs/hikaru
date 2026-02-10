@@ -63,9 +63,7 @@ class AIService:
         """
         return self.insight_service.generate_chart_insight(chart, schema)
 
-    def generate_global_summary(
-        self, charts: List[ChartData], schema: DataSchema
-    ) -> Optional[str]:
+    def generate_global_summary(self, charts: List[ChartData], schema: DataSchema) -> Optional[str]:
         """
         Generate overall summary of the dataset.
 

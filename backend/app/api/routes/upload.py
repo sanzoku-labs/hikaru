@@ -2,7 +2,7 @@ import logging
 import os
 import shutil
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pandas as pd
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
@@ -11,8 +11,8 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
 from app.middleware.auth import get_current_active_user
-from app.models.database import Upload, User
-from app.models.schemas import ErrorResponse, UploadResponse
+from app.models.database import User
+from app.models.schemas import UploadResponse
 from app.services.data_processor import DataProcessor
 from app.services.upload_service import UploadService
 

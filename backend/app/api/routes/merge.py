@@ -4,7 +4,6 @@ File merging and relationship API endpoints for Phase 7C.
 Handles creating relationships between files and analyzing merged datasets.
 """
 import json
-from datetime import datetime
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -15,7 +14,6 @@ from app.middleware.auth import get_current_active_user
 from app.models.database import File as FileModel
 from app.models.database import FileRelationship, Project, User
 from app.models.schemas import (
-    ChartData,
     MergeAnalyzeRequest,
     MergeAnalyzeResponse,
     RelationshipCreate,

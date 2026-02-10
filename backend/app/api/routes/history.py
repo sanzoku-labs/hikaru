@@ -4,11 +4,11 @@ History API endpoints for browsing all analyses across projects.
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc, func, or_
+from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -84,10 +84,7 @@ async def get_history(
         # Apply pagination and ordering
         offset = (page - 1) * page_size
         results = (
-            query.order_by(desc(FileAnalysis.created_at))
-            .offset(offset)
-            .limit(page_size)
-            .all()
+            query.order_by(desc(FileAnalysis.created_at)).offset(offset).limit(page_size).all()
         )
 
         # Build response items

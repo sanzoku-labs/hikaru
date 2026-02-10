@@ -1,11 +1,14 @@
+import os
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routes import (
-    analyze,
     analytics,
+    analyze,
     assistant,
     auth,
     compare,
@@ -29,10 +32,25 @@ from app.core.exception_handlers import (
 )
 from app.core.exceptions import AppException
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Validate critical settings on startup."""
+    if not os.environ.get("TESTING"):
+        placeholder = "your-secret-key-change-in-production"
+        if not settings.secret_key or settings.secret_key == placeholder:
+            raise RuntimeError(
+                "SECRET_KEY is not configured. "
+                "Set the SECRET_KEY environment variable before starting the server."
+            )
+    yield
+
+
 app = FastAPI(
     title="Hikaru API",
     description="AI Data Insight Board API - Phase 7 (Projects & Multi-File Workspaces)",
     version="3.0.0",
+    lifespan=lifespan,
 )
 
 # CORS

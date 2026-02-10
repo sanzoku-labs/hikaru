@@ -181,9 +181,7 @@ Focus on the most notable difference or trend visible in this specific chart."""
         except Exception:
             return None
 
-    def _build_chart_suggestion_prompt(
-        self, schema: DataSchema, user_intent: Optional[str]
-    ) -> str:
+    def _build_chart_suggestion_prompt(self, schema: DataSchema, user_intent: Optional[str]) -> str:
         """Build prompt for AI chart suggestions"""
         # Format column information
         columns_info = []

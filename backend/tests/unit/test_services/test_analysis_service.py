@@ -1,6 +1,6 @@
 """Tests for AnalysisService - TDD approach for Phase 2.3."""
 
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock
 
 import pandas as pd
 import pytest
@@ -348,9 +348,7 @@ class TestAnalysisServiceGenerateGlobalSummary:
 
         # Verify
         assert summary == "Overall, revenue is trending upward."
-        mock_ai_service.generate_global_summary.assert_called_once_with(
-            charts, sample_schema
-        )
+        mock_ai_service.generate_global_summary.assert_called_once_with(charts, sample_schema)
 
     def test_generate_global_summary_with_user_intent(self, sample_schema):
         """Test that global summary generation works (user_intent no longer passed to AI)."""
@@ -368,9 +366,7 @@ class TestAnalysisServiceGenerateGlobalSummary:
         )
 
         # Verify AI was called without user_intent (Phase 4.1 refactoring removed this param)
-        mock_ai_service.generate_global_summary.assert_called_once_with(
-            charts, sample_schema
-        )
+        mock_ai_service.generate_global_summary.assert_called_once_with(charts, sample_schema)
 
     def test_generate_global_summary_returns_none_when_ai_disabled(self, sample_schema):
         """Test that None is returned when AI is disabled."""

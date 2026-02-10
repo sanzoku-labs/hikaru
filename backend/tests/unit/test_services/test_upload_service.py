@@ -1,14 +1,15 @@
 """Tests for UploadService (replaces storage.py global state)."""
 
-import pytest
 from datetime import datetime
-from sqlalchemy.orm import Session
-import pandas as pd
 
-from app.services.upload_service import UploadService
-from app.models.database import Upload
-from app.models.schemas import DataSchema, ColumnInfo
+import pandas as pd
+import pytest
+from sqlalchemy.orm import Session
+
 from app.core.exceptions import FileNotFoundError as AppFileNotFoundError
+from app.models.database import Upload
+from app.models.schemas import ColumnInfo, DataSchema
+from app.services.upload_service import UploadService
 
 
 class TestUploadServiceStore:
@@ -122,9 +123,7 @@ class TestUploadServiceGet:
         df = pd.DataFrame({"id": [1, 2]})
 
         # Store first
-        service.store_upload(
-            upload_id="get-test-1", filename="test.csv", schema=schema, df=df
-        )
+        service.store_upload(upload_id="get-test-1", filename="test.csv", schema=schema, df=df)
 
         # Retrieve
         result = service.get_upload("get-test-1")
@@ -174,9 +173,7 @@ class TestUploadServiceGet:
         )
         df = pd.DataFrame({"name": ["Alice", "Bob", "Charlie"], "age": [25, 30, 35]})
 
-        service.store_upload(
-            upload_id="df-test", filename="people.csv", schema=schema, df=df
-        )
+        service.store_upload(upload_id="df-test", filename="people.csv", schema=schema, df=df)
 
         result = service.get_upload("df-test")
         retrieved_df = result["dataframe"]

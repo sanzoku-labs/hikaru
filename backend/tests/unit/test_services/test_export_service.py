@@ -4,9 +4,8 @@ Unit tests for ExportService.
 Tests PDF generation and export functionality.
 """
 import os
-import tempfile
 import time
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -135,9 +134,7 @@ class TestExportServiceInitialization:
 class TestGeneratePDF:
     """Test suite for generate_pdf method"""
 
-    def test_generates_pdf_successfully(
-        self, export_service, sample_schema, sample_charts
-    ):
+    def test_generates_pdf_successfully(self, export_service, sample_schema, sample_charts):
         """Test successful PDF generation"""
         export_id = export_service.generate_pdf(
             filename="test_data.csv",
@@ -171,9 +168,7 @@ class TestGeneratePDF:
         pdf_path = export_service.get_export_path(export_id)
         assert os.path.exists(pdf_path)
 
-    def test_generates_pdf_with_empty_charts(
-        self, export_service, sample_schema
-    ):
+    def test_generates_pdf_with_empty_charts(self, export_service, sample_schema):
         """Test PDF generation with empty charts list"""
         export_id = export_service.generate_pdf(
             filename="test_data.csv",
@@ -186,9 +181,7 @@ class TestGeneratePDF:
         pdf_path = export_service.get_export_path(export_id)
         assert os.path.exists(pdf_path)
 
-    def test_handles_long_filename(
-        self, export_service, sample_schema, sample_charts
-    ):
+    def test_handles_long_filename(self, export_service, sample_schema, sample_charts):
         """Test PDF generation with very long filename"""
         long_filename = "a" * 200 + ".csv"
 
@@ -218,9 +211,7 @@ class TestGeneratePDF:
         pdf_path = export_service.get_export_path(export_id)
         assert os.path.exists(pdf_path)
 
-    def test_generates_unique_export_ids(
-        self, export_service, sample_schema, sample_charts
-    ):
+    def test_generates_unique_export_ids(self, export_service, sample_schema, sample_charts):
         """Test that each export gets unique ID"""
         export_id1 = export_service.generate_pdf(
             filename="test1.csv", schema=sample_schema, charts=sample_charts
@@ -239,7 +230,7 @@ class TestGeneratePDF:
                 type="numeric" if i % 2 == 0 else "categorical",
                 unique_values=10,
                 null_count=0,
-                sample_values=[i, i+1, i+2],  # Add required sample_values
+                sample_values=[i, i + 1, i + 2],  # Add required sample_values
             )
             for i in range(20)
         ]
@@ -262,16 +253,31 @@ class TestGeneratePDF:
 
     def test_handles_large_preview_data(self, export_service, sample_charts):
         """Test PDF generation with large preview dataset"""
-        large_preview = [
-            {"col1": i, "col2": i * 10, "col3": f"row_{i}"}
-            for i in range(100)
-        ]
+        large_preview = [{"col1": i, "col2": i * 10, "col3": f"row_{i}"} for i in range(100)]
 
         schema = DataSchema(
             columns=[
-                ColumnInfo(name="col1", type="numeric", unique_values=100, null_count=0, sample_values=[1, 2, 3]),
-                ColumnInfo(name="col2", type="numeric", unique_values=100, null_count=0, sample_values=[10, 20, 30]),
-                ColumnInfo(name="col3", type="categorical", unique_values=100, null_count=0, sample_values=["row_0", "row_1", "row_2"]),
+                ColumnInfo(
+                    name="col1",
+                    type="numeric",
+                    unique_values=100,
+                    null_count=0,
+                    sample_values=[1, 2, 3],
+                ),
+                ColumnInfo(
+                    name="col2",
+                    type="numeric",
+                    unique_values=100,
+                    null_count=0,
+                    sample_values=[10, 20, 30],
+                ),
+                ColumnInfo(
+                    name="col3",
+                    type="categorical",
+                    unique_values=100,
+                    null_count=0,
+                    sample_values=["row_0", "row_1", "row_2"],
+                ),
             ],
             row_count=100,
             preview=large_preview,

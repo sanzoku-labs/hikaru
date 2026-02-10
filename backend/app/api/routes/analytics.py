@@ -8,7 +8,6 @@ from datetime import datetime, timedelta, timezone
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -16,12 +15,7 @@ from app.middleware.auth import get_current_active_user
 from app.models.database import File as FileModel
 from app.models.database import Project as ProjectModel
 from app.models.database import User
-from app.models.schemas import (
-    AnalyticsResponse,
-    ChartDistribution,
-    RecentAnalysis,
-    TopInsight,
-)
+from app.models.schemas import AnalyticsResponse, ChartDistribution, RecentAnalysis, TopInsight
 
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 logger = logging.getLogger(__name__)
@@ -54,9 +48,7 @@ async def get_analytics(
 
         # Total counts
         total_projects = (
-            db.query(ProjectModel)
-            .filter(ProjectModel.user_id == current_user.id)
-            .count()
+            db.query(ProjectModel).filter(ProjectModel.user_id == current_user.id).count()
         )
 
         total_files = (

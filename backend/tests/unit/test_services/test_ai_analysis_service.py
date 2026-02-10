@@ -4,7 +4,7 @@ Unit tests for AIAnalysisService.
 Tests AI-powered chart suggestions and comparison insights with mocked Anthropic API.
 """
 import json
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -169,9 +169,7 @@ class TestSuggestCharts:
 
     @patch("app.services.ai_analysis_service.Anthropic")
     @patch("app.services.ai_analysis_service.settings")
-    def test_limits_to_four_charts(
-        self, mock_settings, mock_anthropic_class, sample_schema
-    ):
+    def test_limits_to_four_charts(self, mock_settings, mock_anthropic_class, sample_schema):
         """Test that suggestions are limited to 4 charts"""
         mock_settings.anthropic_api_key = "test-key"
         mock_client = Mock()
@@ -179,8 +177,7 @@ class TestSuggestCharts:
 
         # Return 6 suggestions
         many_suggestions = [
-            {"chart_type": "line", "title": f"Chart {i}", "reasoning": "test"}
-            for i in range(6)
+            {"chart_type": "line", "title": f"Chart {i}", "reasoning": "test"} for i in range(6)
         ]
         mock_message.content = [Mock(text=json.dumps(many_suggestions))]
         mock_client.messages.create.return_value = mock_message
@@ -211,9 +208,7 @@ class TestSuggestCharts:
 
     @patch("app.services.ai_analysis_service.Anthropic")
     @patch("app.services.ai_analysis_service.settings")
-    def test_handles_empty_suggestions(
-        self, mock_settings, mock_anthropic_class, sample_schema
-    ):
+    def test_handles_empty_suggestions(self, mock_settings, mock_anthropic_class, sample_schema):
         """Test that empty suggestions are handled"""
         mock_settings.anthropic_api_key = "test-key"
         mock_client = Mock()
@@ -316,9 +311,7 @@ class TestGenerateComparisonInsight:
             "numeric_columns": {"revenue": {"mean_a": 1000, "mean_b": 1500}},
         }
 
-        await service.generate_comparison_insight(
-            "file_a.csv", "file_b.csv", metrics, "yoy"
-        )
+        await service.generate_comparison_insight("file_a.csv", "file_b.csv", metrics, "yoy")
 
         # Verify metrics are in the prompt
         call_args = mock_client.messages.create.call_args
@@ -375,9 +368,7 @@ class TestGenerateChartComparisonInsight:
     @patch("app.services.ai_analysis_service.Anthropic")
     @patch("app.services.ai_analysis_service.settings")
     @pytest.mark.asyncio
-    async def test_generates_chart_insight_successfully(
-        self, mock_settings, mock_anthropic_class
-    ):
+    async def test_generates_chart_insight_successfully(self, mock_settings, mock_anthropic_class):
         """Test successful chart comparison insight generation"""
         mock_settings.anthropic_api_key = "test-key"
         mock_client = Mock()
@@ -412,9 +403,7 @@ class TestGenerateChartComparisonInsight:
     @patch("app.services.ai_analysis_service.Anthropic")
     @patch("app.services.ai_analysis_service.settings")
     @pytest.mark.asyncio
-    async def test_handles_api_error_returns_none(
-        self, mock_settings, mock_anthropic_class
-    ):
+    async def test_handles_api_error_returns_none(self, mock_settings, mock_anthropic_class):
         """Test that API errors return None"""
         mock_settings.anthropic_api_key = "test-key"
         mock_client = Mock()
@@ -461,9 +450,7 @@ class TestBuildChartSuggestionPrompt:
 
         with patch("app.services.ai_analysis_service.Anthropic"):
             service = AIAnalysisService()
-            prompt = service._build_chart_suggestion_prompt(
-                sample_schema, "Show revenue by region"
-            )
+            prompt = service._build_chart_suggestion_prompt(sample_schema, "Show revenue by region")
 
             assert "Show revenue by region" in prompt
             assert "User Intent:" in prompt

@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 from fastapi import HTTPException
 
-from app.api.routes.query import query_data, _generate_chart_from_config
+from app.api.routes.query import _generate_chart_from_config, query_data
 from app.models.schemas import ColumnInfo, DataSchema, QueryRequest
 
 
@@ -21,23 +21,52 @@ def mock_db():
 @pytest.fixture
 def sample_upload_data():
     """Sample upload data"""
-    df = pd.DataFrame({
-        "month": ["Jan", "Feb", "Mar"],
-        "revenue": [100, 150, 200],
-        "category": ["A", "B", "A"],
-    })
+    df = pd.DataFrame(
+        {
+            "month": ["Jan", "Feb", "Mar"],
+            "revenue": [100, 150, 200],
+            "category": ["A", "B", "A"],
+        }
+    )
 
     schema = DataSchema(
         columns=[
-            ColumnInfo(name="month", type="categorical", unique_values=3, null_count=0, sample_values=["Jan", "Feb"]),
-            ColumnInfo(name="revenue", type="numeric", unique_values=3, null_count=0, sample_values=[100, 150], min=100, max=200, mean=150, median=150),
-            ColumnInfo(name="category", type="categorical", unique_values=2, null_count=0, sample_values=["A", "B"]),
+            ColumnInfo(
+                name="month",
+                type="categorical",
+                unique_values=3,
+                null_count=0,
+                sample_values=["Jan", "Feb"],
+            ),
+            ColumnInfo(
+                name="revenue",
+                type="numeric",
+                unique_values=3,
+                null_count=0,
+                sample_values=[100, 150],
+                min=100,
+                max=200,
+                mean=150,
+                median=150,
+            ),
+            ColumnInfo(
+                name="category",
+                type="categorical",
+                unique_values=2,
+                null_count=0,
+                sample_values=["A", "B"],
+            ),
         ],
         row_count=3,
         preview=[],
     )
 
-    return {"dataframe": df, "schema": schema, "filename": "test.csv", "timestamp": datetime.now().isoformat()}
+    return {
+        "dataframe": df,
+        "schema": schema,
+        "filename": "test.csv",
+        "timestamp": datetime.now().isoformat(),
+    }
 
 
 @pytest.mark.asyncio
@@ -82,7 +111,11 @@ async def test_query_data_with_chart_generation(mock_db, sample_upload_data):
 
                 mock_ai_service = Mock()
                 mock_ai_service.enabled = True
-                chart_config = {"chart_type": "bar", "category_column": "category", "value_column": "revenue"}
+                chart_config = {
+                    "chart_type": "bar",
+                    "category_column": "category",
+                    "value_column": "revenue",
+                }
                 mock_ai_service.generate_query_response.return_value = (
                     "Here's a chart showing revenue by category.",
                     "conv-123",
@@ -92,6 +125,7 @@ async def test_query_data_with_chart_generation(mock_db, sample_upload_data):
 
                 # Mock chart generation
                 from app.models.schemas import ChartData
+
                 mock_chart = ChartData(
                     chart_type="bar",
                     title="Test Chart",
@@ -172,7 +206,12 @@ def test_generate_chart_from_config_bar():
     """Test generating bar chart from config"""
     df = pd.DataFrame({"category": ["A", "B"], "value": [100, 200]})
     schema = Mock()
-    config = {"chart_type": "bar", "category_column": "category", "value_column": "value", "title": "Test Bar"}
+    config = {
+        "chart_type": "bar",
+        "category_column": "category",
+        "value_column": "value",
+        "title": "Test Bar",
+    }
 
     with patch("app.api.routes.query.ChartGenerator") as mock_chart_gen_class:
         mock_chart_gen = Mock()

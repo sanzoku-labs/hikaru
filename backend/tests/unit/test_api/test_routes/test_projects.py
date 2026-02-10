@@ -11,35 +11,32 @@ Tests cover:
 """
 from datetime import datetime, timezone
 from io import BytesIO
-from unittest.mock import Mock, patch, MagicMock
-import json
+from unittest.mock import Mock, patch
 
 import pandas as pd
 import pytest
 from fastapi import HTTPException, UploadFile, status
 
 from app.api.routes.projects import (
-    create_project,
-    list_projects,
-    get_project,
-    update_project,
-    delete_project,
-    upload_file_to_project,
-    list_project_files,
-    delete_project_file,
-    download_project_file,
     analyze_project_file,
-    get_project_file_analysis,
+    create_project,
+    delete_project,
+    delete_project_file,
+    get_project,
+    list_project_files,
+    list_projects,
+    update_project,
+    upload_file_to_project,
 )
+from app.core.exceptions import ProjectNotFoundError, ValidationError
 from app.models.schemas import (
-    ProjectCreate,
-    ProjectUpdate,
-    FileAnalyzeRequest,
     ChartData,
     ColumnInfo,
     DataSchema,
+    FileAnalyzeRequest,
+    ProjectCreate,
+    ProjectUpdate,
 )
-from app.core.exceptions import ProjectNotFoundError, ValidationError
 
 
 @pytest.fixture
@@ -91,11 +88,13 @@ def sample_file():
 @pytest.fixture
 def sample_dataframe():
     """Sample pandas DataFrame"""
-    return pd.DataFrame({
-        "date": pd.date_range("2024-01-01", periods=10, freq="D"),
-        "revenue": [100, 150, 200, 250, 300, 350, 400, 450, 500, 550],
-        "category": ["A", "B", "A", "B", "A", "B", "A", "B", "A", "B"],
-    })
+    return pd.DataFrame(
+        {
+            "date": pd.date_range("2024-01-01", periods=10, freq="D"),
+            "revenue": [100, 150, 200, 250, 300, 350, 400, 450, 500, 550],
+            "category": ["A", "B", "A", "B", "A", "B", "A", "B", "A", "B"],
+        }
+    )
 
 
 @pytest.fixture
@@ -135,10 +134,7 @@ def sample_schema():
 @pytest.mark.asyncio
 async def test_create_project_success(mock_db, mock_user, sample_project):
     """Test successful project creation"""
-    project_data = ProjectCreate(
-        name="New Project",
-        description="New project description"
-    )
+    project_data = ProjectCreate(name="New Project", description="New project description")
 
     with patch("app.api.routes.projects.ProjectService") as mock_project_service_class:
         # Setup mock
@@ -343,10 +339,7 @@ async def test_get_project_not_found(mock_db, mock_user):
 @pytest.mark.asyncio
 async def test_update_project_success(mock_db, mock_user, sample_project):
     """Test successful project update"""
-    update_data = ProjectUpdate(
-        name="Updated Name",
-        description="Updated Description"
-    )
+    update_data = ProjectUpdate(name="Updated Name", description="Updated Description")
 
     with patch("app.api.routes.projects.ProjectService") as mock_project_service_class:
         # Setup mock - return updated project
@@ -452,7 +445,9 @@ async def test_delete_project_not_found(mock_db, mock_user):
 
 
 @pytest.mark.asyncio
-async def test_upload_file_to_project_success(mock_db, mock_user, sample_project, sample_file, sample_dataframe, sample_schema):
+async def test_upload_file_to_project_success(
+    mock_db, mock_user, sample_project, sample_file, sample_dataframe, sample_schema
+):
     """Test successful file upload to project"""
     # Create mock uploaded file
     file_content = b"date,revenue\n2024-01-01,100\n2024-01-02,150"
@@ -619,8 +614,7 @@ async def test_delete_project_file_not_found(mock_db, mock_user):
     with patch("app.api.routes.projects.ProjectService") as mock_project_service_class:
         mock_project_service = Mock()
         mock_project_service.delete_file.side_effect = HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="File not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
         )
         mock_project_service_class.return_value = mock_project_service
 
@@ -642,7 +636,9 @@ async def test_delete_project_file_not_found(mock_db, mock_user):
 
 
 @pytest.mark.asyncio
-async def test_analyze_project_file_success(mock_db, mock_user, sample_file, sample_dataframe, sample_schema):
+async def test_analyze_project_file_success(
+    mock_db, mock_user, sample_file, sample_dataframe, sample_schema
+):
     """Test successful file analysis"""
     request_data = FileAnalyzeRequest(max_charts=4, user_intent=None)
 
@@ -674,7 +670,7 @@ async def test_analyze_project_file_success(mock_db, mock_user, sample_file, sam
                 mock_analysis_service = Mock()
                 mock_analysis_service.perform_full_analysis.return_value = {
                     "charts": sample_charts,
-                    "global_summary": "Revenue is growing steadily"
+                    "global_summary": "Revenue is growing steadily",
                 }
                 mock_analysis_service_class.return_value = mock_analysis_service
 
@@ -703,8 +699,7 @@ async def test_analyze_project_file_not_found(mock_db, mock_user):
     with patch("app.api.routes.projects.ProjectService") as mock_project_service_class:
         mock_project_service = Mock()
         mock_project_service.get_file.side_effect = HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="File not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
         )
         mock_project_service_class.return_value = mock_project_service
 

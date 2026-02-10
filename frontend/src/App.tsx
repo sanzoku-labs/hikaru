@@ -26,6 +26,7 @@ const ReportsPage = lazy(() =>
 const IntegrationsPage = lazy(() =>
   import('@/pages/IntegrationsPage').then((m) => ({ default: m.IntegrationsPage }))
 )
+const OAuthCallbackPage = lazy(() => import('@/pages/OAuthCallbackPage'))
 
 // Full-page loading fallback
 function PageLoader() {
@@ -176,6 +177,15 @@ export default function App() {
               element={
                 <ProtectedRouteWithErrorBoundary>
                   <IntegrationsPage />
+                </ProtectedRouteWithErrorBoundary>
+              }
+            />
+
+            <Route
+              path="/integrations/callback"
+              element={
+                <ProtectedRouteWithErrorBoundary>
+                  <OAuthCallbackPage />
                 </ProtectedRouteWithErrorBoundary>
               }
             />

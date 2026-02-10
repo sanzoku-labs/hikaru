@@ -86,9 +86,7 @@ class AIInsightService:
             logger.error(f"Error generating chart insight: {e}")
             return None
 
-    def generate_global_summary(
-        self, charts: List[ChartData], schema: DataSchema
-    ) -> Optional[str]:
+    def generate_global_summary(self, charts: List[ChartData], schema: DataSchema) -> Optional[str]:
         """
         Generate overall summary of the dataset.
 

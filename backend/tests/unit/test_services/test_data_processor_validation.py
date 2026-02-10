@@ -1,6 +1,5 @@
 """Test validation logic in DataProcessor for multi-sheet Excel files."""
 import pandas as pd
-import pytest
 
 from app.services.data_processor import DataProcessor
 

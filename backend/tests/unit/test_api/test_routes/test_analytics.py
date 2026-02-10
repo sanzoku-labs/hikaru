@@ -10,8 +10,7 @@ Tests cover:
 - Error handling
 """
 from datetime import datetime, timedelta, timezone
-from unittest.mock import Mock, patch
-import json
+from unittest.mock import Mock
 
 import pytest
 from fastapi import HTTPException, status
@@ -48,15 +47,15 @@ async def test_get_analytics_success(mock_db, mock_user):
 
     # Setup count mocks for different queries
     count_values = [
-        5,   # total_projects
+        5,  # total_projects
         20,  # total_files
         15,  # total_analyses
-        2,   # current_projects
-        1,   # previous_projects
-        8,   # current_files
-        5,   # previous_files
-        6,   # current_analyses
-        4,   # previous_analyses
+        2,  # current_projects
+        1,  # previous_projects
+        8,  # current_files
+        5,  # previous_files
+        6,  # current_analyses
+        4,  # previous_analyses
     ]
 
     mock_query.count.side_effect = count_values
@@ -141,15 +140,15 @@ async def test_get_analytics_no_previous_period_data(mock_db, mock_user):
 
     # Current period has data, previous period has none
     count_values = [
-        3,   # total_projects
+        3,  # total_projects
         10,  # total_files
-        8,   # total_analyses
-        3,   # current_projects
-        0,   # previous_projects (no previous data)
+        8,  # total_analyses
+        3,  # current_projects
+        0,  # previous_projects (no previous data)
         10,  # current_files
-        0,   # previous_files (no previous data)
-        8,   # current_analyses
-        0,   # previous_analyses (no previous data)
+        0,  # previous_files (no previous data)
+        8,  # current_analyses
+        0,  # previous_analyses (no previous data)
     ]
 
     mock_query.count.side_effect = count_values
@@ -179,15 +178,15 @@ async def test_get_analytics_with_chart_distribution(mock_db, mock_user):
 
     # Setup basic counts
     count_values = [
-        1,   # total_projects
-        3,   # total_files
-        3,   # total_analyses
-        1,   # current_projects
-        0,   # previous_projects
-        3,   # current_files
-        0,   # previous_files
-        3,   # current_analyses
-        0,   # previous_analyses
+        1,  # total_projects
+        3,  # total_files
+        3,  # total_analyses
+        1,  # current_projects
+        0,  # previous_projects
+        3,  # current_files
+        0,  # previous_files
+        3,  # current_analyses
+        0,  # previous_analyses
     ]
 
     mock_query.count.side_effect = count_values
@@ -200,16 +199,20 @@ async def test_get_analytics_with_chart_distribution(mock_db, mock_user):
     file1.filename = "data1.csv"
     file1.analysis_timestamp = datetime.now(timezone.utc)
     file1.project_id = 1
-    file1.schema_json = '{}'
-    file1.analysis_json = '{"charts": [{"chart_type": "line"}, {"chart_type": "bar"}], "global_summary": ""}'
+    file1.schema_json = "{}"
+    file1.analysis_json = (
+        '{"charts": [{"chart_type": "line"}, {"chart_type": "bar"}], "global_summary": ""}'
+    )
 
     file2 = Mock()
     file2.id = 2
     file2.filename = "data2.csv"
     file2.analysis_timestamp = datetime.now(timezone.utc)
     file2.project_id = 1
-    file2.schema_json = '{}'
-    file2.analysis_json = '{"charts": [{"chart_type": "line"}, {"chart_type": "pie"}], "global_summary": ""}'
+    file2.schema_json = "{}"
+    file2.analysis_json = (
+        '{"charts": [{"chart_type": "line"}, {"chart_type": "pie"}], "global_summary": ""}'
+    )
 
     project1 = Mock()
     project1.id = 1
@@ -220,7 +223,7 @@ async def test_get_analytics_with_chart_distribution(mock_db, mock_user):
     # Second call (line 203): analyzed_files query (returns just files, not tuples)
     mock_query.all.side_effect = [
         [(file1, project1), (file2, project1)],  # recent_files (for recent analyses)
-        [file1, file2]  # analyzed_files (for chart distribution)
+        [file1, file2],  # analyzed_files (for chart distribution)
     ]
     mock_query.order_by.return_value = mock_query
     mock_query.limit.return_value = mock_query
@@ -258,15 +261,17 @@ async def test_get_analytics_with_top_insights(mock_db, mock_user):
     file1.filename = "sales.csv"
     file1.analysis_timestamp = datetime.now(timezone.utc)
     file1.project_id = 1
-    file1.schema_json = '{}'
-    file1.analysis_json = '{"charts": [{"insight": "Revenue increased by 20%"}], "global_summary": ""}'
+    file1.schema_json = "{}"
+    file1.analysis_json = (
+        '{"charts": [{"insight": "Revenue increased by 20%"}], "global_summary": ""}'
+    )
 
     file2 = Mock()
     file2.id = 2
     file2.filename = "users.csv"
     file2.analysis_timestamp = datetime.now(timezone.utc)
     file2.project_id = 2
-    file2.schema_json = '{}'
+    file2.schema_json = "{}"
     file2.analysis_json = '{"charts": [{"insight": "User growth is strong"}], "global_summary": ""}'
 
     project1 = Mock()
@@ -309,7 +314,9 @@ async def test_get_analytics_database_error(mock_db, mock_user):
         )
 
     assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-    assert "Failed to calculate analytics" in str(exc_info.value.detail)  # Fixed: actual error message
+    assert "Failed to calculate analytics" in str(
+        exc_info.value.detail
+    )  # Fixed: actual error message
 
 
 @pytest.mark.asyncio
@@ -329,24 +336,24 @@ async def test_get_analytics_recent_analyses_sorting(mock_db, mock_user):
     file1.filename = "old.csv"
     file1.analysis_timestamp = datetime.now(timezone.utc) - timedelta(days=5)
     file1.project_id = 1
-    file1.schema_json = '{}'
-    file1.analysis_json = '{}'
+    file1.schema_json = "{}"
+    file1.analysis_json = "{}"
 
     file2 = Mock()
     file2.id = 2
     file2.filename = "new.csv"
     file2.analysis_timestamp = datetime.now(timezone.utc) - timedelta(hours=1)
     file2.project_id = 1
-    file2.schema_json = '{}'
-    file2.analysis_json = '{}'
+    file2.schema_json = "{}"
+    file2.analysis_json = "{}"
 
     file3 = Mock()
     file3.id = 3
     file3.filename = "newest.csv"
     file3.analysis_timestamp = datetime.now(timezone.utc)
     file3.project_id = 1
-    file3.schema_json = '{}'
-    file3.analysis_json = '{}'
+    file3.schema_json = "{}"
+    file3.analysis_json = "{}"
 
     project1 = Mock()
     project1.id = 1

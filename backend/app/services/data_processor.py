@@ -8,7 +8,9 @@ from app.models.schemas import ColumnInfo, DataSchema
 
 class DataProcessor:
     @staticmethod
-    def parse_file(file_path: str, file_extension: str, sheet_name: Optional[str | int] = None) -> pd.DataFrame:
+    def parse_file(
+        file_path: str, file_extension: str, sheet_name: Optional[str | int] = None
+    ) -> pd.DataFrame:
         """Parse CSV or Excel file into DataFrame, supporting both US and European formats
 
         Args:
@@ -65,7 +67,9 @@ class DataProcessor:
         try:
             import openpyxl
         except ImportError:
-            raise ImportError("openpyxl is required for Excel sheet detection. Install with: pip install openpyxl")
+            raise ImportError(
+                "openpyxl is required for Excel sheet detection. Install with: pip install openpyxl"
+            )
 
         try:
             workbook = openpyxl.load_workbook(file_path, read_only=True, data_only=True)
@@ -73,13 +77,15 @@ class DataProcessor:
 
             for idx, sheet_name in enumerate(workbook.sheetnames):
                 sheet = workbook[sheet_name]
-                sheets.append({
-                    "name": sheet_name,
-                    "index": idx,
-                    "is_hidden": sheet.sheet_state == 'hidden',
-                    "row_count": sheet.max_row,
-                    "column_count": sheet.max_column,
-                })
+                sheets.append(
+                    {
+                        "name": sheet_name,
+                        "index": idx,
+                        "is_hidden": sheet.sheet_state == "hidden",
+                        "row_count": sheet.max_row,
+                        "column_count": sheet.max_column,
+                    }
+                )
 
             workbook.close()
             return sheets
@@ -126,7 +132,7 @@ class DataProcessor:
         # Try to convert to datetime
         if series.dtype == "object":
             try:
-                pd.to_datetime(series.dropna().head(100), format='mixed')
+                pd.to_datetime(series.dropna().head(100), format="mixed")
                 return "datetime"
             except:
                 pass

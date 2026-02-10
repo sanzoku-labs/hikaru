@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./hikaru.db"  # Default to SQLite for backwards compatibility
 
     # JWT Authentication
-    secret_key: str = "your-secret-key-change-in-production"  # MUST be changed in production
+    secret_key: str = ""  # MUST be set via SECRET_KEY env var
     algorithm: str = "HS256"
     access_token_expire_days: int = 7
 

@@ -3,7 +3,6 @@ Dashboard CRUD API routes for custom dashboard management.
 Implements Mockup 9 - Dashboard Builder backend support.
 """
 import json
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -16,7 +15,6 @@ from app.models.schemas import (
     DashboardListResponse,
     DashboardResponse,
     DashboardUpdate,
-    ErrorResponse,
 )
 
 router = APIRouter(prefix="/api/projects", tags=["dashboards"])

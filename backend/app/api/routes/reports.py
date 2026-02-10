@@ -32,8 +32,8 @@ async def list_templates(
     Returns pre-defined templates like Weekly Summary, Executive Brief, etc.
     """
     # Templates don't need DB access, but we still require auth
-    from app.services.report_service import REPORT_TEMPLATES
     from app.models.schemas import ReportTemplate
+    from app.services.report_service import REPORT_TEMPLATES
 
     templates = [ReportTemplate(**t) for t in REPORT_TEMPLATES]
     return ReportTemplateListResponse(templates=templates, total=len(templates))
@@ -94,8 +94,19 @@ async def download_report(
 ):
     """
     Download a generated report PDF.
+
+    Verifies the requesting user owns the report before allowing download.
     """
     service = ReportService(db)
+
+    # Verify user ownership via metadata file
+    metadata_path = service.reports_dir / "metadata" / f"user_{current_user.id}_{report_id}.json"
+    if not metadata_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Report not found or expired",
+        )
+
     pdf_path = service.get_report_path(report_id)
 
     if not pdf_path:

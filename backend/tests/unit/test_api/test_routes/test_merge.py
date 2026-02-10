@@ -9,25 +9,21 @@ Tests cover:
 - Merge compatibility validation
 - Error handling (missing files, incompatible merges)
 """
+import json
 from datetime import datetime, timezone
 from unittest.mock import Mock, patch
-import json
 
 import pandas as pd
 import pytest
 from fastapi import HTTPException, status
 
-from app.api.routes.merge import (
-    create_relationship,
-    list_relationships,
-    analyze_merged_data,
-)
+from app.api.routes.merge import analyze_merged_data, create_relationship, list_relationships
 from app.models.schemas import (
-    RelationshipCreate,
-    MergeAnalyzeRequest,
     ChartData,
     ColumnInfo,
     DataSchema,
+    MergeAnalyzeRequest,
+    RelationshipCreate,
 )
 
 
@@ -82,33 +78,39 @@ def sample_file_b():
 @pytest.fixture
 def sample_dataframe_a():
     """Sample DataFrame A (customers)"""
-    return pd.DataFrame({
-        "customer_id": [1, 2, 3],
-        "name": ["Alice", "Bob", "Charlie"],
-        "city": ["NYC", "LA", "SF"],
-    })
+    return pd.DataFrame(
+        {
+            "customer_id": [1, 2, 3],
+            "name": ["Alice", "Bob", "Charlie"],
+            "city": ["NYC", "LA", "SF"],
+        }
+    )
 
 
 @pytest.fixture
 def sample_dataframe_b():
     """Sample DataFrame B (orders)"""
-    return pd.DataFrame({
-        "order_id": [101, 102, 103],
-        "customer_id": [1, 2, 1],
-        "amount": [100, 200, 150],
-    })
+    return pd.DataFrame(
+        {
+            "order_id": [101, 102, 103],
+            "customer_id": [1, 2, 1],
+            "amount": [100, 200, 150],
+        }
+    )
 
 
 @pytest.fixture
 def sample_merged_dataframe():
     """Sample merged DataFrame"""
-    return pd.DataFrame({
-        "customer_id": [1, 2, 1],
-        "name": ["Alice", "Bob", "Alice"],
-        "city": ["NYC", "LA", "NYC"],
-        "order_id": [101, 102, 103],
-        "amount": [100, 200, 150],
-    })
+    return pd.DataFrame(
+        {
+            "customer_id": [1, 2, 1],
+            "name": ["Alice", "Bob", "Alice"],
+            "city": ["NYC", "LA", "NYC"],
+            "order_id": [101, 102, 103],
+            "amount": [100, 200, 150],
+        }
+    )
 
 
 @pytest.fixture
@@ -169,8 +171,8 @@ async def test_create_relationship_success(
         # Setup db mocks
         mock_db.query.return_value.filter.return_value.first.side_effect = [
             sample_project,  # Project query
-            sample_file_a,   # File A query
-            sample_file_b,   # File B query
+            sample_file_a,  # File A query
+            sample_file_b,  # File B query
         ]
 
         # Setup MergeService mock
@@ -201,10 +203,7 @@ async def test_create_relationship_success(
 
         # Verify service was called
         mock_merge_service.validate_merge_compatibility.assert_called_once_with(
-            sample_dataframe_a,
-            sample_dataframe_b,
-            "customer_id",
-            "customer_id"
+            sample_dataframe_a, sample_dataframe_b, "customer_id", "customer_id"
         )
 
 
@@ -252,8 +251,8 @@ async def test_create_relationship_files_not_found(mock_db, mock_user, sample_pr
 
     mock_db.query.return_value.filter.return_value.first.side_effect = [
         sample_project,  # Project query
-        mock_file_a,     # File A query
-        None,            # File B query (not found)
+        mock_file_a,  # File A query
+        None,  # File B query (not found)
     ]
 
     # Should raise HTTPException
@@ -465,13 +464,15 @@ async def test_analyze_merged_data_success(
     sample_relationship.id = 1
     sample_relationship.project_id = 1
     sample_relationship.relationship_type = "merge"
-    sample_relationship.config_json = json.dumps({
-        "file_a_id": 1,
-        "file_b_id": 2,
-        "join_type": "inner",
-        "left_key": "customer_id",
-        "right_key": "customer_id",
-    })
+    sample_relationship.config_json = json.dumps(
+        {
+            "file_a_id": 1,
+            "file_b_id": 2,
+            "join_type": "inner",
+            "left_key": "customer_id",
+            "right_key": "customer_id",
+        }
+    )
     sample_relationship.created_at = datetime.now(timezone.utc)
 
     request_data = MergeAnalyzeRequest(
@@ -524,7 +525,10 @@ async def test_analyze_merged_data_success(
                 # Setup MergeService mock
                 mock_merge_service = Mock()
                 mock_merge_service.load_file.side_effect = [sample_dataframe_a, sample_dataframe_b]
-                mock_merge_service.merge_files.return_value = (sample_merged_dataframe, sample_schema)
+                mock_merge_service.merge_files.return_value = (
+                    sample_merged_dataframe,
+                    sample_schema,
+                )
                 mock_merge_service_class.return_value = mock_merge_service
 
                 # Setup ChartGenerator mock
@@ -535,7 +539,9 @@ async def test_analyze_merged_data_success(
                 # Setup AIService mock
                 mock_ai_service = Mock()
                 mock_ai_service.generate_chart_insight.return_value = "AI insight"
-                mock_ai_service.generate_global_summary.return_value = "Merged data shows customer order patterns"
+                mock_ai_service.generate_global_summary.return_value = (
+                    "Merged data shows customer order patterns"
+                )
                 mock_ai_service_class.return_value = mock_ai_service
 
                 # Call endpoint
@@ -560,7 +566,7 @@ async def test_analyze_merged_data_success(
                     "customer_id",
                     "inner",
                     "_a",
-                    "_b"
+                    "_b",
                 )
 
 
@@ -582,13 +588,15 @@ async def test_analyze_merged_data_outer_join(
     sample_relationship.id = 2
     sample_relationship.project_id = 1
     sample_relationship.relationship_type = "merge"
-    sample_relationship.config_json = json.dumps({
-        "file_a_id": 1,
-        "file_b_id": 2,
-        "join_type": "outer",
-        "left_key": "customer_id",
-        "right_key": "customer_id",
-    })
+    sample_relationship.config_json = json.dumps(
+        {
+            "file_a_id": 1,
+            "file_b_id": 2,
+            "join_type": "outer",
+            "left_key": "customer_id",
+            "right_key": "customer_id",
+        }
+    )
     sample_relationship.created_at = datetime.now(timezone.utc)
 
     request_data = MergeAnalyzeRequest(
@@ -614,7 +622,10 @@ async def test_analyze_merged_data_outer_join(
 
                 mock_merge_service = Mock()
                 mock_merge_service.load_file.side_effect = [sample_dataframe_a, sample_dataframe_b]
-                mock_merge_service.merge_files.return_value = (sample_merged_dataframe, schema_with_row_count)
+                mock_merge_service.merge_files.return_value = (
+                    sample_merged_dataframe,
+                    schema_with_row_count,
+                )
                 mock_merge_service_class.return_value = mock_merge_service
 
                 mock_chart_generator = Mock()
@@ -677,13 +688,15 @@ async def test_analyze_merged_data_service_error(
     sample_relationship.id = 1
     sample_relationship.project_id = 1
     sample_relationship.relationship_type = "merge"
-    sample_relationship.config_json = json.dumps({
-        "file_a_id": 1,
-        "file_b_id": 2,
-        "join_type": "inner",
-        "left_key": "customer_id",
-        "right_key": "customer_id",
-    })
+    sample_relationship.config_json = json.dumps(
+        {
+            "file_a_id": 1,
+            "file_b_id": 2,
+            "join_type": "inner",
+            "left_key": "customer_id",
+            "right_key": "customer_id",
+        }
+    )
     sample_relationship.created_at = datetime.now(timezone.utc)
 
     request_data = MergeAnalyzeRequest(

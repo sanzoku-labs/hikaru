@@ -8,22 +8,18 @@ Tests cover:
 """
 from datetime import datetime, timezone
 from unittest.mock import Mock, patch
-import json
 
 import pytest
 from fastapi import HTTPException, status
 
 from app.api.routes.dashboards import (
     create_dashboard,
-    list_dashboards,
-    get_dashboard,
-    update_dashboard,
     delete_dashboard,
+    get_dashboard,
+    list_dashboards,
+    update_dashboard,
 )
-from app.models.schemas import (
-    DashboardCreate,
-    DashboardUpdate,
-)
+from app.models.schemas import DashboardCreate, DashboardUpdate
 
 
 @pytest.fixture
@@ -76,9 +72,7 @@ def sample_dashboard():
 async def test_create_dashboard_success(mock_db, mock_user, sample_project):
     """Test successful dashboard creation"""
     dashboard_data = DashboardCreate(
-        name="Sales Dashboard",
-        dashboard_type="single_file",
-        config_json='{"charts": [1, 2, 3]}'
+        name="Sales Dashboard", dashboard_type="single_file", config_json='{"charts": [1, 2, 3]}'
     )
 
     # Setup db mocks
@@ -110,9 +104,7 @@ async def test_create_dashboard_success(mock_db, mock_user, sample_project):
 async def test_create_dashboard_project_not_found(mock_db, mock_user):
     """Test creating dashboard when project doesn't exist"""
     dashboard_data = DashboardCreate(
-        name="Test Dashboard",
-        dashboard_type="single_file",
-        config_json='{}'
+        name="Test Dashboard", dashboard_type="single_file", config_json="{}"
     )
 
     # Setup db to return None for project
@@ -137,7 +129,7 @@ async def test_create_dashboard_invalid_json(mock_db, mock_user, sample_project)
     dashboard_data = DashboardCreate(
         name="Test Dashboard",
         dashboard_type="single_file",
-        config_json='{"invalid json'  # Invalid JSON
+        config_json='{"invalid json',  # Invalid JSON
     )
 
     # Setup db mock
@@ -186,7 +178,7 @@ async def test_list_dashboards_success(mock_db, mock_user):
     dashboard2.project_id = 1
     dashboard2.name = "Revenue Dashboard"
     dashboard2.dashboard_type = "comparison"
-    dashboard2.config_json = '{}'
+    dashboard2.config_json = "{}"
     dashboard2.chart_data = None
     dashboard2.created_at = datetime.now(timezone.utc)
     dashboard2.updated_at = datetime.now(timezone.utc)
@@ -196,7 +188,10 @@ async def test_list_dashboards_success(mock_db, mock_user):
     project_query.filter.return_value.first.return_value = project
 
     dashboard_query = Mock()
-    dashboard_query.filter.return_value.order_by.return_value.all.return_value = [dashboard1, dashboard2]
+    dashboard_query.filter.return_value.order_by.return_value.all.return_value = [
+        dashboard1,
+        dashboard2,
+    ]
 
     mock_db.query.side_effect = [project_query, dashboard_query]
 
@@ -292,10 +287,7 @@ async def test_get_dashboard_not_found(mock_db, mock_user, sample_project):
 @pytest.mark.asyncio
 async def test_update_dashboard_success(mock_db, mock_user, sample_project, sample_dashboard):
     """Test successful dashboard update"""
-    update_data = DashboardUpdate(
-        name="Updated Dashboard",
-        config_json='{"updated": true}'
-    )
+    update_data = DashboardUpdate(name="Updated Dashboard", config_json='{"updated": true}')
 
     # Setup db mocks
     mock_db.query.return_value.filter.return_value.first.side_effect = [
@@ -322,9 +314,7 @@ async def test_update_dashboard_success(mock_db, mock_user, sample_project, samp
 @pytest.mark.asyncio
 async def test_update_dashboard_invalid_json(mock_db, mock_user, sample_project, sample_dashboard):
     """Test updating dashboard with invalid JSON"""
-    update_data = DashboardUpdate(
-        config_json='{"invalid json'
-    )
+    update_data = DashboardUpdate(config_json='{"invalid json')
 
     # Setup db mocks
     mock_db.query.return_value.filter.return_value.first.side_effect = [

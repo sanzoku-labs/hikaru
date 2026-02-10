@@ -33,7 +33,9 @@ def get_user_project(
         ProjectNotFoundError: If project not found or not owned by user
     """
     project = (
-        db.query(Project).filter(Project.id == project_id, Project.user_id == current_user.id).first()
+        db.query(Project)
+        .filter(Project.id == project_id, Project.user_id == current_user.id)
+        .first()
     )
 
     if not project:

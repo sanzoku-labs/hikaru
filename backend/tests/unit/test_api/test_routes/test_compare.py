@@ -8,19 +8,16 @@ Tests cover:
 - AI-generated comparison insights
 - Error handling (missing files, incompatible files)
 """
+import json
 from datetime import datetime, timezone
 from unittest.mock import Mock, patch
-import json
 
 import pandas as pd
 import pytest
 from fastapi import HTTPException, status
 
 from app.api.routes.compare import compare_files
-from app.models.schemas import (
-    ComparisonRequest,
-    ChartData,
-)
+from app.models.schemas import ComparisonRequest
 
 
 @pytest.fixture
@@ -53,6 +50,7 @@ def sample_project():
 def sample_file_a():
     """Sample file A"""
     from datetime import datetime, timezone
+
     file = Mock()
     file.id = 1
     file.filename = "sales_2023.csv"
@@ -72,6 +70,7 @@ def sample_file_a():
 def sample_file_b():
     """Sample file B"""
     from datetime import datetime, timezone
+
     file = Mock()
     file.id = 2
     file.filename = "sales_2024.csv"
@@ -90,25 +89,30 @@ def sample_file_b():
 @pytest.fixture
 def sample_dataframe_a():
     """Sample DataFrame A (2023 data)"""
-    return pd.DataFrame({
-        "month": ["Jan", "Feb", "Mar"],
-        "revenue": [100, 150, 200],
-    })
+    return pd.DataFrame(
+        {
+            "month": ["Jan", "Feb", "Mar"],
+            "revenue": [100, 150, 200],
+        }
+    )
 
 
 @pytest.fixture
 def sample_dataframe_b():
     """Sample DataFrame B (2024 data)"""
-    return pd.DataFrame({
-        "month": ["Jan", "Feb", "Mar"],
-        "revenue": [120, 180, 240],
-    })
+    return pd.DataFrame(
+        {
+            "month": ["Jan", "Feb", "Mar"],
+            "revenue": [120, 180, 240],
+        }
+    )
 
 
 @pytest.fixture
 def sample_overlay_charts():
     """Sample overlay charts"""
     from app.models.schemas import OverlayChartData
+
     return [
         OverlayChartData(
             chart_type="line",
@@ -160,19 +164,15 @@ async def test_compare_files_success(
     sample_metrics,
 ):
     """Test successful file comparison"""
-    request_data = ComparisonRequest(
-        file_a_id=1,
-        file_b_id=2,
-        comparison_type="side_by_side"
-    )
+    request_data = ComparisonRequest(file_a_id=1, file_b_id=2, comparison_type="side_by_side")
 
     with patch("app.api.routes.compare.ComparisonService") as mock_comparison_service_class:
         with patch("app.api.routes.compare.AIService") as mock_ai_service_class:
             # Setup db query mocks
             mock_db.query.return_value.filter.return_value.first.side_effect = [
                 sample_project,  # First query for project
-                sample_file_a,   # Second query for file_a
-                sample_file_b,   # Third query for file_b
+                sample_file_a,  # Second query for file_a
+                sample_file_b,  # Third query for file_b
             ]
 
             # Setup ComparisonService mock
@@ -192,7 +192,9 @@ async def test_compare_files_success(
                 return "Strong positive correlation"
 
             mock_ai_service.generate_comparison_insight = mock_generate_comparison_insight
-            mock_ai_service.generate_chart_comparison_insight = mock_generate_chart_comparison_insight
+            mock_ai_service.generate_chart_comparison_insight = (
+                mock_generate_chart_comparison_insight
+            )
             mock_ai_service_class.return_value = mock_ai_service
 
             # Setup db operations
@@ -235,11 +237,7 @@ async def test_compare_files_success(
 @pytest.mark.asyncio
 async def test_compare_files_project_not_found(mock_db, mock_user):
     """Test comparison when project doesn't exist"""
-    request_data = ComparisonRequest(
-        file_a_id=1,
-        file_b_id=2,
-        comparison_type="side_by_side"
-    )
+    request_data = ComparisonRequest(file_a_id=1, file_b_id=2, comparison_type="side_by_side")
 
     # Setup db to return None for project
     mock_db.query.return_value.filter.return_value.first.return_value = None
@@ -261,9 +259,7 @@ async def test_compare_files_project_not_found(mock_db, mock_user):
 async def test_compare_files_file_not_found(mock_db, mock_user, sample_project):
     """Test comparison when one or both files don't exist"""
     request_data = ComparisonRequest(
-        file_a_id=1,
-        file_b_id=999,  # Non-existent file
-        comparison_type="side_by_side"
+        file_a_id=1, file_b_id=999, comparison_type="side_by_side"  # Non-existent file
     )
 
     # Setup db mocks - project exists, but file_b doesn't
@@ -272,8 +268,8 @@ async def test_compare_files_file_not_found(mock_db, mock_user, sample_project):
 
     mock_db.query.return_value.filter.return_value.first.side_effect = [
         sample_project,  # Project query
-        mock_file_a,     # File A query
-        None,            # File B query (not found)
+        mock_file_a,  # File A query
+        None,  # File B query (not found)
     ]
 
     # Should raise HTTPException
@@ -300,11 +296,7 @@ async def test_compare_files_incompatible(
     sample_dataframe_b,
 ):
     """Test comparison when files have no compatible columns"""
-    request_data = ComparisonRequest(
-        file_a_id=1,
-        file_b_id=2,
-        comparison_type="side_by_side"
-    )
+    request_data = ComparisonRequest(file_a_id=1, file_b_id=2, comparison_type="side_by_side")
 
     with patch("app.api.routes.compare.ComparisonService") as mock_comparison_service_class:
         # Setup db query mocks
@@ -349,7 +341,7 @@ async def test_compare_files_year_over_year(
     request_data = ComparisonRequest(
         file_a_id=1,
         file_b_id=2,
-        comparison_type="yoy"  # Fixed: use literal "yoy" not "year_over_year"
+        comparison_type="yoy",  # Fixed: use literal "yoy" not "year_over_year"
     )
 
     with patch("app.api.routes.compare.ComparisonService") as mock_comparison_service_class:
@@ -377,7 +369,9 @@ async def test_compare_files_year_over_year(
                 return "Consistent growth"
 
             mock_ai_service.generate_comparison_insight = mock_generate_comparison_insight
-            mock_ai_service.generate_chart_comparison_insight = mock_generate_chart_comparison_insight
+            mock_ai_service.generate_chart_comparison_insight = (
+                mock_generate_chart_comparison_insight
+            )
             mock_ai_service_class.return_value = mock_ai_service
 
             # Setup relationship
@@ -402,7 +396,7 @@ async def test_compare_files_year_over_year(
                 sample_dataframe_b,
                 sample_file_a.filename,
                 sample_file_b.filename,
-                "yoy"  # Fixed: use literal value not alias
+                "yoy",  # Fixed: use literal value not alias
             )
 
 
@@ -419,11 +413,7 @@ async def test_compare_files_trend_comparison(
     sample_metrics,
 ):
     """Test trend comparison type"""
-    request_data = ComparisonRequest(
-        file_a_id=1,
-        file_b_id=2,
-        comparison_type="trend"
-    )
+    request_data = ComparisonRequest(file_a_id=1, file_b_id=2, comparison_type="trend")
 
     with patch("app.api.routes.compare.ComparisonService") as mock_comparison_service_class:
         with patch("app.api.routes.compare.AIService") as mock_ai_service_class:
@@ -450,7 +440,9 @@ async def test_compare_files_trend_comparison(
                 return "Trend insight"
 
             mock_ai_service.generate_comparison_insight = mock_generate_comparison_insight
-            mock_ai_service.generate_chart_comparison_insight = mock_generate_chart_comparison_insight
+            mock_ai_service.generate_chart_comparison_insight = (
+                mock_generate_chart_comparison_insight
+            )
             mock_ai_service_class.return_value = mock_ai_service
 
             # Setup relationship
@@ -481,11 +473,7 @@ async def test_compare_files_service_error(
     sample_file_b,
 ):
     """Test comparison when service throws an error"""
-    request_data = ComparisonRequest(
-        file_a_id=1,
-        file_b_id=2,
-        comparison_type="side_by_side"
-    )
+    request_data = ComparisonRequest(file_a_id=1, file_b_id=2, comparison_type="side_by_side")
 
     with patch("app.api.routes.compare.ComparisonService") as mock_comparison_service_class:
         # Setup db mocks
@@ -527,11 +515,7 @@ async def test_compare_files_stores_relationship(
     sample_metrics,
 ):
     """Test that comparison stores FileRelationship in database"""
-    request_data = ComparisonRequest(
-        file_a_id=1,
-        file_b_id=2,
-        comparison_type="side_by_side"
-    )
+    request_data = ComparisonRequest(file_a_id=1, file_b_id=2, comparison_type="side_by_side")
 
     with patch("app.api.routes.compare.ComparisonService") as mock_comparison_service_class:
         with patch("app.api.routes.compare.AIService") as mock_ai_service_class:
@@ -558,7 +542,9 @@ async def test_compare_files_stores_relationship(
                 return "Chart insight"
 
             mock_ai_service.generate_comparison_insight = mock_generate_comparison_insight
-            mock_ai_service.generate_chart_comparison_insight = mock_generate_chart_comparison_insight
+            mock_ai_service.generate_chart_comparison_insight = (
+                mock_generate_chart_comparison_insight
+            )
             mock_ai_service_class.return_value = mock_ai_service
 
             # Setup relationship tracking

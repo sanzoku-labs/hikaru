@@ -1,16 +1,15 @@
 """
 Authentication API endpoints for user registration, login, and user management.
 """
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
-from app.config import settings
 from app.database import get_db
 from app.middleware.auth import get_current_active_user, get_current_user
 from app.models.database import User
-from app.models.schemas import ErrorResponse, TokenResponse, UserLogin, UserRegister, UserResponse
+from app.models.schemas import TokenResponse, UserLogin, UserRegister, UserResponse
 from app.services import auth_service
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])

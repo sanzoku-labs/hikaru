@@ -5,7 +5,6 @@ These handlers convert custom exceptions into proper HTTP responses
 with consistent error formatting.
 """
 import logging
-from typing import Union
 
 from fastapi import Request, status
 from fastapi.exceptions import RequestValidationError

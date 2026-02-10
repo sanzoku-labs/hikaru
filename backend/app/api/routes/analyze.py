@@ -2,9 +2,8 @@ import hashlib
 import json
 import logging
 from datetime import datetime
-from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -17,8 +16,8 @@ from app.models.schemas import (
     ChartInsightResponse,
     QuickChartInsightRequest,
 )
-from app.services.analysis_service import AnalysisService
 from app.services.ai_insight_service import AIInsightService
+from app.services.analysis_service import AnalysisService
 from app.services.upload_service import UploadService
 
 logger = logging.getLogger(__name__)
@@ -49,6 +48,7 @@ async def analyze_data(
 
     # Verify user owns this upload (security check)
     from app.models.database import Upload
+
     upload_record = db.query(Upload).filter_by(upload_id=upload_id).first()
     if upload_record and upload_record.user_id and upload_record.user_id != current_user.id:
         raise HTTPException(status_code=404, detail=f"Upload ID {upload_id} not found")

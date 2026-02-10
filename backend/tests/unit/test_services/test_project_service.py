@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ProjectNotFoundError, ValidationError
-from app.models.database import File, Project, User
+from app.models.database import File, User
 from app.services.project_service import ProjectService
 
 

@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import List
 
 import pandas as pd
-
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
@@ -23,12 +22,11 @@ from app.middleware.auth import get_current_active_user
 from app.models.database import File as FileModel
 
 logger = logging.getLogger(__name__)
-from app.models.database import Project, User
+from app.models.database import User
 from app.models.schemas import (
     AnalysisHistoryItem,
     AnalysisHistoryResponse,
     AnalysisListResponse,
-    ErrorResponse,
     FileAnalysisResponse,
     FileAnalyzeRequest,
     FileInProject,
@@ -38,11 +36,8 @@ from app.models.schemas import (
     ProjectResponse,
     ProjectUpdate,
     SavedAnalysisDetail,
-    SavedAnalysisSummary,
     SheetInfo,
 )
-from app.services.ai_service import AIService
-from app.services.chart_generator import ChartGenerator
 from app.services.data_processor import DataProcessor
 from app.services.project_service import ProjectService
 
@@ -699,7 +694,7 @@ async def get_file_sheets(
             )
 
         # Check if file is Excel
-        if not file.filename.lower().endswith(('.xlsx', '.xls')):
+        if not file.filename.lower().endswith((".xlsx", ".xls")):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="File is not an Excel workbook",
@@ -722,20 +717,20 @@ async def get_file_sheets(
             for sheet in sheets:
                 try:
                     # Parse just this sheet
-                    df = processor.parse_file(file.file_path, file_ext, sheet_name=sheet['name'])
+                    df = processor.parse_file(file.file_path, file_ext, sheet_name=sheet["name"])
 
                     # Add preview (first 3 rows)
-                    sheet['preview'] = df.head(3).to_dict('records')
+                    sheet["preview"] = df.head(3).to_dict("records")
 
                     # Check if has numeric columns
-                    numeric_cols = df.select_dtypes(include=['number']).columns
-                    sheet['has_numeric'] = len(numeric_cols) > 0
+                    numeric_cols = df.select_dtypes(include=["number"]).columns
+                    sheet["has_numeric"] = len(numeric_cols) > 0
 
                 except Exception as e:
                     # If this sheet fails, add error but continue with other sheets
-                    sheet['error'] = f"Failed to load sheet: {str(e)}"
-                    sheet['preview'] = None
-                    sheet['has_numeric'] = False
+                    sheet["error"] = f"Failed to load sheet: {str(e)}"
+                    sheet["preview"] = None
+                    sheet["has_numeric"] = False
 
         return sheets
 
@@ -817,7 +812,7 @@ async def analyze_project_file(
             sheet_info = f" (sheet: {request.sheet_name})" if request.sheet_name else ""
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Cannot analyze this sheet{sheet_info}: {error_msg}. Please select a different sheet with sufficient data and at least one numeric column."
+                detail=f"Cannot analyze this sheet{sheet_info}: {error_msg}. Please select a different sheet with sufficient data and at least one numeric column.",
             )
 
         # Parse schema from stored JSON
@@ -831,7 +826,7 @@ async def analyze_project_file(
             df=df,
             schema=schema,
             user_intent=request.user_intent,  # Pass user intent for AI-powered suggestions
-            max_charts=4
+            max_charts=4,
         )
 
         charts_with_insights = analysis_result["charts"]
@@ -876,7 +871,9 @@ async def analyze_project_file(
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f"Failed to analyze file {file_id} in project {project_id}: {str(e)}", exc_info=True)
+        logger.error(
+            f"Failed to analyze file {file_id} in project {project_id}: {str(e)}", exc_info=True
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to analyze file: {str(e)}",
@@ -1071,7 +1068,7 @@ async def list_file_analyses(
     """
     try:
         from app.models.database import FileAnalysis
-        from app.models.schemas import SavedAnalysisSummary, ChartData
+        from app.models.schemas import SavedAnalysisSummary
 
         project_service = ProjectService(db)
 
@@ -1278,9 +1275,7 @@ async def delete_file_analysis(
         db.delete(analysis)
         db.commit()
 
-        logger.info(
-            f"Deleted analysis {analysis_id} for file {file_id} in project {project_id}"
-        )
+        logger.info(f"Deleted analysis {analysis_id} for file {file_id} in project {project_id}")
 
     except HTTPException:
         raise

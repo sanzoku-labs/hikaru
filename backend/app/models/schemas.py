@@ -1,7 +1,7 @@
+import json
 from datetime import datetime
 from typing import Any, Dict, List, Literal, Optional
 
-import json
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, computed_field, field_validator
 
 # ===== Phase 8: Authentication Schemas =====
@@ -619,7 +619,9 @@ class FileContext(BaseModel):
 class AssistantQueryRequest(BaseModel):
     """Request schema for AI Assistant cross-file query."""
 
-    file_ids: List[int] = Field(..., min_length=1, max_length=5, description="File IDs to query (max 5)")
+    file_ids: List[int] = Field(
+        ..., min_length=1, max_length=5, description="File IDs to query (max 5)"
+    )
     question: str = Field(..., min_length=1, max_length=2000)
     conversation_id: Optional[str] = Field(None, description="Existing conversation ID to continue")
 

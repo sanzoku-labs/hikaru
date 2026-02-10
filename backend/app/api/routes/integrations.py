@@ -32,6 +32,7 @@ router = APIRouter(prefix="/api/integrations", tags=["integrations"])
 
 @router.get("/providers", response_model=IntegrationProviderListResponse)
 async def list_providers(
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ) -> IntegrationProviderListResponse:
     """
@@ -40,16 +41,8 @@ async def list_providers(
     Returns providers like Google Sheets, Airtable, Notion, etc.
     Each provider includes availability status based on OAuth configuration.
     """
-    # Providers don't need DB, but require auth
-    from app.services.integration_service import IntegrationService
-    from app.database import SessionLocal
-
-    db = SessionLocal()
-    try:
-        service = IntegrationService(db)
-        return service.list_providers()
-    finally:
-        db.close()
+    service = IntegrationService(db)
+    return service.list_providers()
 
 
 @router.get("", response_model=IntegrationListResponse)

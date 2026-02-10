@@ -1,6 +1,5 @@
 """Upload service - replaces global storage.py with database-backed storage."""
 
-import json
 import logging
 from datetime import datetime, timezone
 from io import StringIO
@@ -24,8 +23,12 @@ class UploadService:
         self.db = db
 
     def store_upload(
-        self, upload_id: str, filename: str, schema: DataSchema, df: pd.DataFrame,
-        user_id: int = None
+        self,
+        upload_id: str,
+        filename: str,
+        schema: DataSchema,
+        df: pd.DataFrame,
+        user_id: int = None,
     ) -> str:
         """
         Store upload metadata and dataframe in the database.

@@ -17,7 +17,6 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.middleware.auth import get_current_active_user
-from app.config import settings
 from app.models.database import ChartInsight, File, User
 from app.models.schemas import ChartData, ChartInsightRequest, ChartInsightResponse, DataSchema
 from app.services.ai_insight_service import AIInsightService
@@ -94,9 +93,7 @@ async def generate_chart_insight(
 
     # Verify user owns the project containing this file
     if file.project.user_id != current_user.id:
-        raise HTTPException(
-            status_code=403, detail="You don't have permission to access this file"
-        )
+        raise HTTPException(status_code=403, detail="You don't have permission to access this file")
 
     # Compute chart hash for caching
     chart_hash = compute_chart_hash(request)
@@ -104,9 +101,7 @@ async def generate_chart_insight(
     # Check database for existing insight
     existing_insight = (
         db.query(ChartInsight)
-        .filter(
-            ChartInsight.file_id == request.file_id, ChartInsight.chart_hash == chart_hash
-        )
+        .filter(ChartInsight.file_id == request.file_id, ChartInsight.chart_hash == chart_hash)
         .first()
     )
 

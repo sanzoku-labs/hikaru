@@ -3,7 +3,7 @@ Unit tests for AIInsightService.
 
 Tests AI-powered insight generation with mocked Anthropic API.
 """
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -115,9 +115,7 @@ class TestGenerateChartInsight:
     """Test suite for generate_chart_insight method"""
 
     @patch("app.services.ai_insight_service.settings")
-    def test_disabled_service_returns_none(
-        self, mock_settings, sample_chart_data, sample_schema
-    ):
+    def test_disabled_service_returns_none(self, mock_settings, sample_chart_data, sample_schema):
         """Test that disabled service returns None"""
         mock_settings.anthropic_api_key = None
         service = AIInsightService()
@@ -198,7 +196,9 @@ class TestGenerateChartInsight:
         assert result == "Fresh insight from API"
 
         # Verify it was cached
-        mock_cache.set.assert_called_once_with("test_cache_key", "Fresh insight from API", ttl_hours=24)
+        mock_cache.set.assert_called_once_with(
+            "test_cache_key", "Fresh insight from API", ttl_hours=24
+        )
 
     @patch("app.services.ai_insight_service.Anthropic")
     @patch("app.services.ai_insight_service.settings")
@@ -239,9 +239,7 @@ class TestGenerateGlobalSummary:
         mock_settings.anthropic_api_key = "test-key"
         mock_client = Mock()
         mock_message = Mock()
-        mock_message.content = [
-            Mock(text="The dataset shows revenue trends over 3 months.")
-        ]
+        mock_message.content = [Mock(text="The dataset shows revenue trends over 3 months.")]
         mock_client.messages.create.return_value = mock_message
         mock_anthropic_class.return_value = mock_client
 

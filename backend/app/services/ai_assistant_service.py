@@ -20,12 +20,7 @@ from anthropic import Anthropic
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.models.database import (
-    Conversation,
-    ConversationMessage,
-    File,
-    Project,
-)
+from app.models.database import Conversation, ConversationMessage, File, Project
 from app.models.schemas import (
     AssistantQueryResponse,
     ChartData,
@@ -308,9 +303,7 @@ class AIAssistantService:
 
     # ===== Private Helper Methods =====
 
-    def _get_files_with_context(
-        self, user_id: int, file_ids: List[int]
-    ) -> List[Dict[str, Any]]:
+    def _get_files_with_context(self, user_id: int, file_ids: List[int]) -> List[Dict[str, Any]]:
         """Get files with their context and schemas."""
         files_data = []
 
@@ -334,16 +327,18 @@ class AIAssistantService:
                 except (json.JSONDecodeError, TypeError):
                     pass
 
-            files_data.append({
-                "file": file_record,
-                "schema": schema,
-                "context": FileContext(
-                    file_id=file_record.id,
-                    filename=file_record.filename,
-                    project_id=file_record.project_id,
-                    project_name=file_record.project.name,
-                ),
-            })
+            files_data.append(
+                {
+                    "file": file_record,
+                    "schema": schema,
+                    "context": FileContext(
+                        file_id=file_record.id,
+                        filename=file_record.filename,
+                        project_id=file_record.project_id,
+                        project_name=file_record.project.name,
+                    ),
+                }
+            )
 
         return files_data
 
@@ -358,9 +353,7 @@ class AIAssistantService:
             .first()
         )
 
-    def _get_conversation_messages(
-        self, conversation_db_id: int
-    ) -> List[Tuple[str, str]]:
+    def _get_conversation_messages(self, conversation_db_id: int) -> List[Tuple[str, str]]:
         """Get conversation message history as (role, content) tuples."""
         messages = (
             self.db.query(ConversationMessage)
@@ -438,7 +431,16 @@ class AIAssistantService:
                 history_text += f"{role.capitalize()}: {content}\n"
 
         # Check if visualization request
-        viz_keywords = ["show", "visualize", "chart", "graph", "plot", "display", "create", "compare"]
+        viz_keywords = [
+            "show",
+            "visualize",
+            "chart",
+            "graph",
+            "plot",
+            "display",
+            "create",
+            "compare",
+        ]
         is_viz_request = any(keyword in question.lower() for keyword in viz_keywords)
 
         if is_viz_request:
@@ -479,7 +481,7 @@ Provide a helpful, specific answer based on the available data. When referencing
 
         try:
             config_start = answer.find("CHART_CONFIG:")
-            config_json = answer[config_start + len("CHART_CONFIG:"):].strip()
+            config_json = answer[config_start + len("CHART_CONFIG:") :].strip()
 
             if config_json.startswith("{"):
                 brace_count = 0

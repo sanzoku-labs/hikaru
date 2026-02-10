@@ -6,12 +6,11 @@ import logging
 import os
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import List
 
-from PIL import Image
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
-from reportlab.lib.pagesizes import A4, letter
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.platypus import PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle

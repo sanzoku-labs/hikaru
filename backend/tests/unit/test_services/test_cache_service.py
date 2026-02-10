@@ -1,7 +1,5 @@
 """Tests for CacheService (replaces _insight_cache global state with Redis)."""
 
-import pytest
-from datetime import datetime, timedelta
 from fakeredis import FakeRedis
 
 from app.services.cache_service import CacheService

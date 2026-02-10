@@ -178,9 +178,7 @@ Provide a clear, concise answer based on the data. If you need specific data val
 
         return "\n".join(lines)
 
-    def _get_conversation(
-        self, upload_id: str, conversation_id: str
-    ) -> List[ConversationMessage]:
+    def _get_conversation(self, upload_id: str, conversation_id: str) -> List[ConversationMessage]:
         """Retrieve conversation history"""
         if upload_id not in _conversations:
             return []

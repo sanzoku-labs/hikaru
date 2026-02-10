@@ -11,10 +11,9 @@ New feature added in Phase 11 (Feature Expansion).
 
 import json
 import logging
-import os
 import time
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -46,7 +45,10 @@ REPORT_TEMPLATES: List[Dict[str, Any]] = [
     {
         "id": "weekly_summary",
         "name": "Weekly Summary",
-        "description": "A concise overview of key metrics and trends from the past week. Perfect for team updates.",
+        "description": (
+            "A concise overview of key metrics and trends from the past week."
+            " Perfect for team updates."
+        ),
         "category": "summary",
         "sections": ["overview", "key_metrics", "top_charts", "insights"],
         "estimated_pages": 2,
@@ -55,7 +57,10 @@ REPORT_TEMPLATES: List[Dict[str, Any]] = [
     {
         "id": "executive_brief",
         "name": "Executive Brief",
-        "description": "High-level insights and recommendations for leadership. Focuses on actionable takeaways.",
+        "description": (
+            "High-level insights and recommendations for leadership."
+            " Focuses on actionable takeaways."
+        ),
         "category": "summary",
         "sections": ["executive_summary", "key_findings", "recommendations", "next_steps"],
         "estimated_pages": 3,
@@ -64,7 +69,10 @@ REPORT_TEMPLATES: List[Dict[str, Any]] = [
     {
         "id": "full_analysis",
         "name": "Full Analysis Report",
-        "description": "Comprehensive analysis including all charts, data tables, and detailed insights.",
+        "description": (
+            "Comprehensive analysis including all charts, data tables,"
+            " and detailed insights."
+        ),
         "category": "detailed",
         "sections": ["overview", "data_summary", "all_charts", "insights", "raw_data"],
         "estimated_pages": 8,
@@ -184,7 +192,7 @@ class ReportService:
         )
 
         # Save metadata for tracking
-        self._save_report_metadata(report)
+        self._save_report_metadata(user_id, report)
 
         generation_time_ms = int((time.time() - start_time) * 1000)
 
@@ -214,7 +222,10 @@ class ReportService:
                         report = GeneratedReport(**data)
 
                         # Check if expired
-                        if datetime.fromisoformat(data["expires_at"].replace("Z", "+00:00")) > utc_now():
+                        if (
+                            datetime.fromisoformat(data["expires_at"].replace("Z", "+00:00"))
+                            > utc_now()
+                        ):
                             reports.append(report)
                         else:
                             # Clean up expired report
@@ -346,13 +357,7 @@ class ReportService:
         from reportlab.lib.pagesizes import letter
         from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
         from reportlab.lib.units import inch
-        from reportlab.platypus import (
-            Paragraph,
-            SimpleDocTemplate,
-            Spacer,
-            Table,
-            TableStyle,
-        )
+        from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
         pdf_path = self.reports_dir / f"{report_id}.pdf"
 
@@ -422,26 +427,32 @@ class ReportService:
                 if fd["analysis"] and "charts" in fd["analysis"]:
                     chart_count = len(fd["analysis"]["charts"])
 
-                table_data.append([
-                    fd["filename"][:30],
-                    fd["project_name"][:20],
-                    str(fd["row_count"] or "N/A"),
-                    str(chart_count),
-                ])
+                table_data.append(
+                    [
+                        fd["filename"][:30],
+                        fd["project_name"][:20],
+                        str(fd["row_count"] or "N/A"),
+                        str(chart_count),
+                    ]
+                )
 
             table = Table(table_data, colWidths=[2.5 * inch, 1.5 * inch, 1 * inch, 1 * inch])
-            table.setStyle(TableStyle([
-                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f0f0f0")),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#333333")),
-                ("ALIGN", (0, 0), (-1, -1), "LEFT"),
-                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                ("FONTSIZE", (0, 0), (-1, 0), 10),
-                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
-                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#dddddd")),
-                ("FONTSIZE", (0, 1), (-1, -1), 9),
-                ("TOPPADDING", (0, 1), (-1, -1), 8),
-                ("BOTTOMPADDING", (0, 1), (-1, -1), 8),
-            ]))
+            table.setStyle(
+                TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f0f0f0")),
+                        ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#333333")),
+                        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                        ("FONTSIZE", (0, 0), (-1, 0), 10),
+                        ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#dddddd")),
+                        ("FONTSIZE", (0, 1), (-1, -1), 9),
+                        ("TOPPADDING", (0, 1), (-1, -1), 8),
+                        ("BOTTOMPADDING", (0, 1), (-1, -1), 8),
+                    ]
+                )
+            )
             story.append(table)
             story.append(Spacer(1, 0.5 * inch))
 
@@ -460,7 +471,9 @@ class ReportService:
                         insights_found = True
 
             if not insights_found:
-                story.append(Paragraph("No AI insights available for the selected files.", styles["Normal"]))
+                story.append(
+                    Paragraph("No AI insights available for the selected files.", styles["Normal"])
+                )
 
         # Build PDF
         doc.build(story)
@@ -473,14 +486,12 @@ class ReportService:
 
         return pdf_path, page_count, file_size
 
-    def _save_report_metadata(self, report: GeneratedReport) -> None:
+    def _save_report_metadata(self, user_id: int, report: GeneratedReport) -> None:
         """Save report metadata for tracking."""
         metadata_dir = self.reports_dir / "metadata"
         metadata_dir.mkdir(exist_ok=True)
 
-        # We need to find user_id - extract from the report's context
-        # For now, we'll use a simplified approach
-        metadata_path = metadata_dir / f"report_{report.report_id}.json"
+        metadata_path = metadata_dir / f"user_{user_id}_{report.report_id}.json"
 
         # Convert to dict and handle datetime serialization
         data = report.model_dump()

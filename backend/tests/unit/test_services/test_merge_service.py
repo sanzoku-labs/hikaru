@@ -21,21 +21,25 @@ def merge_service():
 @pytest.fixture
 def sample_df_customers():
     """Create sample customers DataFrame"""
-    return pd.DataFrame({
-        "customer_id": [1, 2, 3, 4, 5],
-        "customer_name": ["Alice", "Bob", "Charlie", "David", "Eve"],
-        "city": ["NYC", "LA", "Chicago", "Houston", "Miami"],
-    })
+    return pd.DataFrame(
+        {
+            "customer_id": [1, 2, 3, 4, 5],
+            "customer_name": ["Alice", "Bob", "Charlie", "David", "Eve"],
+            "city": ["NYC", "LA", "Chicago", "Houston", "Miami"],
+        }
+    )
 
 
 @pytest.fixture
 def sample_df_orders():
     """Create sample orders DataFrame"""
-    return pd.DataFrame({
-        "order_id": [101, 102, 103, 104, 105, 106],
-        "customer_id": [1, 2, 2, 3, 6, 7],  # 6 and 7 don't exist in customers
-        "amount": [100, 200, 150, 300, 250, 180],
-    })
+    return pd.DataFrame(
+        {
+            "order_id": [101, 102, 103, 104, 105, 106],
+            "customer_id": [1, 2, 2, 3, 6, 7],  # 6 and 7 don't exist in customers
+            "amount": [100, 200, 150, 300, 250, 180],
+        }
+    )
 
 
 @pytest.fixture
@@ -165,7 +169,11 @@ class TestMergeFiles:
         )
 
         # customer_id appears in both, so should have suffixed versions
-        assert "customer_id_cust" in merged_df.columns or "customer_id_ord" in merged_df.columns or "customer_id" in merged_df.columns
+        assert (
+            "customer_id_cust" in merged_df.columns
+            or "customer_id_ord" in merged_df.columns
+            or "customer_id" in merged_df.columns
+        )
 
     def test_raises_error_for_missing_left_key(
         self, merge_service, sample_df_customers, sample_df_orders
@@ -201,9 +209,7 @@ class TestMergeFiles:
         with pytest.raises(ValueError, match="empty dataset"):
             merge_service.merge_files(df_a, df_b, "id", "id", join_type="inner")
 
-    def test_returns_valid_schema(
-        self, merge_service, sample_df_customers, sample_df_orders
-    ):
+    def test_returns_valid_schema(self, merge_service, sample_df_customers, sample_df_orders):
         """Test that merge returns valid DataSchema"""
         merged_df, schema = merge_service.merge_files(
             sample_df_customers,
@@ -224,10 +230,12 @@ class TestGenerateMergedSchema:
 
     def test_generates_schema_with_numeric_columns(self, merge_service):
         """Test schema generation for numeric columns"""
-        df = pd.DataFrame({
-            "numeric_col": [1, 2, 3, 4, 5],
-            "value": [10.5, 20.3, 30.1, 40.9, 50.2],
-        })
+        df = pd.DataFrame(
+            {
+                "numeric_col": [1, 2, 3, 4, 5],
+                "value": [10.5, 20.3, 30.1, 40.9, 50.2],
+            }
+        )
 
         schema = merge_service._generate_merged_schema(df)
 
@@ -244,10 +252,12 @@ class TestGenerateMergedSchema:
 
     def test_generates_schema_with_categorical_columns(self, merge_service):
         """Test schema generation for categorical columns"""
-        df = pd.DataFrame({
-            "category": ["A", "B", "C", "A", "B"],
-            "name": ["Alice", "Bob", "Charlie", "David", "Eve"],
-        })
+        df = pd.DataFrame(
+            {
+                "category": ["A", "B", "C", "A", "B"],
+                "name": ["Alice", "Bob", "Charlie", "David", "Eve"],
+            }
+        )
 
         schema = merge_service._generate_merged_schema(df)
 
@@ -260,10 +270,12 @@ class TestGenerateMergedSchema:
 
     def test_generates_schema_with_datetime_columns(self, merge_service):
         """Test schema generation for datetime columns"""
-        df = pd.DataFrame({
-            "date": pd.date_range("2024-01-01", periods=5, freq="D"),
-            "value": [1, 2, 3, 4, 5],
-        })
+        df = pd.DataFrame(
+            {
+                "date": pd.date_range("2024-01-01", periods=5, freq="D"),
+                "value": [1, 2, 3, 4, 5],
+            }
+        )
 
         schema = merge_service._generate_merged_schema(df)
 
@@ -272,10 +284,12 @@ class TestGenerateMergedSchema:
 
     def test_handles_null_values(self, merge_service):
         """Test schema generation with null values"""
-        df = pd.DataFrame({
-            "col_with_nulls": [1, None, 3, None, 5],
-            "text": ["a", "b", None, "d", "e"],
-        })
+        df = pd.DataFrame(
+            {
+                "col_with_nulls": [1, None, 3, None, 5],
+                "text": ["a", "b", None, "d", "e"],
+            }
+        )
 
         schema = merge_service._generate_merged_schema(df)
 
@@ -304,9 +318,7 @@ class TestGenerateMergedSchema:
 class TestValidateMergeCompatibility:
     """Test suite for validate_merge_compatibility method"""
 
-    def test_validates_compatible_merge(
-        self, merge_service, sample_df_customers, sample_df_orders
-    ):
+    def test_validates_compatible_merge(self, merge_service, sample_df_customers, sample_df_orders):
         """Test validation of compatible merge"""
         result = merge_service.validate_merge_compatibility(
             sample_df_customers,
@@ -321,9 +333,7 @@ class TestValidateMergeCompatibility:
         assert "right" in result["estimated_row_count"]
         assert "outer" in result["estimated_row_count"]
 
-    def test_detects_missing_left_key(
-        self, merge_service, sample_df_customers, sample_df_orders
-    ):
+    def test_detects_missing_left_key(self, merge_service, sample_df_customers, sample_df_orders):
         """Test detection of missing left key"""
         result = merge_service.validate_merge_compatibility(
             sample_df_customers,
@@ -336,9 +346,7 @@ class TestValidateMergeCompatibility:
         assert len(result["warnings"]) > 0
         assert "not found in first file" in result["warnings"][0]
 
-    def test_detects_missing_right_key(
-        self, merge_service, sample_df_customers, sample_df_orders
-    ):
+    def test_detects_missing_right_key(self, merge_service, sample_df_customers, sample_df_orders):
         """Test detection of missing right key"""
         result = merge_service.validate_merge_compatibility(
             sample_df_customers,
@@ -373,9 +381,7 @@ class TestValidateMergeCompatibility:
         warnings_text = " ".join(result["warnings"])
         assert "No matching values" in warnings_text or "empty dataset" in warnings_text
 
-    def test_estimates_row_counts(
-        self, merge_service, sample_df_customers, sample_df_orders
-    ):
+    def test_estimates_row_counts(self, merge_service, sample_df_customers, sample_df_orders):
         """Test that row count estimates are provided"""
         result = merge_service.validate_merge_compatibility(
             sample_df_customers,

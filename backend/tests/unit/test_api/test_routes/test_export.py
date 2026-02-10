@@ -8,25 +8,20 @@ Tests cover:
 - Error handling for missing files/exports
 - Export cleanup and expiration
 """
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, MagicMock
-import os
+from datetime import datetime
+from unittest.mock import Mock, patch
 
 import pandas as pd
 import pytest
 from fastapi import HTTPException
 
-from app.api.routes.export import (
-    export_dashboard,
-    download_export,
-    export_advanced,
-)
+from app.api.routes.export import download_export, export_advanced, export_dashboard
 from app.models.schemas import (
+    AdvancedExportRequest,
     ChartData,
     ColumnInfo,
     DataSchema,
     ExportRequest,
-    AdvancedExportRequest,
 )
 
 
@@ -49,11 +44,13 @@ def mock_user():
 @pytest.fixture
 def sample_upload_data():
     """Sample upload data with DataFrame and schema"""
-    df = pd.DataFrame({
-        "date": pd.date_range("2024-01-01", periods=10, freq="D"),
-        "revenue": [100, 150, 200, 250, 300, 350, 400, 450, 500, 550],
-        "category": ["A", "B", "A", "B", "A", "B", "A", "B", "A", "B"],
-    })
+    df = pd.DataFrame(
+        {
+            "date": pd.date_range("2024-01-01", periods=10, freq="D"),
+            "revenue": [100, 150, 200, 250, 300, 350, 400, 450, 500, 550],
+            "category": ["A", "B", "A", "B", "A", "B", "A", "B", "A", "B"],
+        }
+    )
 
     schema = DataSchema(
         columns=[
@@ -220,7 +217,9 @@ async def test_export_dashboard_without_ai(mock_db, mock_user, sample_upload_dat
 
 
 @pytest.mark.asyncio
-async def test_export_dashboard_ai_failure_graceful(mock_db, mock_user, sample_upload_data, sample_charts):
+async def test_export_dashboard_ai_failure_graceful(
+    mock_db, mock_user, sample_upload_data, sample_charts
+):
     """Test that export continues even if AI fails"""
     request = ExportRequest(upload_id="test-upload-123")
 
@@ -288,7 +287,7 @@ async def test_download_export_success(mock_user):
                 mock_file_response.assert_called_once_with(
                     "/exports/test-export-123.pdf",
                     media_type="application/pdf",
-                    filename="hikaru-dashboard-test-exp.pdf"
+                    filename="hikaru-dashboard-test-exp.pdf",
                 )
 
 
@@ -347,12 +346,17 @@ async def test_export_advanced_with_file_id(mock_db, mock_user, sample_charts):
                 mock_project.user_id = 1
 
                 # Setup db query mocks
-                mock_db.query.return_value.filter.return_value.first.side_effect = [mock_file, mock_project]
+                mock_db.query.return_value.filter.return_value.first.side_effect = [
+                    mock_file,
+                    mock_project,
+                ]
 
                 # Setup ExportService mock
                 mock_export_service = Mock()
                 mock_export_service.generate_pdf.return_value = "advanced-export-123"
-                mock_export_service.get_export_path.return_value = "/exports/advanced-export-123.pdf"
+                mock_export_service.get_export_path.return_value = (
+                    "/exports/advanced-export-123.pdf"
+                )
                 mock_export_service_class.return_value = mock_export_service
 
                 # Call endpoint
@@ -370,7 +374,9 @@ async def test_export_advanced_with_file_id(mock_db, mock_user, sample_charts):
 
 
 @pytest.mark.asyncio
-async def test_export_advanced_with_upload_id(mock_db, mock_user, sample_upload_data, sample_charts):
+async def test_export_advanced_with_upload_id(
+    mock_db, mock_user, sample_upload_data, sample_charts
+):
     """Test advanced export with upload_id (legacy support)"""
     request = AdvancedExportRequest(
         upload_id="upload-123",
@@ -397,7 +403,9 @@ async def test_export_advanced_with_upload_id(mock_db, mock_user, sample_upload_
 
                         mock_export_service = Mock()
                         mock_export_service.generate_pdf.return_value = "excel-export-456"
-                        mock_export_service.get_export_path.return_value = "/exports/excel-export-456.pdf"
+                        mock_export_service.get_export_path.return_value = (
+                            "/exports/excel-export-456.pdf"
+                        )
                         mock_export_service_class.return_value = mock_export_service
 
                         # Call endpoint
@@ -491,7 +499,9 @@ async def test_export_advanced_file_not_analyzed(mock_db, mock_user):
 
 
 @pytest.mark.asyncio
-async def test_export_advanced_custom_options(mock_db, mock_user, sample_upload_data, sample_charts):
+async def test_export_advanced_custom_options(
+    mock_db, mock_user, sample_upload_data, sample_charts
+):
     """Test advanced export with custom content selection"""
     request = AdvancedExportRequest(
         upload_id="upload-123",
@@ -518,7 +528,9 @@ async def test_export_advanced_custom_options(mock_db, mock_user, sample_upload_
 
                         mock_export_service = Mock()
                         mock_export_service.generate_pdf.return_value = "minimal-export-789"
-                        mock_export_service.get_export_path.return_value = "/exports/minimal-export-789.pdf"
+                        mock_export_service.get_export_path.return_value = (
+                            "/exports/minimal-export-789.pdf"
+                        )
                         mock_export_service_class.return_value = mock_export_service
 
                         # Call endpoint

@@ -10,8 +10,6 @@ from sqlalchemy.pool import StaticPool
 
 from app.config import settings
 from app.database import Base
-from app.models.database import Session as SessionModel
-from app.models.database import User
 from app.services.auth_service import (
     authenticate_user,
     create_access_token,
@@ -233,7 +231,7 @@ class TestUserCreation:
             email="test@example.com",
             username="testuser",
             password="password123",
-            full_name="Test User"
+            full_name="Test User",
         )
 
         assert user.id is not None
@@ -248,10 +246,7 @@ class TestUserCreation:
     def test_create_user_without_full_name(self, db_session):
         """Test creating user without full name"""
         user = create_user(
-            db=db_session,
-            email="test@example.com",
-            username="testuser",
-            password="password123"
+            db=db_session, email="test@example.com", username="testuser", password="password123"
         )
 
         assert user.full_name is None
@@ -259,27 +254,18 @@ class TestUserCreation:
     def test_create_user_duplicate_email(self, db_session):
         """Test that duplicate email raises ValueError"""
         create_user(
-            db=db_session,
-            email="test@example.com",
-            username="user1",
-            password="password123"
+            db=db_session, email="test@example.com", username="user1", password="password123"
         )
 
         with pytest.raises(ValueError, match="Email already registered"):
             create_user(
-                db=db_session,
-                email="test@example.com",
-                username="user2",
-                password="password123"
+                db=db_session, email="test@example.com", username="user2", password="password123"
             )
 
     def test_create_user_duplicate_username(self, db_session):
         """Test that duplicate username raises ValueError"""
         create_user(
-            db=db_session,
-            email="test1@example.com",
-            username="testuser",
-            password="password123"
+            db=db_session, email="test1@example.com", username="testuser", password="password123"
         )
 
         with pytest.raises(ValueError, match="Username already taken"):
@@ -287,17 +273,14 @@ class TestUserCreation:
                 db=db_session,
                 email="test2@example.com",
                 username="testuser",
-                password="password123"
+                password="password123",
             )
 
     def test_create_user_password_is_hashed(self, db_session):
         """Test that password is properly hashed"""
         password = "my_secret_password"
         user = create_user(
-            db=db_session,
-            email="test@example.com",
-            username="testuser",
-            password=password
+            db=db_session, email="test@example.com", username="testuser", password=password
         )
 
         # Password should be hashed
@@ -313,10 +296,7 @@ class TestUserAuthentication:
         """Test successful authentication by username"""
         password = "password123"
         user = create_user(
-            db=db_session,
-            email="test@example.com",
-            username="testuser",
-            password=password
+            db=db_session, email="test@example.com", username="testuser", password=password
         )
 
         authenticated = authenticate_user(db_session, "testuser", password)
@@ -329,10 +309,7 @@ class TestUserAuthentication:
         """Test successful authentication by email"""
         password = "password123"
         user = create_user(
-            db=db_session,
-            email="test@example.com",
-            username="testuser",
-            password=password
+            db=db_session, email="test@example.com", username="testuser", password=password
         )
 
         authenticated = authenticate_user(db_session, "test@example.com", password)
@@ -343,10 +320,7 @@ class TestUserAuthentication:
     def test_authenticate_user_wrong_password(self, db_session):
         """Test authentication with wrong password returns None"""
         create_user(
-            db=db_session,
-            email="test@example.com",
-            username="testuser",
-            password="password123"
+            db=db_session, email="test@example.com", username="testuser", password="password123"
         )
 
         authenticated = authenticate_user(db_session, "testuser", "wrong_password")
@@ -362,10 +336,7 @@ class TestUserAuthentication:
     def test_authenticate_user_inactive(self, db_session):
         """Test authentication with inactive user returns None"""
         user = create_user(
-            db=db_session,
-            email="test@example.com",
-            username="testuser",
-            password="password123"
+            db=db_session, email="test@example.com", username="testuser", password="password123"
         )
 
         # Deactivate user
@@ -384,18 +355,12 @@ class TestSessionManagement:
         """Test creating a session"""
         # Create user first
         user = create_user(
-            db=db_session,
-            email="test@example.com",
-            username="testuser",
-            password="password123"
+            db=db_session, email="test@example.com", username="testuser", password="password123"
         )
 
         expires_at = datetime.now(timezone.utc) + timedelta(days=7)
         session = create_session(
-            db=db_session,
-            user_id=user.id,
-            token_jti="test_jti_123",
-            expires_at=expires_at
+            db=db_session, user_id=user.id, token_jti="test_jti_123", expires_at=expires_at
         )
 
         assert session.id is not None
@@ -406,10 +371,7 @@ class TestSessionManagement:
     def test_create_session_with_metadata(self, db_session):
         """Test creating session with IP and user agent"""
         user = create_user(
-            db=db_session,
-            email="test@example.com",
-            username="testuser",
-            password="password123"
+            db=db_session, email="test@example.com", username="testuser", password="password123"
         )
 
         expires_at = datetime.now(timezone.utc) + timedelta(days=7)
@@ -419,7 +381,7 @@ class TestSessionManagement:
             token_jti="test_jti_123",
             expires_at=expires_at,
             ip_address="192.168.1.1",
-            user_agent="Mozilla/5.0"
+            user_agent="Mozilla/5.0",
         )
 
         assert session.ip_address == "192.168.1.1"
@@ -428,18 +390,12 @@ class TestSessionManagement:
     def test_revoke_session_success(self, db_session):
         """Test revoking a session"""
         user = create_user(
-            db=db_session,
-            email="test@example.com",
-            username="testuser",
-            password="password123"
+            db=db_session, email="test@example.com", username="testuser", password="password123"
         )
 
         expires_at = datetime.now(timezone.utc) + timedelta(days=7)
         session = create_session(
-            db=db_session,
-            user_id=user.id,
-            token_jti="test_jti_123",
-            expires_at=expires_at
+            db=db_session, user_id=user.id, token_jti="test_jti_123", expires_at=expires_at
         )
 
         result = revoke_session(db_session, "test_jti_123")
@@ -458,18 +414,12 @@ class TestSessionManagement:
     def test_is_session_revoked_true(self, db_session):
         """Test checking if session is revoked"""
         user = create_user(
-            db=db_session,
-            email="test@example.com",
-            username="testuser",
-            password="password123"
+            db=db_session, email="test@example.com", username="testuser", password="password123"
         )
 
         expires_at = datetime.now(timezone.utc) + timedelta(days=7)
         session = create_session(
-            db=db_session,
-            user_id=user.id,
-            token_jti="test_jti_123",
-            expires_at=expires_at
+            db=db_session, user_id=user.id, token_jti="test_jti_123", expires_at=expires_at
         )
 
         # Revoke session
@@ -481,18 +431,12 @@ class TestSessionManagement:
     def test_is_session_revoked_false(self, db_session):
         """Test checking if active session is not revoked"""
         user = create_user(
-            db=db_session,
-            email="test@example.com",
-            username="testuser",
-            password="password123"
+            db=db_session, email="test@example.com", username="testuser", password="password123"
         )
 
         expires_at = datetime.now(timezone.utc) + timedelta(days=7)
         create_session(
-            db=db_session,
-            user_id=user.id,
-            token_jti="test_jti_123",
-            expires_at=expires_at
+            db=db_session, user_id=user.id, token_jti="test_jti_123", expires_at=expires_at
         )
 
         assert is_session_revoked(db_session, "test_jti_123") is False
@@ -508,10 +452,7 @@ class TestUserRetrieval:
     def test_get_user_by_id_found(self, db_session):
         """Test getting user by ID"""
         user = create_user(
-            db=db_session,
-            email="test@example.com",
-            username="testuser",
-            password="password123"
+            db=db_session, email="test@example.com", username="testuser", password="password123"
         )
 
         retrieved = get_user_by_id(db_session, user.id)
@@ -529,10 +470,7 @@ class TestUserRetrieval:
     def test_get_user_by_email_found(self, db_session):
         """Test getting user by email"""
         user = create_user(
-            db=db_session,
-            email="test@example.com",
-            username="testuser",
-            password="password123"
+            db=db_session, email="test@example.com", username="testuser", password="password123"
         )
 
         retrieved = get_user_by_email(db_session, "test@example.com")
@@ -550,10 +488,7 @@ class TestUserRetrieval:
     def test_get_user_by_username_found(self, db_session):
         """Test getting user by username"""
         user = create_user(
-            db=db_session,
-            email="test@example.com",
-            username="testuser",
-            password="password123"
+            db=db_session, email="test@example.com", username="testuser", password="password123"
         )
 
         retrieved = get_user_by_username(db_session, "testuser")
@@ -571,10 +506,7 @@ class TestUserRetrieval:
     def test_get_user_by_email_case_sensitive(self, db_session):
         """Test that email lookup is case-sensitive by default"""
         create_user(
-            db=db_session,
-            email="Test@Example.com",
-            username="testuser",
-            password="password123"
+            db=db_session, email="Test@Example.com", username="testuser", password="password123"
         )
 
         # SQLite is case-insensitive by default for LIKE, but == should be case-sensitive

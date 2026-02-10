@@ -16,7 +16,6 @@ Note: Actual OAuth flows require provider credentials in environment variables.
 Without credentials, providers are marked as unavailable but the API structure works.
 """
 
-import hashlib
 import json
 import logging
 import secrets
@@ -28,13 +27,13 @@ from urllib.parse import urlencode
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.models.database import Integration, File, Project
+from app.models.database import Integration, Project
 from app.models.schemas import (
     ImportFromProviderResponse,
+    IntegrationListResponse,
     IntegrationProvider,
     IntegrationProviderListResponse,
     IntegrationResponse,
-    IntegrationListResponse,
     OAuthInitiateResponse,
     ProviderBrowseResponse,
     ProviderFile,
@@ -193,7 +192,9 @@ class IntegrationService:
             raise ValueError(f"Provider '{provider_id}' not found")
 
         if not self._is_provider_configured(provider_id):
-            raise ValueError(f"Provider '{provider_id}' is not configured. Missing OAuth credentials.")
+            raise ValueError(
+                f"Provider '{provider_id}' is not configured. Missing OAuth credentials."
+            )
 
         # Generate state token for CSRF protection
         state = secrets.token_urlsafe(32)
@@ -519,9 +520,7 @@ class IntegrationService:
             "expires_at": utc_now() + timedelta(hours=1),
         }
 
-    def _get_provider_user_info(
-        self, provider_id: str, access_token: str
-    ) -> Dict[str, Any]:
+    def _get_provider_user_info(self, provider_id: str, access_token: str) -> Dict[str, Any]:
         """
         Get user info from provider.
 

@@ -358,7 +358,7 @@ class ChartGenerator:
             )
             # Convert to bar chart instead if too many categories
             if unique_count > 8:
-                logger.info(f"Converting to top-15 bar chart instead")
+                logger.info("Converting to top-15 bar chart instead")
                 return self._create_bar_chart(df, category_col, value_col, priority=3)
             return None
 

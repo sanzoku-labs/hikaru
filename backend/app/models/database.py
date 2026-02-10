@@ -220,7 +220,9 @@ class ChartInsight(Base):
     file = relationship("File", backref="chart_insights")
 
     def __repr__(self):
-        return f"<ChartInsight(id={self.id}, chart_title={self.chart_title}, type={self.chart_type})>"
+        return (
+            f"<ChartInsight(id={self.id}, chart_title={self.chart_title}, type={self.chart_type})>"
+        )
 
 
 class FileAnalysis(Base):
@@ -255,7 +257,9 @@ class Conversation(Base):
     conversation_id = Column(String(36), unique=True, index=True, nullable=False)  # UUID
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     title = Column(String(255), nullable=True)  # Auto-generated or user-set
-    file_context_json = Column(Text, nullable=True)  # JSON array of {file_id, filename, project_name}
+    file_context_json = Column(
+        Text, nullable=True
+    )  # JSON array of {file_id, filename, project_name}
     created_at = Column(DateTime, default=utc_now, nullable=False)
     updated_at = Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
 
@@ -297,7 +301,9 @@ class Integration(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     # Provider info
-    provider = Column(String(50), nullable=False)  # 'google_sheets', 'airtable', 'notion', 'dropbox'
+    provider = Column(
+        String(50), nullable=False
+    )  # 'google_sheets', 'airtable', 'notion', 'dropbox'
     provider_account_id = Column(String(255), nullable=True)  # User ID on provider side
     provider_email = Column(String(255), nullable=True)  # Email on provider side
 

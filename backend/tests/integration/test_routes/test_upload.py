@@ -104,17 +104,23 @@ Eve,45,150000.50,Seattle,2024-01-19"""
 @pytest.fixture
 def sample_excel_file():
     """Create a sample Excel file for testing"""
-    df = pd.DataFrame({
-        "name": ["Alice", "Bob", "Charlie"],
-        "age": [25, 30, 35],
-        "salary": [50000.50, 75000.75, 100000.00]
-    })
+    df = pd.DataFrame(
+        {
+            "name": ["Alice", "Bob", "Charlie"],
+            "age": [25, 30, 35],
+            "salary": [50000.50, 75000.75, 100000.00],
+        }
+    )
 
     buffer = io.BytesIO()
     df.to_excel(buffer, index=False)
     buffer.seek(0)
 
-    return ("test_data.xlsx", buffer, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    return (
+        "test_data.xlsx",
+        buffer,
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
 
 
 class TestUploadEndpoint:
@@ -127,7 +133,7 @@ class TestUploadEndpoint:
         response = client.post(
             "/api/upload",
             headers=auth_headers,
-            files={"file": (filename, file_content, content_type)}
+            files={"file": (filename, file_content, content_type)},
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -159,7 +165,7 @@ class TestUploadEndpoint:
         response = client.post(
             "/api/upload",
             headers=auth_headers,
-            files={"file": (filename, file_content, content_type)}
+            files={"file": (filename, file_content, content_type)},
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -173,8 +179,7 @@ class TestUploadEndpoint:
         filename, file_content, content_type = sample_csv_file
 
         response = client.post(
-            "/api/upload",
-            files={"file": (filename, file_content, content_type)}
+            "/api/upload", files={"file": (filename, file_content, content_type)}
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -185,9 +190,7 @@ class TestUploadEndpoint:
         headers = {"Authorization": "Bearer invalid_token"}
 
         response = client.post(
-            "/api/upload",
-            headers=headers,
-            files={"file": (filename, file_content, content_type)}
+            "/api/upload", headers=headers, files={"file": (filename, file_content, content_type)}
         )
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -201,7 +204,7 @@ class TestUploadEndpoint:
         response = client.post(
             "/api/upload",
             headers=auth_headers,
-            files={"file": ("test.txt", file_content, "text/plain")}
+            files={"file": ("test.txt", file_content, "text/plain")},
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -219,11 +222,14 @@ class TestUploadEndpoint:
         response = client.post(
             "/api/upload",
             headers=auth_headers,
-            files={"file": ("large.csv", file_content, "text/csv")}
+            files={"file": ("large.csv", file_content, "text/csv")},
         )
 
         # Should return 400 or 500 depending on where error is caught
-        assert response.status_code in [status.HTTP_400_BAD_REQUEST, status.HTTP_500_INTERNAL_SERVER_ERROR]
+        assert response.status_code in [
+            status.HTTP_400_BAD_REQUEST,
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+        ]
         assert "detail" in response.json()
 
     def test_upload_empty_file(self, client: TestClient, auth_headers: dict):
@@ -234,11 +240,14 @@ class TestUploadEndpoint:
         response = client.post(
             "/api/upload",
             headers=auth_headers,
-            files={"file": ("empty.csv", file_content, "text/csv")}
+            files={"file": ("empty.csv", file_content, "text/csv")},
         )
 
         # Should fail during parsing or validation
-        assert response.status_code in [status.HTTP_400_BAD_REQUEST, status.HTTP_500_INTERNAL_SERVER_ERROR]
+        assert response.status_code in [
+            status.HTTP_400_BAD_REQUEST,
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+        ]
 
     def test_upload_csv_with_only_headers(self, client: TestClient, auth_headers: dict):
         """Test upload with CSV containing only headers returns 400"""
@@ -248,11 +257,14 @@ class TestUploadEndpoint:
         response = client.post(
             "/api/upload",
             headers=auth_headers,
-            files={"file": ("headers_only.csv", file_content, "text/csv")}
+            files={"file": ("headers_only.csv", file_content, "text/csv")},
         )
 
         # Should fail validation or parsing
-        assert response.status_code in [status.HTTP_400_BAD_REQUEST, status.HTTP_500_INTERNAL_SERVER_ERROR]
+        assert response.status_code in [
+            status.HTTP_400_BAD_REQUEST,
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+        ]
         assert "detail" in response.json()
 
     def test_upload_csv_too_many_rows(self, client: TestClient, auth_headers: dict):
@@ -272,7 +284,7 @@ class TestUploadEndpoint:
         response = client.post(
             "/api/upload",
             headers=auth_headers,
-            files={"file": ("test.csv", file_content, "text/csv")}
+            files={"file": ("test.csv", file_content, "text/csv")},
         )
 
         # Should succeed with 100 rows
@@ -290,11 +302,14 @@ Charlie,Chicago,USA"""
         response = client.post(
             "/api/upload",
             headers=auth_headers,
-            files={"file": ("no_numeric.csv", file_content, "text/csv")}
+            files={"file": ("no_numeric.csv", file_content, "text/csv")},
         )
 
         # Should fail validation for missing numeric columns
-        assert response.status_code in [status.HTTP_400_BAD_REQUEST, status.HTTP_500_INTERNAL_SERVER_ERROR]
+        assert response.status_code in [
+            status.HTTP_400_BAD_REQUEST,
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+        ]
         assert "detail" in response.json()
 
     def test_upload_malformed_csv(self, client: TestClient, auth_headers: dict):
@@ -310,12 +325,16 @@ Charlie"""
         response = client.post(
             "/api/upload",
             headers=auth_headers,
-            files={"file": ("malformed.csv", file_content, "text/csv")}
+            files={"file": ("malformed.csv", file_content, "text/csv")},
         )
 
         # Pandas might parse this with NaN values, so check response
         # It could be 200 (parsed with NaNs), 400 (parse error), or 500 (validation error)
-        assert response.status_code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST, status.HTTP_500_INTERNAL_SERVER_ERROR]
+        assert response.status_code in [
+            status.HTTP_200_OK,
+            status.HTTP_400_BAD_REQUEST,
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+        ]
 
     def test_upload_european_format_csv(self, client: TestClient, auth_headers: dict):
         """Test upload with European format CSV (semicolon delimiter)"""
@@ -329,7 +348,7 @@ Charlie;35;100000,00"""
         response = client.post(
             "/api/upload",
             headers=auth_headers,
-            files={"file": ("european.csv", file_content, "text/csv")}
+            files={"file": ("european.csv", file_content, "text/csv")},
         )
 
         # DataProcessor should handle European format
@@ -344,7 +363,7 @@ Charlie;35;100000,00"""
         response = client.post(
             "/api/upload",
             headers=auth_headers,
-            files={"file": (filename, file_content, content_type)}
+            files={"file": (filename, file_content, content_type)},
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -357,14 +376,16 @@ Charlie;35;100000,00"""
         assert isinstance(preview[0], dict)
         assert "name" in preview[0]
 
-    def test_upload_detects_datetime_columns(self, client: TestClient, auth_headers: dict, sample_csv_file):
+    def test_upload_detects_datetime_columns(
+        self, client: TestClient, auth_headers: dict, sample_csv_file
+    ):
         """Test that upload correctly detects datetime columns"""
         filename, file_content, content_type = sample_csv_file
 
         response = client.post(
             "/api/upload",
             headers=auth_headers,
-            files={"file": (filename, file_content, content_type)}
+            files={"file": (filename, file_content, content_type)},
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -376,14 +397,16 @@ Charlie;35;100000,00"""
         # Should be detected as datetime or categorical (depending on parsing)
         assert columns_by_name["date"]["type"] in ["datetime", "categorical"]
 
-    def test_upload_calculates_numeric_stats(self, client: TestClient, auth_headers: dict, sample_csv_file):
+    def test_upload_calculates_numeric_stats(
+        self, client: TestClient, auth_headers: dict, sample_csv_file
+    ):
         """Test that upload calculates statistics for numeric columns"""
         filename, file_content, content_type = sample_csv_file
 
         response = client.post(
             "/api/upload",
             headers=auth_headers,
-            files={"file": (filename, file_content, content_type)}
+            files={"file": (filename, file_content, content_type)},
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -404,14 +427,16 @@ Charlie;35;100000,00"""
         assert salary_col["min"] is not None
         assert salary_col["max"] is not None
 
-    def test_upload_stores_in_database(self, client: TestClient, auth_headers: dict, sample_csv_file, db_session):
+    def test_upload_stores_in_database(
+        self, client: TestClient, auth_headers: dict, sample_csv_file, db_session
+    ):
         """Test that upload stores data in database"""
         filename, file_content, content_type = sample_csv_file
 
         response = client.post(
             "/api/upload",
             headers=auth_headers,
-            files={"file": (filename, file_content, content_type)}
+            files={"file": (filename, file_content, content_type)},
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -419,6 +444,7 @@ Charlie;35;100000,00"""
 
         # Verify data was stored in database
         from app.models.database import Upload
+
         upload = db_session.query(Upload).filter_by(upload_id=upload_id).first()
 
         assert upload is not None
@@ -426,7 +452,9 @@ Charlie;35;100000,00"""
         assert upload.data_csv is not None
         assert upload.schema_json is not None
 
-    def test_upload_multiple_files_by_same_user(self, client: TestClient, auth_headers: dict, sample_csv_file):
+    def test_upload_multiple_files_by_same_user(
+        self, client: TestClient, auth_headers: dict, sample_csv_file
+    ):
         """Test that same user can upload multiple files"""
         filename, file_content, content_type = sample_csv_file
 
@@ -434,7 +462,7 @@ Charlie;35;100000,00"""
         response1 = client.post(
             "/api/upload",
             headers=auth_headers,
-            files={"file": (filename, file_content, content_type)}
+            files={"file": (filename, file_content, content_type)},
         )
         assert response1.status_code == status.HTTP_200_OK
         upload_id1 = response1.json()["upload_id"]
@@ -446,7 +474,7 @@ Charlie;35;100000,00"""
         response2 = client.post(
             "/api/upload",
             headers=auth_headers,
-            files={"file": ("second_file.csv", file_content, content_type)}
+            files={"file": ("second_file.csv", file_content, content_type)},
         )
         assert response2.status_code == status.HTTP_200_OK
         upload_id2 = response2.json()["upload_id"]

@@ -1,7 +1,4 @@
 """Unit tests for DataProcessor service."""
-import io
-import tempfile
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -40,12 +37,14 @@ Charlie;35;100000,00;Chicago"""
     @pytest.fixture
     def temp_excel_file(self, tmp_path):
         """Create temporary Excel file"""
-        df = pd.DataFrame({
-            "name": ["Alice", "Bob", "Charlie"],
-            "age": [25, 30, 35],
-            "salary": [50000.50, 75000.75, 100000.00],
-            "city": ["New York", "San Francisco", "Chicago"]
-        })
+        df = pd.DataFrame(
+            {
+                "name": ["Alice", "Bob", "Charlie"],
+                "age": [25, 30, 35],
+                "salary": [50000.50, 75000.75, 100000.00],
+                "city": ["New York", "San Francisco", "Chicago"],
+            }
+        )
 
         file_path = tmp_path / "test.xlsx"
         df.to_excel(file_path, index=False)
@@ -119,11 +118,13 @@ class TestDataProcessorValidateDataframe:
 
     def test_valid_dataframe(self):
         """Test that valid dataframe passes validation"""
-        df = pd.DataFrame({
-            "name": ["Alice", "Bob", "Charlie"],
-            "age": [25, 30, 35],
-            "salary": [50000, 75000, 100000]
-        })
+        df = pd.DataFrame(
+            {
+                "name": ["Alice", "Bob", "Charlie"],
+                "age": [25, 30, 35],
+                "salary": [50000, 75000, 100000],
+            }
+        )
 
         is_valid, error = DataProcessor.validate_dataframe(df)
 
@@ -133,10 +134,7 @@ class TestDataProcessorValidateDataframe:
     def test_too_many_rows(self):
         """Test that dataframe with >100,000 rows fails validation"""
         # Create large dataframe
-        df = pd.DataFrame({
-            "col1": range(100_001),
-            "col2": range(100_001)
-        })
+        df = pd.DataFrame({"col1": range(100_001), "col2": range(100_001)})
 
         is_valid, error = DataProcessor.validate_dataframe(df)
 
@@ -146,10 +144,7 @@ class TestDataProcessorValidateDataframe:
 
     def test_insufficient_rows(self):
         """Test that dataframe with <2 rows fails validation"""
-        df = pd.DataFrame({
-            "col1": [1],
-            "col2": [2]
-        })
+        df = pd.DataFrame({"col1": [1], "col2": [2]})
 
         is_valid, error = DataProcessor.validate_dataframe(df)
 
@@ -170,11 +165,13 @@ class TestDataProcessorValidateDataframe:
 
     def test_no_numeric_columns(self):
         """Test that dataframe with no numeric columns fails validation"""
-        df = pd.DataFrame({
-            "name": ["Alice", "Bob", "Charlie"],
-            "city": ["NYC", "SF", "Chicago"],
-            "country": ["USA", "USA", "USA"]
-        })
+        df = pd.DataFrame(
+            {
+                "name": ["Alice", "Bob", "Charlie"],
+                "city": ["NYC", "SF", "Chicago"],
+                "country": ["USA", "USA", "USA"],
+            }
+        )
 
         is_valid, error = DataProcessor.validate_dataframe(df)
 
@@ -183,10 +180,7 @@ class TestDataProcessorValidateDataframe:
 
     def test_edge_case_exactly_100000_rows(self):
         """Test that exactly 100,000 rows passes validation"""
-        df = pd.DataFrame({
-            "col1": range(100_000),
-            "col2": range(100_000)
-        })
+        df = pd.DataFrame({"col1": range(100_000), "col2": range(100_000)})
 
         is_valid, error = DataProcessor.validate_dataframe(df)
 
@@ -195,10 +189,7 @@ class TestDataProcessorValidateDataframe:
 
     def test_edge_case_exactly_2_rows(self):
         """Test that exactly 2 rows passes validation"""
-        df = pd.DataFrame({
-            "col1": [1, 2],
-            "col2": [3, 4]
-        })
+        df = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
 
         is_valid, error = DataProcessor.validate_dataframe(df)
 
@@ -352,14 +343,16 @@ class TestDataProcessorAnalyzeSchema:
     @pytest.fixture
     def sample_dataframe(self):
         """Create sample dataframe for schema analysis"""
-        return pd.DataFrame({
-            "id": [1, 2, 3, 4, 5],
-            "name": ["Alice", "Bob", "Charlie", "David", "Eve"],
-            "age": [25, 30, 35, 40, 45],
-            "salary": [50000.50, 75000.75, 100000.00, 125000.25, 150000.50],
-            "city": ["NYC", "SF", "Chicago", "NYC", "SF"],
-            "date": pd.date_range("2024-01-01", periods=5)
-        })
+        return pd.DataFrame(
+            {
+                "id": [1, 2, 3, 4, 5],
+                "name": ["Alice", "Bob", "Charlie", "David", "Eve"],
+                "age": [25, 30, 35, 40, 45],
+                "salary": [50000.50, 75000.75, 100000.00, 125000.25, 150000.50],
+                "city": ["NYC", "SF", "Chicago", "NYC", "SF"],
+                "date": pd.date_range("2024-01-01", periods=5),
+            }
+        )
 
     def test_analyze_schema_structure(self, sample_dataframe):
         """Test that schema has correct structure"""
@@ -397,10 +390,7 @@ class TestDataProcessorAnalyzeSchema:
 
     def test_analyze_schema_null_counts(self):
         """Test that null counts are correctly calculated"""
-        df = pd.DataFrame({
-            "col1": [1, 2, None, 4, 5],
-            "col2": ["a", None, None, "d", "e"]
-        })
+        df = pd.DataFrame({"col1": [1, 2, None, 4, 5], "col2": ["a", None, None, "d", "e"]})
 
         schema = DataProcessor.analyze_schema(df)
 
@@ -430,10 +420,9 @@ class TestDataProcessorAnalyzeSchema:
 
     def test_analyze_schema_with_nan_values(self):
         """Test schema analysis handles NaN values correctly"""
-        df = pd.DataFrame({
-            "col1": [1, 2, np.nan, 4, 5],
-            "col2": [10.5, np.inf, 30.5, -np.inf, 50.5]
-        })
+        df = pd.DataFrame(
+            {"col1": [1, 2, np.nan, 4, 5], "col2": [10.5, np.inf, 30.5, -np.inf, 50.5]}
+        )
 
         schema = DataProcessor.analyze_schema(df)
 
@@ -443,7 +432,9 @@ class TestDataProcessorAnalyzeSchema:
 
         # Check that sample values don't contain NaN
         col1 = next(col for col in schema.columns if col.name == "col1")
-        assert None not in col1.sample_values or all(v is None or isinstance(v, (int, float)) for v in col1.sample_values)
+        assert None not in col1.sample_values or all(
+            v is None or isinstance(v, (int, float)) for v in col1.sample_values
+        )
 
     def test_analyze_schema_preview_format(self, sample_dataframe):
         """Test that preview is in correct format (list of dicts)"""
@@ -457,10 +448,7 @@ class TestDataProcessorAnalyzeSchema:
 
     def test_analyze_schema_large_dataframe(self):
         """Test schema analysis on dataframe larger than preview limit"""
-        df = pd.DataFrame({
-            "col1": range(50),
-            "col2": range(50, 100)
-        })
+        df = pd.DataFrame({"col1": range(50), "col2": range(50, 100)})
 
         schema = DataProcessor.analyze_schema(df)
 

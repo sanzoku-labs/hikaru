@@ -26,9 +26,10 @@ from app.middleware.auth import (
     get_optional_current_user,
     get_user_project,
 )
-from app.models.database import Project, User
+from app.models.database import Project
 from app.models.database import Session as UserSession
-from app.services.auth_service import create_access_token, create_session, hash_password
+from app.models.database import User
+from app.services.auth_service import create_access_token, hash_password
 
 # Use in-memory SQLite for tests
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
@@ -128,8 +129,10 @@ class TestGetCurrentUser:
         token = create_access_token(data={"sub": str(test_user.id)})
 
         # Create session for the token
-        from app.services.auth_service import decode_access_token
         from datetime import datetime
+
+        from app.services.auth_service import decode_access_token
+
         payload = decode_access_token(token)
         session = UserSession(
             user_id=test_user.id,
@@ -179,8 +182,10 @@ class TestGetCurrentUser:
         token = create_access_token(data={"sub": str(test_user.id)})
 
         # Create revoked session
-        from app.services.auth_service import decode_access_token
         from datetime import datetime
+
+        from app.services.auth_service import decode_access_token
+
         payload = decode_access_token(token)
         session = UserSession(
             user_id=test_user.id,
@@ -206,8 +211,10 @@ class TestGetCurrentUser:
         token = create_access_token(data={"sub": str(inactive_user.id)})
 
         # Create session
-        from app.services.auth_service import decode_access_token
         from datetime import datetime
+
+        from app.services.auth_service import decode_access_token
+
         payload = decode_access_token(token)
         session = UserSession(
             user_id=inactive_user.id,
@@ -233,8 +240,10 @@ class TestGetCurrentUser:
         token = create_access_token(data={"sub": "99999"})
 
         # Create session
-        from app.services.auth_service import decode_access_token
         from datetime import datetime
+
+        from app.services.auth_service import decode_access_token
+
         payload = decode_access_token(token)
         session = UserSession(
             user_id=99999,
@@ -292,7 +301,10 @@ class TestGetCurrentSuperuser:
             await get_current_superuser(current_user=test_user)
 
         assert exc_info.value.status_code == 403
-        assert "permission" in exc_info.value.detail.lower() or "superuser" in exc_info.value.detail.lower()
+        assert (
+            "permission" in exc_info.value.detail.lower()
+            or "superuser" in exc_info.value.detail.lower()
+        )
 
 
 class TestGetOptionalCurrentUser:
@@ -351,13 +363,9 @@ class TestGetUserProject:
         assert exc_info.value.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_nonexistent_project_raises_404(
-        self, db_session: Session, test_user: User
-    ):
+    async def test_nonexistent_project_raises_404(self, db_session: Session, test_user: User):
         """Test that nonexistent project raises 404"""
         with pytest.raises(HTTPException) as exc_info:
-            await get_user_project(
-                project_id=99999, current_user=test_user, db=db_session
-            )
+            await get_user_project(project_id=99999, current_user=test_user, db=db_session)
 
         assert exc_info.value.status_code == 404

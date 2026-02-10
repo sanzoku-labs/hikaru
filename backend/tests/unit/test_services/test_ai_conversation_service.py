@@ -115,9 +115,7 @@ class TestGenerateQueryResponse:
 
     @patch("app.services.ai_conversation_service.Anthropic")
     @patch("app.services.ai_conversation_service.settings")
-    def test_creates_new_conversation_id(
-        self, mock_settings, mock_anthropic_class, sample_schema
-    ):
+    def test_creates_new_conversation_id(self, mock_settings, mock_anthropic_class, sample_schema):
         """Test that new conversation ID is generated"""
         mock_settings.anthropic_api_key = "test-key"
         mock_client = Mock()
@@ -228,9 +226,7 @@ class TestConversationManagement:
 
     @patch("app.services.ai_conversation_service.Anthropic")
     @patch("app.services.ai_conversation_service.settings")
-    def test_stores_conversation_history(
-        self, mock_settings, mock_anthropic_class, sample_schema
-    ):
+    def test_stores_conversation_history(self, mock_settings, mock_anthropic_class, sample_schema):
         """Test that conversation history is stored"""
         mock_settings.anthropic_api_key = "test-key"
         mock_client = Mock()
@@ -405,7 +401,7 @@ class TestParseChartRequest:
             service = AIConversationService()
 
             # Invalid JSON after CHART_CONFIG:
-            response = 'CHART_CONFIG: {invalid json}'
+            response = "CHART_CONFIG: {invalid json}"
             chart_config = service._parse_chart_request(response)
 
             assert chart_config is None

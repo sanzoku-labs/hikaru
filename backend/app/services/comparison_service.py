@@ -4,13 +4,12 @@ Comparison service for Phase 7B - File Comparison.
 Handles comparing two files side-by-side, generating overlay charts,
 and calculating difference metrics.
 """
-import json
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 import pandas as pd
 
-from app.models.schemas import DataSchema, OverlayChartData
+from app.models.schemas import OverlayChartData
 
 
 class ComparisonService:

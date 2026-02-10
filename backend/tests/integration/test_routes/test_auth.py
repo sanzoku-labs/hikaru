@@ -8,7 +8,6 @@ Tests the complete flow of authentication:
 - Logout
 - Health check
 """
-import io
 from typing import Generator
 
 import pytest
@@ -20,7 +19,8 @@ from sqlalchemy.pool import StaticPool
 
 from app.database import Base, get_db
 from app.main import app
-from app.models.database import Session as UserSession, User
+from app.models.database import Session as UserSession
+from app.models.database import User
 from app.services.auth_service import create_access_token, hash_password
 
 # Use in-memory SQLite for tests
@@ -212,9 +212,9 @@ class TestRegisterEndpoint:
         assert response.status_code == status.HTTP_201_CREATED
 
         # Verify session was created
-        user_session = db_session.query(UserSession).filter_by(
-            user_id=response.json()["user"]["id"]
-        ).first()
+        user_session = (
+            db_session.query(UserSession).filter_by(user_id=response.json()["user"]["id"]).first()
+        )
 
         assert user_session is not None
         assert user_session.is_revoked is False
@@ -330,7 +330,9 @@ class TestLoginEndpoint:
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_login_multiple_sessions(self, client: TestClient, test_user: User, db_session: Session):
+    def test_login_multiple_sessions(
+        self, client: TestClient, test_user: User, db_session: Session
+    ):
         """Test that user can have multiple active sessions"""
         credentials = {"username": test_user.username, "password": "TestPassword123!"}
 
@@ -390,6 +392,7 @@ class TestGetMeEndpoint:
     def test_get_me_expired_token(self, client: TestClient, test_user: User):
         """Test get me with expired token returns 401"""
         from datetime import timedelta
+
         from app.services.auth_service import create_access_token
 
         # Create token that expires immediately
@@ -436,9 +439,7 @@ class TestLogoutEndpoint:
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_logout_revokes_session(
-        self, client: TestClient, test_user: User, db_session: Session
-    ):
+    def test_logout_revokes_session(self, client: TestClient, test_user: User, db_session: Session):
         """Test that logout revokes the session"""
         # Login to create session
         credentials = {"username": test_user.username, "password": "TestPassword123!"}
@@ -450,9 +451,7 @@ class TestLogoutEndpoint:
         from app.services.auth_service import decode_access_token
 
         payload = decode_access_token(token)
-        session_before = (
-            db_session.query(UserSession).filter_by(token_jti=payload["jti"]).first()
-        )
+        session_before = db_session.query(UserSession).filter_by(token_jti=payload["jti"]).first()
         assert session_before is not None
         assert session_before.is_revoked is False
 
@@ -462,9 +461,7 @@ class TestLogoutEndpoint:
 
         # Verify session is revoked
         db_session.expire_all()  # Clear cache
-        session_after = (
-            db_session.query(UserSession).filter_by(token_jti=payload["jti"]).first()
-        )
+        session_after = db_session.query(UserSession).filter_by(token_jti=payload["jti"]).first()
         assert session_after is not None
         assert session_after.is_revoked is True
 

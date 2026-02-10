@@ -21,23 +21,27 @@ def comparison_service():
 @pytest.fixture
 def sample_df_a():
     """Create sample DataFrame A"""
-    return pd.DataFrame({
-        "date": pd.date_range("2024-01-01", periods=12, freq="ME"),
-        "revenue": [1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100],
-        "region": ["North", "South", "East", "West"] * 3,
-        "units": [10, 15, 12, 18, 20, 22, 25, 28, 30, 32, 35, 38],
-    })
+    return pd.DataFrame(
+        {
+            "date": pd.date_range("2024-01-01", periods=12, freq="ME"),
+            "revenue": [1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100],
+            "region": ["North", "South", "East", "West"] * 3,
+            "units": [10, 15, 12, 18, 20, 22, 25, 28, 30, 32, 35, 38],
+        }
+    )
 
 
 @pytest.fixture
 def sample_df_b():
     """Create sample DataFrame B (similar structure, different values)"""
-    return pd.DataFrame({
-        "date": pd.date_range("2024-01-01", periods=12, freq="ME"),
-        "revenue": [1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200],
-        "region": ["North", "South", "East", "West"] * 3,
-        "units": [12, 17, 14, 20, 22, 24, 27, 30, 32, 34, 37, 40],
-    })
+    return pd.DataFrame(
+        {
+            "date": pd.date_range("2024-01-01", periods=12, freq="ME"),
+            "revenue": [1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200],
+            "region": ["North", "South", "East", "West"] * 3,
+            "units": [12, 17, 14, 20, 22, 24, 27, 30, 32, 34, 37, 40],
+        }
+    )
 
 
 @pytest.fixture
@@ -150,9 +154,7 @@ class TestFindCommonColumns:
 class TestGenerateOverlayCharts:
     """Test suite for generate_overlay_charts method"""
 
-    def test_generates_time_series_overlay(
-        self, comparison_service, sample_df_a, sample_df_b
-    ):
+    def test_generates_time_series_overlay(self, comparison_service, sample_df_a, sample_df_b):
         """Test generating time series overlay chart"""
         charts = comparison_service.generate_overlay_charts(
             sample_df_a, sample_df_b, "File A", "File B"
@@ -165,14 +167,18 @@ class TestGenerateOverlayCharts:
 
     def test_generates_categorical_overlay(self, comparison_service):
         """Test generating categorical overlay chart"""
-        df_a = pd.DataFrame({
-            "category": ["A", "B", "C"] * 10,
-            "value": range(30),
-        })
-        df_b = pd.DataFrame({
-            "category": ["A", "B", "C"] * 10,
-            "value": range(30, 60),
-        })
+        df_a = pd.DataFrame(
+            {
+                "category": ["A", "B", "C"] * 10,
+                "value": range(30),
+            }
+        )
+        df_b = pd.DataFrame(
+            {
+                "category": ["A", "B", "C"] * 10,
+                "value": range(30, 60),
+            }
+        )
 
         charts = comparison_service.generate_overlay_charts(df_a, df_b, "File A", "File B")
 
@@ -182,14 +188,18 @@ class TestGenerateOverlayCharts:
 
     def test_generates_scatter_overlay(self, comparison_service):
         """Test generating scatter overlay chart"""
-        df_a = pd.DataFrame({
-            "x_val": range(100),
-            "y_val": range(100, 200),
-        })
-        df_b = pd.DataFrame({
-            "x_val": range(100),
-            "y_val": range(200, 300),
-        })
+        df_a = pd.DataFrame(
+            {
+                "x_val": range(100),
+                "y_val": range(100, 200),
+            }
+        )
+        df_b = pd.DataFrame(
+            {
+                "x_val": range(100),
+                "y_val": range(200, 300),
+            }
+        )
 
         charts = comparison_service.generate_overlay_charts(df_a, df_b, "File A", "File B")
 
@@ -210,9 +220,7 @@ class TestGenerateOverlayCharts:
         df_empty = pd.DataFrame()
         df_normal = pd.DataFrame({"col": [1, 2, 3]})
 
-        charts = comparison_service.generate_overlay_charts(
-            df_empty, df_normal, "Empty", "Normal"
-        )
+        charts = comparison_service.generate_overlay_charts(df_empty, df_normal, "Empty", "Normal")
 
         assert len(charts) == 0
 
@@ -220,9 +228,7 @@ class TestGenerateOverlayCharts:
 class TestCreateTimeSeriesOverlay:
     """Test suite for _create_time_series_overlay method"""
 
-    def test_creates_valid_time_series_chart(
-        self, comparison_service, sample_df_a, sample_df_b
-    ):
+    def test_creates_valid_time_series_chart(self, comparison_service, sample_df_a, sample_df_b):
         """Test creating valid time series overlay"""
         chart = comparison_service._create_time_series_overlay(
             sample_df_a, sample_df_b, "date", "revenue", "File A", "File B"
@@ -249,14 +255,18 @@ class TestCreateTimeSeriesOverlay:
 
     def test_handles_missing_data(self, comparison_service):
         """Test handling missing data in time series"""
-        df_a = pd.DataFrame({
-            "date": pd.date_range("2024-01-01", periods=5, freq="D"),
-            "value": [1, None, 3, None, 5]
-        })
-        df_b = pd.DataFrame({
-            "date": pd.date_range("2024-01-01", periods=5, freq="D"),
-            "value": [2, 4, None, 6, None]
-        })
+        df_a = pd.DataFrame(
+            {
+                "date": pd.date_range("2024-01-01", periods=5, freq="D"),
+                "value": [1, None, 3, None, 5],
+            }
+        )
+        df_b = pd.DataFrame(
+            {
+                "date": pd.date_range("2024-01-01", periods=5, freq="D"),
+                "value": [2, 4, None, 6, None],
+            }
+        )
 
         chart = comparison_service._create_time_series_overlay(
             df_a, df_b, "date", "value", "File A", "File B"
@@ -271,14 +281,18 @@ class TestCreateCategoricalOverlay:
 
     def test_creates_valid_categorical_chart(self, comparison_service):
         """Test creating valid categorical overlay"""
-        df_a = pd.DataFrame({
-            "category": ["A", "B", "C"] * 10,
-            "value": range(30),
-        })
-        df_b = pd.DataFrame({
-            "category": ["A", "B", "C"] * 10,
-            "value": range(30, 60),
-        })
+        df_a = pd.DataFrame(
+            {
+                "category": ["A", "B", "C"] * 10,
+                "value": range(30),
+            }
+        )
+        df_b = pd.DataFrame(
+            {
+                "category": ["A", "B", "C"] * 10,
+                "value": range(30, 60),
+            }
+        )
 
         chart = comparison_service._create_categorical_overlay(
             df_a, df_b, "category", "value", "File A", "File B"
@@ -292,14 +306,18 @@ class TestCreateCategoricalOverlay:
     def test_limits_to_top_10_categories(self, comparison_service):
         """Test that categories are limited to top 10"""
         # Create DataFrame with 20 categories
-        df_a = pd.DataFrame({
-            "category": [f"Cat{i}" for i in range(20)] * 5,
-            "value": range(100),
-        })
-        df_b = pd.DataFrame({
-            "category": [f"Cat{i}" for i in range(20)] * 5,
-            "value": range(100, 200),
-        })
+        df_a = pd.DataFrame(
+            {
+                "category": [f"Cat{i}" for i in range(20)] * 5,
+                "value": range(100),
+            }
+        )
+        df_b = pd.DataFrame(
+            {
+                "category": [f"Cat{i}" for i in range(20)] * 5,
+                "value": range(100, 200),
+            }
+        )
 
         chart = comparison_service._create_categorical_overlay(
             df_a, df_b, "category", "value", "File A", "File B"
@@ -318,9 +336,7 @@ class TestCreateScatterOverlay:
         df_a = pd.DataFrame({"x": range(100), "y": range(100, 200)})
         df_b = pd.DataFrame({"x": range(100), "y": range(200, 300)})
 
-        chart = comparison_service._create_scatter_overlay(
-            df_a, df_b, "x", "y", "File A", "File B"
-        )
+        chart = comparison_service._create_scatter_overlay(df_a, df_b, "x", "y", "File A", "File B")
 
         assert chart is not None
         assert chart.chart_type == "scatter"
@@ -333,9 +349,7 @@ class TestCreateScatterOverlay:
         df_a = pd.DataFrame({"x": range(1000), "y": range(1000, 2000)})
         df_b = pd.DataFrame({"x": range(1000), "y": range(2000, 3000)})
 
-        chart = comparison_service._create_scatter_overlay(
-            df_a, df_b, "x", "y", "File A", "File B"
-        )
+        chart = comparison_service._create_scatter_overlay(df_a, df_b, "x", "y", "File A", "File B")
 
         assert chart is not None
         assert len(chart.file_a_data) <= 500
@@ -346,9 +360,7 @@ class TestCreateScatterOverlay:
         df_a = pd.DataFrame({"x": [1, 2, None, 4], "y": [5, None, 7, 8]})
         df_b = pd.DataFrame({"x": [None, 2, 3, 4], "y": [5, 6, None, 8]})
 
-        chart = comparison_service._create_scatter_overlay(
-            df_a, df_b, "x", "y", "File A", "File B"
-        )
+        chart = comparison_service._create_scatter_overlay(df_a, df_b, "x", "y", "File A", "File B")
 
         # Should create chart with only non-null rows
         assert chart is not None or chart is None  # Either is acceptable
@@ -357,9 +369,7 @@ class TestCreateScatterOverlay:
 class TestCalculateMetrics:
     """Test suite for calculate_metrics method"""
 
-    def test_calculates_row_count_metrics(
-        self, comparison_service, sample_df_a, sample_df_b
-    ):
+    def test_calculates_row_count_metrics(self, comparison_service, sample_df_a, sample_df_b):
         """Test row count metrics calculation"""
         metrics = comparison_service.calculate_metrics(sample_df_a, sample_df_b)
 
@@ -368,9 +378,7 @@ class TestCalculateMetrics:
         assert metrics["row_count_diff"] == 0
         assert metrics["row_count_pct_change"] == 0.0
 
-    def test_calculates_numeric_column_metrics(
-        self, comparison_service, sample_df_a, sample_df_b
-    ):
+    def test_calculates_numeric_column_metrics(self, comparison_service, sample_df_a, sample_df_b):
         """Test numeric column metrics calculation"""
         metrics = comparison_service.calculate_metrics(sample_df_a, sample_df_b)
 
@@ -404,7 +412,9 @@ class TestCalculateMetrics:
 
         value_metrics = metrics["numeric_columns"]["value"]
         # Should handle zero division gracefully
-        assert value_metrics["mean_pct_change"] is None or isinstance(value_metrics["mean_pct_change"], float)
+        assert value_metrics["mean_pct_change"] is None or isinstance(
+            value_metrics["mean_pct_change"], float
+        )
 
     def test_handles_different_row_counts(self, comparison_service):
         """Test metrics with different row counts"""

@@ -31,10 +31,12 @@ def mock_user():
 @pytest.fixture
 def sample_upload_data():
     """Sample upload data"""
-    df = pd.DataFrame({
-        "date": pd.date_range("2024-01-01", periods=10, freq="D"),
-        "revenue": [100, 150, 200, 250, 300, 350, 400, 450, 500, 550],
-    })
+    df = pd.DataFrame(
+        {
+            "date": pd.date_range("2024-01-01", periods=10, freq="D"),
+            "revenue": [100, 150, 200, 250, 300, 350, 400, 450, 500, 550],
+        }
+    )
 
     schema = DataSchema(
         columns=[

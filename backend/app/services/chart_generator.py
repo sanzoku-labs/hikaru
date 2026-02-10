@@ -277,11 +277,12 @@ class ChartGenerator:
 
         for idx, suggestion in enumerate(suggestions):
             logger.debug(
-                f"Processing suggestion {idx + 1}/{len(suggestions)}: {suggestion.get('chart_type', 'unknown')} - {suggestion.get('title', 'untitled')}"
+                f"Processing suggestion {idx + 1}/{len(suggestions)}: "
+                f"{suggestion.get('chart_type', 'unknown')} - "
+                f"{suggestion.get('title', 'untitled')}"
             )
             try:
                 chart_type = suggestion.get("chart_type")
-                title = suggestion.get("title", "Chart")
 
                 # Create chart based on type
                 if chart_type == "line":

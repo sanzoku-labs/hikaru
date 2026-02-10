@@ -19,7 +19,6 @@ Without credentials, providers are marked as unavailable but the API structure w
 import json
 import logging
 import secrets
-import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlencode
@@ -161,7 +160,7 @@ class IntegrationService:
         """
         integrations = (
             self.db.query(Integration)
-            .filter(Integration.user_id == user_id, Integration.is_active == True)
+            .filter(Integration.user_id == user_id, Integration.is_active.is_(True))
             .order_by(Integration.created_at.desc())
             .all()
         )
@@ -372,7 +371,7 @@ class IntegrationService:
             .filter(
                 Integration.id == integration_id,
                 Integration.user_id == user_id,
-                Integration.is_active == True,
+                Integration.is_active.is_(True),
             )
             .first()
         )
@@ -433,7 +432,7 @@ class IntegrationService:
             .filter(
                 Integration.id == integration_id,
                 Integration.user_id == user_id,
-                Integration.is_active == True,
+                Integration.is_active.is_(True),
             )
             .first()
         )
@@ -461,8 +460,6 @@ class IntegrationService:
             integration.provider, token, file_id
         )
 
-        # Create file record
-        upload_id = str(uuid.uuid4())
         # Note: In production, would save to storage and create proper File record
         # For demo, return mock response
         return ImportFromProviderResponse(
@@ -483,11 +480,8 @@ class IntegrationService:
         if not provider:
             return False
 
-        client_id = getattr(settings, provider["env_client_id"].lower(), None)
-        client_secret = getattr(settings, provider["env_client_secret"].lower(), None)
-
         # For demo purposes, return True to show UI even without credentials
-        # In production, would check: return bool(client_id and client_secret)
+        # In production, check: bool(getattr(settings, provider["env_client_id"].lower(), None))
         return True
 
     def _get_provider_config(self, provider_id: str) -> Optional[Dict[str, Any]]:

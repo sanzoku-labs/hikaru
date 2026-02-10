@@ -11,12 +11,15 @@ class DataProcessor:
     def parse_file(
         file_path: str, file_extension: str, sheet_name: Optional[str | int] = None
     ) -> pd.DataFrame:
-        """Parse CSV or Excel file into DataFrame, supporting both US and European formats
+        """Parse CSV or Excel file into DataFrame.
+
+        Supports both US and European formats.
 
         Args:
             file_path: Path to the file
             file_extension: File extension (csv, xlsx, xls)
-            sheet_name: For Excel files, the sheet name or index (0-based). Defaults to 0 (first sheet)
+            sheet_name: For Excel files, the sheet name or index
+                (0-based). Defaults to 0 (first sheet)
         """
         if file_extension == "csv":
             # Try US format first (comma delimiter, period decimal)
@@ -44,7 +47,8 @@ class DataProcessor:
                 except Exception as e:
                     # If both fail, raise the original error
                     raise ValueError(
-                        f"Failed to parse CSV file. Tried both US (comma) and European (semicolon) formats. Error: {str(e)}"
+                        "Failed to parse CSV file. Tried both US (comma) "
+                        f"and European (semicolon) formats. Error: {e}"
                     )
 
         elif file_extension in ["xlsx", "xls"]:
@@ -134,7 +138,7 @@ class DataProcessor:
             try:
                 pd.to_datetime(series.dropna().head(100), format="mixed")
                 return "datetime"
-            except:
+            except (ValueError, TypeError):
                 pass
 
         # Check for numeric

@@ -102,7 +102,8 @@ async def create_relationship(
         if not compatibility["compatible"]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Files are not compatible for merge: {', '.join(compatibility['warnings'])}",
+                detail="Files are not compatible for merge: "
+                f"{', '.join(compatibility['warnings'])}",
             )
 
         # Create relationship config

@@ -77,7 +77,8 @@ class ExportService:
         story.append(Paragraph("📁 Dataset Overview", styles["CustomHeading1"]))
         story.append(
             Paragraph(
-                f"<b>Total Rows:</b> {schema.row_count:,} | <b>Total Columns:</b> {len(schema.columns)}",
+                f"<b>Total Rows:</b> {schema.row_count:,} | "
+                f"<b>Total Columns:</b> {len(schema.columns)}",
                 styles["CustomBodyText"],
             )
         )

@@ -73,7 +73,7 @@ describe('useAssistantFlow', () => {
     const { result } = renderHook(() => useAssistantFlow())
 
     expect(result.current.conversations).toHaveLength(1)
-    expect(result.current.conversations[0].conversation_id).toBe('c1')
+    expect(result.current.conversations[0]!.conversation_id).toBe('c1')
   })
 
   it('adds a file to selection', () => {
@@ -82,7 +82,7 @@ describe('useAssistantFlow', () => {
     act(() => { result.current.addFile(mockFile) })
 
     expect(result.current.selectedFiles).toHaveLength(1)
-    expect(result.current.selectedFiles[0].file_id).toBe(10)
+    expect(result.current.selectedFiles[0]!.file_id).toBe(10)
     expect(result.current.canAddMoreFiles).toBe(true)
   })
 
@@ -170,8 +170,8 @@ describe('useAssistantFlow', () => {
     })
     // Should have added user message + assistant message
     expect(result.current.messages).toHaveLength(2)
-    expect(result.current.messages[0].role).toBe('user')
-    expect(result.current.messages[1].role).toBe('assistant')
+    expect(result.current.messages[0]!.role).toBe('user')
+    expect(result.current.messages[1]!.role).toBe('assistant')
     expect(result.current.conversationId).toBe('c-new')
   })
 

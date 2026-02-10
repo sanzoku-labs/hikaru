@@ -48,10 +48,10 @@ describe('useChatFlow', () => {
     })
 
     expect(result.current.messages).toHaveLength(2)
-    expect(result.current.messages[0].role).toBe('user')
-    expect(result.current.messages[0].content).toBe('What are the trends?')
-    expect(result.current.messages[1].role).toBe('assistant')
-    expect(result.current.messages[1].content).toBe('Revenue is growing')
+    expect(result.current.messages[0]!.role).toBe('user')
+    expect(result.current.messages[0]!.content).toBe('What are the trends?')
+    expect(result.current.messages[1]!.role).toBe('assistant')
+    expect(result.current.messages[1]!.content).toBe('Revenue is growing')
   })
 
   it('passes conversation_id on follow-up messages', async () => {
@@ -105,8 +105,8 @@ describe('useChatFlow', () => {
     })
 
     expect(result.current.messages).toHaveLength(2)
-    expect(result.current.messages[1].role).toBe('assistant')
-    expect(result.current.messages[1].content).toContain('error')
+    expect(result.current.messages[1]!.role).toBe('assistant')
+    expect(result.current.messages[1]!.content).toContain('error')
   })
 
   it('clears chat', async () => {

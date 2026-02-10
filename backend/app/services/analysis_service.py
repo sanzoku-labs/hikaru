@@ -174,7 +174,8 @@ class AnalysisService:
         include_chart_insights: bool = False,
     ) -> Dict[str, Any]:
         """
-        Perform complete analysis: generate charts, optionally add insights, and create global summary.
+        Perform complete analysis: generate charts, optionally add insights,
+        and create global summary.
 
         Args:
             df: DataFrame to analyze

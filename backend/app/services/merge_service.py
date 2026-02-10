@@ -206,7 +206,6 @@ class MergeService:
         unique_b = set(df_b[right_key].dropna())
 
         matching_keys = len(unique_a & unique_b)
-        total_keys = len(unique_a | unique_b)
 
         if matching_keys == 0:
             result["warnings"].append(

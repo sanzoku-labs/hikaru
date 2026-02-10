@@ -149,7 +149,6 @@ async def export_advanced(
             )
 
         # Get file data
-        file_data = None
         filename = None
         schema = None
         charts = []
@@ -249,7 +248,6 @@ async def export_advanced(
         export_service = ExportService()
         export_id = None
         file_extension = request.export_format
-        media_type = "application/pdf"
 
         if request.export_format == "pdf":
             export_id = export_service.generate_pdf(
@@ -259,7 +257,6 @@ async def export_advanced(
                 global_summary=global_summary,
                 custom_title=request.custom_title,
             )
-            media_type = "application/pdf"
 
         elif request.export_format == "png":
             # PNG export (charts as images)
@@ -271,7 +268,6 @@ async def export_advanced(
                 global_summary=global_summary,
                 custom_title=request.custom_title,
             )
-            media_type = "image/png"
             file_extension = "png"
 
         elif request.export_format == "excel":
@@ -284,7 +280,6 @@ async def export_advanced(
                 global_summary=global_summary,
                 custom_title=request.custom_title,
             )
-            media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             file_extension = "xlsx"
 
         # Get file size

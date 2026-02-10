@@ -97,7 +97,7 @@ class ProjectService:
         query = self.db.query(Project).filter(Project.user_id == user_id)
 
         if not include_archived:
-            query = query.filter(Project.is_archived == False)
+            query = query.filter(Project.is_archived.is_(False))
 
         projects = query.order_by(Project.updated_at.desc()).all()
 

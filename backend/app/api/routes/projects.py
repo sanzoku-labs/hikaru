@@ -22,8 +22,6 @@ from app.core.rate_limit import limiter
 from app.database import get_db
 from app.middleware.auth import get_current_active_user
 from app.models.database import File as FileModel
-
-logger = logging.getLogger(__name__)
 from app.models.database import User
 from app.models.schemas import (
     AnalysisHistoryItem,
@@ -42,6 +40,8 @@ from app.models.schemas import (
 )
 from app.services.data_processor import DataProcessor
 from app.services.project_service import ProjectService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 
@@ -631,7 +631,7 @@ async def download_project_file(
         project_service = ProjectService(db)
 
         # Verify project exists and user owns it
-        project = project_service.get_project(project_id=project_id, user_id=current_user.id)
+        project_service.get_project(project_id=project_id, user_id=current_user.id)
 
         # Find file
         file = (
@@ -700,7 +700,7 @@ async def get_file_sheets(
         project_service = ProjectService(db)
 
         # Verify project exists and user owns it
-        project = project_service.get_project(project_id=project_id, user_id=current_user.id)
+        project_service.get_project(project_id=project_id, user_id=current_user.id)
 
         # Find file
         file = (
@@ -798,7 +798,7 @@ async def analyze_project_file(
         project_service = ProjectService(db)
 
         # Verify project exists and user owns it
-        project = project_service.get_project(project_id=project_id, user_id=current_user.id)
+        project_service.get_project(project_id=project_id, user_id=current_user.id)
 
         # Find file
         file = (
@@ -834,7 +834,9 @@ async def analyze_project_file(
             sheet_info = f" (sheet: {request.sheet_name})" if request.sheet_name else ""
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Cannot analyze this sheet{sheet_info}: {error_msg}. Please select a different sheet with sufficient data and at least one numeric column.",
+                detail=f"Cannot analyze this sheet{sheet_info}: {error_msg}. "
+                "Please select a different sheet with sufficient data "
+                "and at least one numeric column.",
             )
 
         # Parse schema from stored JSON
@@ -931,7 +933,7 @@ async def get_project_file_analysis(
         project_service = ProjectService(db)
 
         # Verify project exists and user owns it
-        project = project_service.get_project(project_id=project_id, user_id=current_user.id)
+        project_service.get_project(project_id=project_id, user_id=current_user.id)
 
         # Find file
         file = (
@@ -1014,7 +1016,7 @@ async def get_analysis_history(
         project_service = ProjectService(db)
 
         # Verify project exists and user owns it
-        project = project_service.get_project(project_id=project_id, user_id=current_user.id)
+        project_service.get_project(project_id=project_id, user_id=current_user.id)
 
         # Find file
         file = (
@@ -1096,7 +1098,7 @@ async def list_file_analyses(
         project_service = ProjectService(db)
 
         # Verify project exists and user owns it
-        project = project_service.get_project(project_id=project_id, user_id=current_user.id)
+        project_service.get_project(project_id=project_id, user_id=current_user.id)
 
         # Find file
         file = (
@@ -1182,7 +1184,7 @@ async def get_file_analysis(
         project_service = ProjectService(db)
 
         # Verify project exists and user owns it
-        project = project_service.get_project(project_id=project_id, user_id=current_user.id)
+        project_service.get_project(project_id=project_id, user_id=current_user.id)
 
         # Find file
         file = (
@@ -1266,7 +1268,7 @@ async def delete_file_analysis(
         project_service = ProjectService(db)
 
         # Verify project exists and user owns it
-        project = project_service.get_project(project_id=project_id, user_id=current_user.id)
+        project_service.get_project(project_id=project_id, user_id=current_user.id)
 
         # Find file
         file = (

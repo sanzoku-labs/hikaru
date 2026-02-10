@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 interface EmptyStateViewProps {
   icon?: React.ReactNode
@@ -44,18 +45,9 @@ export function EmptyStateView({
 
       {/* Action button */}
       {action && (
-        <button
-          onClick={action.onClick}
-          className={cn(
-            'inline-flex items-center gap-2 px-5 py-2.5 rounded-lg',
-            'bg-primary text-primary-foreground font-medium',
-            'transition-all duration-200',
-            'hover:bg-primary/90 hover:glow-primary-sm',
-            'focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background'
-          )}
-        >
+        <Button onClick={action.onClick}>
           {action.label}
-        </button>
+        </Button>
       )}
     </div>
   )

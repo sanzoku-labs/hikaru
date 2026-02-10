@@ -13,6 +13,7 @@ import {
   FileText,
   Link2,
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 interface NavItem {
   label: string
@@ -68,7 +69,7 @@ export function SidebarView({ collapsed, onToggle }: SidebarViewProps) {
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/'
-    return location.pathname.startsWith(path)
+    return location.pathname === path || location.pathname.startsWith(path + '/')
   }
 
   return (
@@ -167,14 +168,10 @@ export function SidebarView({ collapsed, onToggle }: SidebarViewProps) {
 
       {/* Collapse toggle */}
       <div className="p-3 border-t border-border">
-        <button
+        <Button
+          variant="ghost"
           onClick={onToggle}
-          className={cn(
-            'w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg',
-            'text-muted-foreground text-sm',
-            'transition-colors duration-200',
-            'hover:bg-muted hover:text-foreground'
-          )}
+          className="w-full justify-center gap-2"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? (
@@ -185,7 +182,7 @@ export function SidebarView({ collapsed, onToggle }: SidebarViewProps) {
               <span>Collapse</span>
             </>
           )}
-        </button>
+        </Button>
       </div>
     </aside>
   )

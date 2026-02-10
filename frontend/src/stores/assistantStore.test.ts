@@ -15,7 +15,6 @@ describe('assistantStore', () => {
       selectedFiles: [],
       conversationId: null,
       messages: [],
-      isChatOpen: true,
     })
     vi.restoreAllMocks()
   })
@@ -120,17 +119,4 @@ describe('assistantStore', () => {
     })
   })
 
-  describe('UI state', () => {
-    it('starts with isChatOpen true', () => {
-      expect(useAssistantStore.getState().isChatOpen).toBe(true)
-    })
-
-    it('sets isChatOpen', () => {
-      useAssistantStore.getState().setIsChatOpen(false)
-      expect(useAssistantStore.getState().isChatOpen).toBe(false)
-
-      useAssistantStore.getState().setIsChatOpen(true)
-      expect(useAssistantStore.getState().isChatOpen).toBe(true)
-    })
-  })
 })

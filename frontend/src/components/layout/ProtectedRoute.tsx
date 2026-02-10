@@ -1,8 +1,11 @@
+import { useEffect } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 import { useUIStore } from '@/stores/uiStore'
 import { AppLayoutView } from '@/views/layout'
 import { useLogout } from '@/services/api/mutations/useLogout'
+import { apiClient } from '@/services/axios'
+import { ENDPOINTS } from '@/services/endpoints'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -13,6 +16,14 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, user } = useAuthStore()
   const { sidebarCollapsed, theme, toggleSidebar, setTheme } = useUIStore()
   const logoutMutation = useLogout()
+
+  // Validate token on mount - 401 interceptor handles logout + redirect
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (isAuthenticated) {
+      apiClient.get(ENDPOINTS.AUTH.ME).catch(() => {})
+    }
+  }, [])
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {

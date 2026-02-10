@@ -71,11 +71,7 @@ export function useQuickAnalysisFlow(): UseQuickAnalysisFlowReturn {
       const uploadResult = await uploadMutation.mutateAsync(selectedFile)
       setUploadData(uploadResult)
 
-      // Stage 2: Process (brief pause to show schema)
-      setStage('processing')
-      await new Promise((resolve) => setTimeout(resolve, 500))
-
-      // Stage 3: Analyze with user intent
+      // Stage 2: Analyze with user intent
       setStage('analyzing')
       const analyzeResult = await analyzeMutation.mutateAsync({
         uploadId: uploadResult.upload_id,

@@ -1,11 +1,11 @@
 import { create } from 'zustand'
-import type { FileContext, ConversationMessageDetail } from '@/types/api'
+import type { FileContext, ConversationMessageDetail, ChartData } from '@/types/api'
 
 interface AssistantMessage {
   id: string
   role: 'user' | 'assistant'
   content: string
-  chart?: any
+  chart?: ChartData | null
   timestamp: string
 }
 
@@ -24,9 +24,6 @@ interface AssistantState {
   loadMessages: (messages: ConversationMessageDetail[], conversationId: string) => void
   clearConversation: () => void
 
-  // UI state
-  isChatOpen: boolean
-  setIsChatOpen: (open: boolean) => void
 }
 
 export const useAssistantStore = create<AssistantState>((set, get) => ({
@@ -34,9 +31,10 @@ export const useAssistantStore = create<AssistantState>((set, get) => ({
   selectedFiles: [],
   addFile: (file: FileContext) => {
     const current = get().selectedFiles
-    // Max 5 files
-    if (current.length >= 5) return
-    // Don't add duplicates
+    if (current.length >= 5) {
+      import('sonner').then(({ toast }) => toast.warning('Maximum 5 files allowed'))
+      return
+    }
     if (current.some((f) => f.file_id === file.file_id)) return
     set({ selectedFiles: [...current, file] })
   },
@@ -67,8 +65,4 @@ export const useAssistantStore = create<AssistantState>((set, get) => ({
     })
   },
   clearConversation: () => set({ conversationId: null, messages: [] }),
-
-  // UI state
-  isChatOpen: true,
-  setIsChatOpen: (open: boolean) => set({ isChatOpen: open }),
 }))

@@ -74,7 +74,7 @@ export function AssistantView({
       {/* Main content - Split view */}
       <div className="flex-1 flex gap-4 min-h-0">
         {/* Left panel - File Selection */}
-        <div className="w-80 flex-shrink-0 flex flex-col min-h-0">
+        <div className="w-64 md:w-80 flex-shrink-0 flex flex-col min-h-0">
           <FileSelectionPanel
             projects={projects}
             isLoading={isLoadingProjects}

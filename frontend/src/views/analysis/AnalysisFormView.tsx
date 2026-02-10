@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Upload, FileSpreadsheet, X, Sparkles, ArrowRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 
@@ -210,18 +211,16 @@ export function AnalysisFormView({
                 {formatFileSize(selectedFile.size)}
               </p>
             </div>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={onFileRemove}
-              className={cn(
-                'p-1.5 rounded-md',
-                'text-muted-foreground hover:text-destructive',
-                'hover:bg-destructive/10 transition-colors'
-              )}
+              className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
               aria-label="Remove file"
             >
               <X className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
         )}
 
@@ -252,22 +251,16 @@ export function AnalysisFormView({
       </div>
 
       {/* Submit Button */}
-      <button
+      <Button
         type="submit"
         disabled={!canSubmit}
-        className={cn(
-          'w-full flex items-center justify-center gap-2',
-          'px-6 py-3 rounded-xl',
-          'bg-primary text-primary-foreground font-medium',
-          'transition-all duration-200',
-          'hover:bg-primary/90 hover:glow-primary-sm',
-          'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary'
-        )}
+        size="lg"
+        className="w-full"
       >
         <Sparkles className="h-4 w-4" />
         {submitLabel}
         <ArrowRight className="h-4 w-4" />
-      </button>
+      </Button>
     </form>
   )
 }

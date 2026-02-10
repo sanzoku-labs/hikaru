@@ -1,24 +1,15 @@
 import { useMemo } from 'react'
 import ReactECharts from 'echarts-for-react'
 import type { ChartData } from '@/types/api'
+import { useChartColors } from './chartTheme'
 
 interface BarChartViewProps {
   chartData: ChartData
 }
 
-// Hikaru color palette - hex for ECharts compatibility
-const CHART_COLORS = {
-  primary: '#F5A623',
-  accent: '#E8941C',
-  info: '#0EA5E9',
-  success: '#22C55E',
-  purple: '#8B5CF6',
-  background: '#0F1218',
-  border: '#1E2330',
-  text: '#9CA3AF',
-}
-
 export function BarChartView({ chartData }: BarChartViewProps) {
+  const { colors: CHART_COLORS } = useChartColors()
+
   const option = useMemo(() => {
     // Backend returns bar data as: { category: string, value: number }
     const categories = chartData.data?.map((d) => d.category ?? d[chartData.category_column || '']) || []
@@ -104,7 +95,7 @@ export function BarChartView({ chartData }: BarChartViewProps) {
       animationDuration: 600,
       animationEasing: 'cubicInOut',
     }
-  }, [chartData])
+  }, [chartData, CHART_COLORS])
 
   return (
     <ReactECharts

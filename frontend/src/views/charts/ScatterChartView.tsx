@@ -1,20 +1,15 @@
 import { useMemo } from 'react'
 import ReactECharts from 'echarts-for-react'
 import type { ChartData } from '@/types/api'
+import { useChartColors } from './chartTheme'
 
 interface ScatterChartViewProps {
   chartData: ChartData
 }
 
-// Hikaru color palette - hex for ECharts compatibility
-const CHART_COLORS = {
-  primary: '#F5A623',
-  background: '#0F1218',
-  border: '#1E2330',
-  text: '#9CA3AF',
-}
-
 export function ScatterChartView({ chartData }: ScatterChartViewProps) {
+  const { colors: CHART_COLORS } = useChartColors()
+
   const option = useMemo(() => {
     const xColumn = chartData.x_column || ''
     const yColumn = chartData.y_column || ''
@@ -110,7 +105,7 @@ export function ScatterChartView({ chartData }: ScatterChartViewProps) {
       animationDuration: 600,
       animationEasing: 'cubicInOut',
     }
-  }, [chartData])
+  }, [chartData, CHART_COLORS])
 
   return (
     <ReactECharts

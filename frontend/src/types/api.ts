@@ -33,7 +33,7 @@ export interface ColumnInfo {
   type: 'numeric' | 'categorical' | 'datetime'
   null_count: number
   unique_values?: number
-  sample_values: any[]
+  sample_values: (string | number | boolean | null)[]
   min?: number
   max?: number
   mean?: number
@@ -43,7 +43,7 @@ export interface ColumnInfo {
 export interface DataSchema {
   columns: ColumnInfo[]
   row_count: number
-  preview: Record<string, any>[]
+  preview: Record<string, unknown>[]
 }
 
 export interface UploadResponse {

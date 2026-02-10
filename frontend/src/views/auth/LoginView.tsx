@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import { Sparkles, Eye, EyeOff } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 
 interface LoginViewProps {
@@ -142,11 +143,13 @@ export function LoginView({
                   'h-11',
                   errors.username && 'border-destructive focus-visible:ring-destructive'
                 )}
+                aria-invalid={!!errors.username}
+                aria-describedby={errors.username ? 'username-error' : undefined}
                 autoComplete="username"
                 autoFocus
               />
               {errors.username && (
-                <p className="text-sm text-destructive">{errors.username}</p>
+                <p id="username-error" role="alert" className="text-sm text-destructive">{errors.username}</p>
               )}
             </div>
 
@@ -164,12 +167,16 @@ export function LoginView({
                     'h-11 pr-10',
                     errors.password && 'border-destructive focus-visible:ring-destructive'
                   )}
+                  aria-invalid={!!errors.password}
+                  aria-describedby={errors.password ? 'password-error' : undefined}
                   autoComplete="current-password"
                 />
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 h-auto w-auto p-1 text-muted-foreground hover:text-foreground"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
@@ -177,26 +184,19 @@ export function LoginView({
                   ) : (
                     <Eye className="h-4 w-4" />
                   )}
-                </button>
+                </Button>
               </div>
               {errors.password && (
-                <p className="text-sm text-destructive">{errors.password}</p>
+                <p id="password-error" role="alert" className="text-sm text-destructive">{errors.password}</p>
               )}
             </div>
 
             {/* Submit button */}
-            <button
+            <Button
               type="submit"
               disabled={isSubmitting}
-              className={cn(
-                'w-full h-11 rounded-lg font-medium',
-                'bg-primary text-primary-foreground',
-                'transition-all duration-200',
-                'hover:bg-primary/90',
-                'focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background',
-                'disabled:opacity-50 disabled:cursor-not-allowed',
-                !isSubmitting && 'hover:glow-primary-sm'
-              )}
+              size="lg"
+              className="w-full"
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center gap-2">
@@ -206,7 +206,7 @@ export function LoginView({
               ) : (
                 'Sign in'
               )}
-            </button>
+            </Button>
           </form>
 
           {/* Register link */}

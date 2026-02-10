@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import { Sparkles, Eye, EyeOff, Check } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 
 interface RegisterViewProps {
@@ -207,11 +208,13 @@ export function RegisterView({
                   'h-11',
                   errors.fullName && 'border-destructive focus-visible:ring-destructive'
                 )}
+                aria-invalid={!!errors.fullName}
+                aria-describedby={errors.fullName ? 'fullName-error' : undefined}
                 autoComplete="name"
                 autoFocus
               />
               {errors.fullName && (
-                <p className="text-sm text-destructive">{errors.fullName}</p>
+                <p id="fullName-error" role="alert" className="text-sm text-destructive">{errors.fullName}</p>
               )}
             </div>
 
@@ -228,10 +231,12 @@ export function RegisterView({
                   'h-11',
                   errors.email && 'border-destructive focus-visible:ring-destructive'
                 )}
+                aria-invalid={!!errors.email}
+                aria-describedby={errors.email ? 'email-error' : undefined}
                 autoComplete="email"
               />
               {errors.email && (
-                <p className="text-sm text-destructive">{errors.email}</p>
+                <p id="email-error" role="alert" className="text-sm text-destructive">{errors.email}</p>
               )}
             </div>
 
@@ -248,10 +253,12 @@ export function RegisterView({
                   'h-11',
                   errors.username && 'border-destructive focus-visible:ring-destructive'
                 )}
+                aria-invalid={!!errors.username}
+                aria-describedby={errors.username ? 'reg-username-error' : undefined}
                 autoComplete="username"
               />
               {errors.username && (
-                <p className="text-sm text-destructive">{errors.username}</p>
+                <p id="reg-username-error" role="alert" className="text-sm text-destructive">{errors.username}</p>
               )}
             </div>
 
@@ -269,12 +276,16 @@ export function RegisterView({
                     'h-11 pr-10',
                     errors.password && 'border-destructive focus-visible:ring-destructive'
                   )}
+                  aria-invalid={!!errors.password}
+                  aria-describedby={errors.password ? 'reg-password-error' : undefined}
                   autoComplete="new-password"
                 />
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 h-auto w-auto p-1 text-muted-foreground hover:text-foreground"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
@@ -282,28 +293,21 @@ export function RegisterView({
                   ) : (
                     <Eye className="h-4 w-4" />
                   )}
-                </button>
+                </Button>
               </div>
               {errors.password ? (
-                <p className="text-sm text-destructive">{errors.password}</p>
+                <p id="reg-password-error" role="alert" className="text-sm text-destructive">{errors.password}</p>
               ) : (
                 password && <PasswordStrength password={password} />
               )}
             </div>
 
             {/* Submit button */}
-            <button
+            <Button
               type="submit"
               disabled={isSubmitting}
-              className={cn(
-                'w-full h-11 rounded-lg font-medium mt-6',
-                'bg-primary text-primary-foreground',
-                'transition-all duration-200',
-                'hover:bg-primary/90',
-                'focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background',
-                'disabled:opacity-50 disabled:cursor-not-allowed',
-                !isSubmitting && 'hover:glow-primary-sm'
-              )}
+              size="lg"
+              className="w-full mt-6"
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center gap-2">
@@ -313,7 +317,7 @@ export function RegisterView({
               ) : (
                 'Create account'
               )}
-            </button>
+            </Button>
           </form>
 
           {/* Login link */}

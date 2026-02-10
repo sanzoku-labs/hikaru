@@ -1,30 +1,15 @@
 import { useMemo } from 'react'
 import ReactECharts from 'echarts-for-react'
 import type { ChartData } from '@/types/api'
+import { useChartColors } from './chartTheme'
 
 interface PieChartViewProps {
   chartData: ChartData
 }
 
-// Hikaru color palette - hex for ECharts compatibility
-const PIE_COLORS = [
-  '#F5A623',  // Primary amber
-  '#E8941C',  // Accent gold
-  '#0EA5E9',  // Info blue
-  '#22C55E',  // Success green
-  '#8B5CF6',  // Purple
-  '#EF4444',  // Red
-  '#F97316',  // Orange
-  '#14B8A6',  // Teal
-]
-
-const CHART_COLORS = {
-  background: '#0F1218',
-  border: '#1E2330',
-  text: '#9CA3AF',
-}
-
 export function PieChartView({ chartData }: PieChartViewProps) {
+  const { colors: CHART_COLORS, pieColors: PIE_COLORS } = useChartColors()
+
   const option = useMemo(() => {
     // Backend returns pie data as: { name: string, value: number }
     const pieData =
@@ -99,7 +84,7 @@ export function PieChartView({ chartData }: PieChartViewProps) {
       animationDuration: 600,
       animationEasing: 'cubicInOut',
     }
-  }, [chartData])
+  }, [chartData, CHART_COLORS, PIE_COLORS])
 
   return (
     <ReactECharts

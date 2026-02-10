@@ -20,7 +20,7 @@ export function useChatFlow({ uploadId }: UseChatFlowOptions) {
 
       // Create user message
       const userMessage: ChatMessage = {
-        id: `user-${Date.now()}`,
+        id: `user-${crypto.randomUUID()}`,
         role: 'user',
         content,
         timestamp: new Date().toISOString(),
@@ -42,7 +42,7 @@ export function useChatFlow({ uploadId }: UseChatFlowOptions) {
 
         // Create assistant message
         const assistantMessage: ChatMessage = {
-          id: `assistant-${Date.now()}`,
+          id: `assistant-${crypto.randomUUID()}`,
           role: 'assistant',
           content: response.answer,
           timestamp: response.timestamp,
@@ -54,7 +54,7 @@ export function useChatFlow({ uploadId }: UseChatFlowOptions) {
       } catch (error) {
         // Add error message
         const errorMessage: ChatMessage = {
-          id: `error-${Date.now()}`,
+          id: `error-${crypto.randomUUID()}`,
           role: 'assistant',
           content:
             'Sorry, I encountered an error processing your request. Please try again.',

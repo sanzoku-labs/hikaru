@@ -58,7 +58,6 @@ describe('useAssistantFlow', () => {
       selectedFiles: [],
       conversationId: null,
       messages: [],
-      isChatOpen: true,
     })
   })
 

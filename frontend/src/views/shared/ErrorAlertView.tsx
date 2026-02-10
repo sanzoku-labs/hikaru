@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { AlertCircle, XCircle, RefreshCw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 interface ErrorAlertViewProps {
   title?: string
@@ -51,11 +52,12 @@ export function ErrorAlertView({
 
           {/* Actions */}
           {onRetry && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={onRetry}
               className={cn(
-                'mt-3 inline-flex items-center gap-1.5 text-sm font-medium',
-                'transition-colors duration-200',
+                'mt-3 px-0',
                 isError
                   ? 'text-destructive hover:text-destructive/80'
                   : 'text-primary hover:text-primary/80'
@@ -63,16 +65,18 @@ export function ErrorAlertView({
             >
               <RefreshCw className="h-3.5 w-3.5" />
               Try again
-            </button>
+            </Button>
           )}
         </div>
 
         {/* Dismiss button */}
         {onDismiss && (
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onDismiss}
             className={cn(
-              'flex-shrink-0 p-1 rounded-md transition-colors duration-200',
+              'h-8 w-8 flex-shrink-0',
               isError
                 ? 'hover:bg-destructive/20'
                 : 'hover:bg-primary/20'
@@ -80,7 +84,7 @@ export function ErrorAlertView({
             aria-label="Dismiss"
           >
             <XCircle className="h-4 w-4" />
-          </button>
+          </Button>
         )}
       </div>
     </div>

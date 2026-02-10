@@ -1,24 +1,15 @@
 import { useMemo } from 'react'
 import ReactECharts from 'echarts-for-react'
 import type { ChartData } from '@/types/api'
+import { useChartColors } from './chartTheme'
 
 interface LineChartViewProps {
   chartData: ChartData
 }
 
-// Hikaru color palette - warm amber tones (hex for ECharts compatibility)
-const CHART_COLORS = {
-  primary: '#F5A623',     // Primary amber
-  accent: '#E8941C',      // Accent gold
-  info: '#0EA5E9',        // Info blue
-  success: '#22C55E',     // Success green
-  purple: '#8B5CF6',      // Purple
-  background: '#0F1218',  // Dark background
-  border: '#1E2330',      // Border color
-  text: '#9CA3AF',        // Muted text
-}
-
 export function LineChartView({ chartData }: LineChartViewProps) {
+  const { colors: CHART_COLORS } = useChartColors()
+
   const option = useMemo(() => {
     // Backend returns line data as: { x: value, y: value } or column-based
     const xData = chartData.data?.map((d) => d.x ?? d[chartData.x_column || '']) || []
@@ -114,7 +105,7 @@ export function LineChartView({ chartData }: LineChartViewProps) {
       animationDuration: 600,
       animationEasing: 'cubicInOut',
     }
-  }, [chartData])
+  }, [chartData, CHART_COLORS])
 
   return (
     <ReactECharts

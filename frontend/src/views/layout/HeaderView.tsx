@@ -6,6 +6,7 @@ import {
   User,
   ChevronDown,
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,15 +59,10 @@ export function HeaderView({
         {/* Right side - actions */}
         <div className="flex items-center gap-2">
           {/* Theme toggle */}
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onThemeToggle}
-            className={cn(
-              'p-2 rounded-lg',
-              'text-muted-foreground',
-              'transition-all duration-200',
-              'hover:bg-muted hover:text-foreground',
-              'focus:outline-none focus:ring-2 focus:ring-primary/50'
-            )}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {theme === 'dark' ? (
@@ -74,18 +70,14 @@ export function HeaderView({
             ) : (
               <Moon className="h-5 w-5" />
             )}
-          </button>
+          </Button>
 
           {/* User dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button
-                className={cn(
-                  'flex items-center gap-2 p-1.5 pr-3 rounded-lg',
-                  'transition-all duration-200',
-                  'hover:bg-muted',
-                  'focus:outline-none focus:ring-2 focus:ring-primary/50'
-                )}
+              <Button
+                variant="ghost"
+                className="h-auto p-1.5 pr-3"
               >
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
@@ -96,7 +88,7 @@ export function HeaderView({
                   {user?.full_name || user?.username}
                 </span>
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              </button>
+              </Button>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="end" className="w-56">

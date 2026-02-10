@@ -6,29 +6,30 @@ import axios from 'axios'
 
 describe('axios interceptors', () => {
   let apiClient: typeof import('./axios').apiClient
+  let getAuthStore: () => typeof import('@/stores/authStore').useAuthStore
 
   beforeEach(async () => {
     vi.restoreAllMocks()
     localStorage.clear()
 
-    // Re-import to get fresh instance
+    // Re-import to get fresh instance (must import auth store from same module graph)
     vi.resetModules()
-    const mod = await import('./axios')
-    apiClient = mod.apiClient
+    const [axiosMod, authMod] = await Promise.all([
+      import('./axios'),
+      import('@/stores/authStore'),
+    ])
+    apiClient = axiosMod.apiClient
+    getAuthStore = () => authMod.useAuthStore
+    getAuthStore().setState({ user: null, token: null, isAuthenticated: false })
   })
 
   describe('request interceptor', () => {
-    it('attaches Bearer token when present in localStorage', async () => {
-      localStorage.setItem('token', 'my-jwt-token')
-
-      // Use interceptors manually
-      const config = { headers: axios.defaults.headers.common } as any
-      config.headers = { ...config.headers }
+    it('attaches Bearer token when present in auth store', async () => {
+      getAuthStore().setState({ token: 'my-jwt-token', isAuthenticated: true })
 
       // Get the request interceptor
       const interceptor = (apiClient.interceptors.request as any).handlers[0]
       const result = interceptor.fulfilled({
-        ...config,
         headers: new axios.AxiosHeaders(),
       })
 
@@ -53,14 +54,13 @@ describe('axios interceptors', () => {
       expect(result).toBe(response)
     })
 
-    it('handles 401 by clearing storage and redirecting', async () => {
-      localStorage.setItem('token', 'old-token')
-      localStorage.setItem('user', 'user-data')
+    it('handles 401 by clearing auth store and redirecting', async () => {
+      getAuthStore().setState({ token: 'old-token', isAuthenticated: true })
 
-      // Mock window.location
-      const originalHref = window.location.href
+      // Mock window.location.replace
+      const replaceMock = vi.fn()
       Object.defineProperty(window, 'location', {
-        value: { href: originalHref },
+        value: { replace: replaceMock },
         writable: true,
         configurable: true,
       })
@@ -72,9 +72,9 @@ describe('axios interceptors', () => {
       }
 
       await expect(interceptor.rejected(error)).rejects.toThrow('Session expired. Please log in again.')
-      expect(localStorage.getItem('token')).toBeNull()
-      expect(localStorage.getItem('user')).toBeNull()
-      expect(window.location.href).toBe('/login')
+      expect(getAuthStore().getState().isAuthenticated).toBe(false)
+      expect(getAuthStore().getState().token).toBeNull()
+      expect(replaceMock).toHaveBeenCalledWith('/login')
     })
 
     it('handles 403 with permission error', async () => {

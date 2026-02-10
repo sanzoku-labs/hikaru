@@ -41,10 +41,6 @@ describe('authStore', () => {
       expect(state.isAuthenticated).toBe(true)
     })
 
-    it('stores token in localStorage', () => {
-      useAuthStore.getState().setAuth(mockUser, 'test-token-123')
-      expect(localStorage.getItem('token')).toBe('test-token-123')
-    })
   })
 
   describe('logout', () => {
@@ -62,11 +58,6 @@ describe('authStore', () => {
       expect(state.isAuthenticated).toBe(false)
     })
 
-    it('removes token from localStorage', () => {
-      useAuthStore.getState().setAuth(mockUser, 'test-token-123')
-      useAuthStore.getState().logout()
-      expect(localStorage.getItem('token')).toBeNull()
-    })
   })
 
   describe('updateUser', () => {

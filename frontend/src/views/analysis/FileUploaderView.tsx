@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Upload, FileSpreadsheet, X } from 'lucide-react'
 
@@ -18,6 +18,7 @@ export function FileUploaderView({
 }: FileUploaderViewProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const validateFile = useCallback((file: File): string | null => {
     // Check file type
@@ -100,7 +101,7 @@ export function FileUploaderView({
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      <label
+      <div
         className={cn(
           'relative flex flex-col items-center justify-center',
           'min-h-[280px] p-8',
@@ -116,8 +117,19 @@ export function FileUploaderView({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        onClick={() => !disabled && inputRef.current?.click()}
+        tabIndex={0}
+        role="button"
+        aria-label="Select file to upload"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            inputRef.current?.click()
+          }
+        }}
       >
         <input
+          ref={inputRef}
           type="file"
           accept=".csv,.xlsx,.xls"
           onChange={handleInputChange}
@@ -168,7 +180,7 @@ export function FileUploaderView({
         {isDragging && (
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/10 via-transparent to-accent/10 pointer-events-none" />
         )}
-      </label>
+      </div>
 
       {/* Error message */}
       {displayError && (

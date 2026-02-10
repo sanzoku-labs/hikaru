@@ -1,4 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
+import { useAuthStore } from '@/stores/authStore'
 
 // Create axios instance
 export const apiClient = axios.create({
@@ -12,7 +13,7 @@ export const apiClient = axios.create({
 // Request interceptor - attach JWT token
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('token')
+    const token = useAuthStore.getState().token
 
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
@@ -28,12 +29,14 @@ apiClient.interceptors.request.use(
 // Response interceptor - handle errors globally
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<{ error?: string; detail?: string }>) => {
+  async (error: AxiosError<{ error?: string; detail?: string }>) => {
     // Handle 401 Unauthorized - logout user
     if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      window.location.href = '/login'
+      const { useAuthStore: authStore } = await import('@/stores/authStore')
+      authStore.getState().logout()
+      const { toast } = await import('sonner')
+      toast.error('Session expired. Please log in again.')
+      window.location.replace('/login')
       return Promise.reject(new Error('Session expired. Please log in again.'))
     }
 

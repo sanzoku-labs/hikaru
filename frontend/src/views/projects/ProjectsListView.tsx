@@ -7,6 +7,7 @@ import {
   Trash2,
   ChevronRight,
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { PageHeaderView, EmptyStateView, LoadingSpinnerView, ErrorAlertView } from '@/views/shared'
 import { CreateProjectFormView } from './CreateProjectFormView'
 import type { ProjectResponse } from '@/types/api'
@@ -60,18 +61,10 @@ export function ProjectsListView({
         title="Projects"
         description="Organize your data files into projects for multi-file analysis"
         actions={
-          <button
-            onClick={onOpenCreateForm}
-            className={cn(
-              'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
-              'bg-primary text-primary-foreground font-medium text-sm',
-              'transition-all duration-200',
-              'hover:bg-primary/90 hover:glow-primary-sm'
-            )}
-          >
+          <Button onClick={onOpenCreateForm}>
             <Plus className="h-4 w-4" />
             New Project
-          </button>
+          </Button>
         }
       />
 
@@ -117,19 +110,19 @@ export function ProjectsListView({
               onClick={() => onProjectClick(project.id)}
             >
               {/* Delete button */}
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={(e) => {
                   e.stopPropagation()
                   onDelete(project.id)
                 }}
                 disabled={isDeleting && deletingId === project.id}
                 className={cn(
-                  'absolute top-3 right-3 p-2 rounded-lg',
+                  'absolute top-3 right-3 h-8 w-8',
                   'text-muted-foreground/50',
-                  'transition-all duration-200',
                   'hover:bg-destructive/10 hover:text-destructive',
-                  'group-hover:text-muted-foreground',
-                  'disabled:opacity-50'
+                  'group-hover:text-muted-foreground'
                 )}
                 aria-label="Delete project"
               >
@@ -138,7 +131,7 @@ export function ProjectsListView({
                 ) : (
                   <Trash2 className="h-4 w-4" />
                 )}
-              </button>
+              </Button>
 
               {/* Project icon */}
               <div className="p-2.5 rounded-lg bg-primary/10 text-primary w-fit mb-4">

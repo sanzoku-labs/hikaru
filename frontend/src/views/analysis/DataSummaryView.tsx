@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { FileSpreadsheet, ChevronDown, ChevronUp, Rows3, Columns3 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { DataPreviewView } from './DataPreviewView'
 import type { DataSchema } from '@/types/api'
 
@@ -23,12 +24,13 @@ export function DataSummaryView({
   return (
     <div className={cn('rounded-xl border bg-card', className)}>
       {/* Minimal summary bar */}
-      <button
+      <Button
+        variant="ghost"
         onClick={() => setIsExpanded(!isExpanded)}
         className={cn(
-          'w-full flex items-center justify-between',
-          'px-4 py-3',
-          'text-left transition-colors',
+          'w-full flex items-center justify-between h-auto',
+          'px-4 py-3 rounded-none',
+          'text-left',
           'hover:bg-muted/50',
           isExpanded && 'border-b'
         )}
@@ -59,7 +61,7 @@ export function DataSummaryView({
             <ChevronDown className="h-4 w-4" />
           )}
         </div>
-      </button>
+      </Button>
 
       {/* Expanded content */}
       {isExpanded && (

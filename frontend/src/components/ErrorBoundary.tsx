@@ -1,6 +1,7 @@
 import { Component, type ReactNode } from 'react'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 interface Props {
   children: ReactNode
@@ -78,33 +79,15 @@ export class ErrorBoundary extends Component<Props, State> {
 
             {/* Actions */}
             <div className="flex items-center justify-center gap-3">
-              <button
-                onClick={this.handleReset}
-                className={cn(
-                  'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
-                  'bg-primary text-primary-foreground font-medium',
-                  'transition-all duration-200',
-                  'hover:bg-primary/90',
-                  'focus:outline-none focus:ring-2 focus:ring-primary/50'
-                )}
-              >
+              <Button variant="default" onClick={this.handleReset}>
                 <RefreshCw className="h-4 w-4" />
                 Try again
-              </button>
+              </Button>
 
-              <button
-                onClick={this.handleGoHome}
-                className={cn(
-                  'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
-                  'bg-secondary text-secondary-foreground font-medium',
-                  'transition-all duration-200',
-                  'hover:bg-secondary/80',
-                  'focus:outline-none focus:ring-2 focus:ring-secondary/50'
-                )}
-              >
+              <Button variant="secondary" onClick={this.handleGoHome}>
                 <Home className="h-4 w-4" />
                 Go home
-              </button>
+              </Button>
             </div>
           </div>
         </div>

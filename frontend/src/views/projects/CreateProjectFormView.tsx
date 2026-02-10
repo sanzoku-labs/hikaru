@@ -1,6 +1,8 @@
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -68,48 +70,31 @@ export function CreateProjectFormView({
             <Label htmlFor="project-description">
               Description <span className="text-muted-foreground text-xs">(optional)</span>
             </Label>
-            <textarea
+            <Textarea
               id="project-description"
               placeholder="Brief description of your project..."
               value={description}
               onChange={(e) => onDescriptionChange(e.target.value)}
               rows={3}
-              className={cn(
-                'flex w-full rounded-md border border-input bg-background px-3 py-2',
-                'text-sm ring-offset-background',
-                'placeholder:text-muted-foreground',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                'disabled:cursor-not-allowed disabled:opacity-50',
-                'resize-none'
-              )}
+              className="resize-none"
             />
           </div>
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-2">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={onClose}
-              className={cn(
-                'px-4 py-2 rounded-lg text-sm font-medium',
-                'bg-secondary text-secondary-foreground',
-                'hover:bg-secondary/80 transition-colors'
-              )}
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={isSubmitting}
-              className={cn(
-                'px-4 py-2 rounded-lg text-sm font-medium',
-                'bg-primary text-primary-foreground',
-                'hover:bg-primary/90 transition-colors',
-                'disabled:opacity-50 disabled:cursor-not-allowed'
-              )}
             >
               {isSubmitting ? 'Creating...' : 'Create Project'}
-            </button>
+            </Button>
           </div>
         </form>
       </DialogContent>

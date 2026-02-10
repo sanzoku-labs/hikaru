@@ -1,6 +1,7 @@
 import { Component, type ReactNode } from 'react'
 import { AlertTriangle, RefreshCw, ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 interface Props {
   children: ReactNode
@@ -35,7 +36,11 @@ export class RouteErrorBoundary extends Component<Props, State> {
   }
 
   handleBack = () => {
-    window.history.back()
+    if (window.history.length <= 1) {
+      window.location.href = '/'
+    } else {
+      window.history.back()
+    }
   }
 
   override render() {
@@ -71,28 +76,14 @@ export class RouteErrorBoundary extends Component<Props, State> {
             )}
 
             <div className="flex items-center justify-center gap-2">
-              <button
-                onClick={this.handleBack}
-                className={cn(
-                  'inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm',
-                  'bg-secondary text-secondary-foreground font-medium',
-                  'transition-colors hover:bg-secondary/80'
-                )}
-              >
+              <Button variant="secondary" onClick={this.handleBack}>
                 <ArrowLeft className="h-4 w-4" />
                 Go back
-              </button>
-              <button
-                onClick={this.handleRetry}
-                className={cn(
-                  'inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm',
-                  'bg-primary text-primary-foreground font-medium',
-                  'transition-colors hover:bg-primary/90'
-                )}
-              >
+              </Button>
+              <Button variant="default" onClick={this.handleRetry}>
                 <RefreshCw className="h-4 w-4" />
                 Try again
-              </button>
+              </Button>
             </div>
           </div>
         </div>

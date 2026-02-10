@@ -8,6 +8,7 @@ import {
   Trash2,
   ExternalLink,
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { LoadingSpinnerView, EmptyStateView } from '@/views/shared'
 import type { DashboardResponse } from '@/types/api'
@@ -78,24 +79,21 @@ function DashboardCard({
             </div>
           </div>
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onView}
-              className={cn(
-                'p-1.5 rounded-md transition-colors',
-                'text-muted-foreground hover:text-foreground hover:bg-muted'
-              )}
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
               title="View dashboard"
             >
               <ExternalLink className="h-4 w-4" />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onDelete}
               disabled={isDeleting}
-              className={cn(
-                'p-1.5 rounded-md transition-colors',
-                'text-muted-foreground hover:text-destructive hover:bg-destructive/10',
-                isDeleting && 'opacity-50 cursor-not-allowed'
-              )}
+              className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
               title="Delete dashboard"
             >
               {isDeleting ? (
@@ -103,7 +101,7 @@ function DashboardCard({
               ) : (
                 <Trash2 className="h-4 w-4" />
               )}
-            </button>
+            </Button>
           </div>
         </div>
       </CardHeader>

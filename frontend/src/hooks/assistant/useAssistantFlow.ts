@@ -1,10 +1,10 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useProjects } from '@/services/api/queries/useProjects'
 import { useConversations, useConversation } from '@/services/api/queries/useConversations'
 import { useAssistantQuery } from '@/services/api/mutations/useAssistantQuery'
 import { useDeleteConversation } from '@/services/api/mutations/useDeleteConversation'
 import { useAssistantStore } from '@/stores/assistantStore'
-import type { FileContext, ProjectResponse } from '@/types/api'
+import type { FileContext, ProjectResponse, ChartData } from '@/types/api'
 
 export interface UseAssistantFlowReturn {
   // File selection
@@ -24,7 +24,7 @@ export interface UseAssistantFlowReturn {
     id: string
     role: 'user' | 'assistant'
     content: string
-    chart?: any
+    chart?: ChartData | null
     timestamp: string
   }>
   loadConversation: (id: string) => void
@@ -107,7 +107,7 @@ export function useAssistantFlow(): UseAssistantFlowReturn {
   }, [clearConversation, clearFilesInStore])
 
   // Load conversation messages when detail is fetched
-  useMemo(() => {
+  useEffect(() => {
     if (conversationDetail && conversationId) {
       loadMessages(conversationDetail.messages, conversationId)
       // Also restore file context
@@ -125,7 +125,7 @@ export function useAssistantFlow(): UseAssistantFlowReturn {
       }
 
       // Add user message to UI immediately
-      const userMessageId = `user-${Date.now()}`
+      const userMessageId = `user-${crypto.randomUUID()}`
       addMessage({
         id: userMessageId,
         role: 'user',
@@ -147,7 +147,7 @@ export function useAssistantFlow(): UseAssistantFlowReturn {
 
       // Add assistant response
       addMessage({
-        id: `assistant-${Date.now()}`,
+        id: `assistant-${crypto.randomUUID()}`,
         role: 'assistant',
         content: response.answer,
         chart: response.chart,

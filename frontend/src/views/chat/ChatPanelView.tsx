@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { X, MessageSquare, Sparkles } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { ChatMessageView } from './ChatMessageView'
 import { ChatInputView } from './ChatInputView'
 import type { ChatMessage } from '@/types/api'
@@ -57,7 +58,7 @@ export function ChatPanelView({
       {/* Panel */}
       <div
         className={cn(
-          'fixed top-0 right-0 h-full w-[400px] max-w-full z-50',
+          'fixed top-0 right-0 h-full w-full sm:w-[400px] z-50',
           'bg-background border-l shadow-xl',
           'flex flex-col',
           'transition-transform duration-300 ease-out',
@@ -81,17 +82,14 @@ export function ChatPanelView({
               </p>
             </div>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className={cn(
-              'p-2 rounded-lg',
-              'text-muted-foreground hover:text-foreground',
-              'hover:bg-muted transition-colors'
-            )}
             aria-label="Close chat"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
 
         {/* Messages */}
@@ -118,20 +116,16 @@ export function ChatPanelView({
                     'Show me a breakdown by category',
                     'What insights can you find?',
                   ].map((suggestion) => (
-                    <button
+                    <Button
                       key={suggestion}
+                      variant="ghost"
+                      size="sm"
                       onClick={() => onSendMessage(suggestion)}
                       disabled={disabled || isLoading}
-                      className={cn(
-                        'w-full text-left px-3 py-2 rounded-lg',
-                        'text-xs text-muted-foreground',
-                        'bg-muted/50 hover:bg-muted',
-                        'transition-colors duration-200',
-                        'disabled:opacity-50 disabled:cursor-not-allowed'
-                      )}
+                      className="w-full justify-start text-left text-xs text-muted-foreground bg-muted/50 hover:bg-muted h-auto py-2"
                     >
                       "{suggestion}"
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>

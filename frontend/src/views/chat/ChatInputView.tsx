@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { Send } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 
 interface ChatInputViewProps {
   onSend: (message: string) => void
@@ -53,7 +55,7 @@ export function ChatInputView({
 
   return (
     <div className={cn('flex items-end gap-2 p-4 border-t bg-background', className)}>
-      <textarea
+      <Textarea
         ref={textareaRef}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
@@ -61,25 +63,13 @@ export function ChatInputView({
         placeholder={placeholder}
         disabled={disabled || isLoading}
         rows={1}
-        className={cn(
-          'flex-1 resize-none rounded-xl border border-input bg-background px-4 py-3',
-          'text-sm placeholder:text-muted-foreground',
-          'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1',
-          'disabled:cursor-not-allowed disabled:opacity-50',
-          'min-h-[44px] max-h-[120px]'
-        )}
+        className="flex-1 resize-none min-h-[44px] max-h-[120px]"
       />
-      <button
+      <Button
         onClick={handleSubmit}
         disabled={!canSend}
-        className={cn(
-          'flex-shrink-0 h-11 w-11 rounded-xl',
-          'flex items-center justify-center',
-          'transition-all duration-200',
-          canSend
-            ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-            : 'bg-muted text-muted-foreground cursor-not-allowed'
-        )}
+        size="icon"
+        className="flex-shrink-0 h-11 w-11"
         aria-label="Send message"
       >
         {isLoading ? (
@@ -87,7 +77,7 @@ export function ChatInputView({
         ) : (
           <Send className="h-4 w-4" />
         )}
-      </button>
+      </Button>
     </div>
   )
 }

@@ -1,5 +1,5 @@
-import { cn } from '@/lib/utils'
 import { Download, RotateCcw, Sparkles, MessageSquare } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { AnalysisFormView } from './AnalysisFormView'
 import { UploadProgressView } from './UploadProgressView'
 import { DataSummaryView } from './DataSummaryView'
@@ -80,30 +80,17 @@ export function QuickAnalysisView({
             <div className="flex items-center gap-2">
               {showResults && (
                 <>
-                  <button
+                  <Button
+                    variant="secondary"
                     onClick={onChatToggle}
                     disabled={!canChat}
-                    className={cn(
-                      'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
-                      'bg-secondary text-secondary-foreground font-medium text-sm',
-                      'transition-all duration-200',
-                      'hover:bg-secondary/80',
-                      'disabled:opacity-50 disabled:cursor-not-allowed'
-                    )}
                   >
                     <MessageSquare className="h-4 w-4" />
                     Ask AI
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={onExport}
                     disabled={isExporting}
-                    className={cn(
-                      'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
-                      'bg-primary text-primary-foreground font-medium text-sm',
-                      'transition-all duration-200',
-                      'hover:bg-primary/90 hover:glow-primary-sm',
-                      'disabled:opacity-50 disabled:cursor-not-allowed'
-                    )}
                   >
                     {isExporting ? (
                       <>
@@ -116,21 +103,16 @@ export function QuickAnalysisView({
                         Export PDF
                       </>
                     )}
-                  </button>
+                  </Button>
                 </>
               )}
-              <button
+              <Button
+                variant="secondary"
                 onClick={onReset}
-                className={cn(
-                  'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
-                  'bg-secondary text-secondary-foreground font-medium text-sm',
-                  'transition-all duration-200',
-                  'hover:bg-secondary/80'
-                )}
               >
                 <RotateCcw className="h-4 w-4" />
                 New Analysis
-              </button>
+              </Button>
             </div>
           )
         }

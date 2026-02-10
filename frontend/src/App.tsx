@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { FEATURES } from '@/config/features'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary'
@@ -28,6 +28,7 @@ const IntegrationsPage = lazy(() =>
   import('@/pages/IntegrationsPage').then((m) => ({ default: m.IntegrationsPage }))
 )
 const OAuthCallbackPage = lazy(() => import('@/pages/OAuthCallbackPage'))
+const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 
 // Full-page loading fallback
 function PageLoader() {
@@ -195,8 +196,8 @@ export default function App() {
               </>
             )}
 
-            {/* Catch all - redirect to home */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* Catch all - 404 page */}
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
       </BrowserRouter>

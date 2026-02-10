@@ -14,7 +14,13 @@ logger = logging.getLogger(__name__)
 
 
 def _get_key(request: Request) -> str:
-    """Use user ID if authenticated, otherwise IP address."""
+    """Use user ID if authenticated, otherwise IP address.
+
+    Returns a shared key for OPTIONS (CORS preflight) requests
+    so they are not individually rate-limited.
+    """
+    if request.method == "OPTIONS":
+        return "preflight"
     user = getattr(request.state, "user", None)
     if user and hasattr(user, "id"):
         return f"user:{user.id}"

@@ -12,6 +12,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from fastapi import HTTPException, status
+from starlette.requests import Request
 
 from app.api.routes.assistant import (
     delete_conversation,
@@ -72,7 +73,7 @@ def sample_query_response(sample_file_context):
 @pytest.mark.asyncio
 async def test_query_assistant_success(mock_db, mock_user, sample_query_response):
     """Test successful AI assistant query."""
-    request = AssistantQueryRequest(
+    body = AssistantQueryRequest(
         file_ids=[1],
         question="What is the revenue trend?",
     )
@@ -83,7 +84,8 @@ async def test_query_assistant_success(mock_db, mock_user, sample_query_response
         mock_service_class.return_value = mock_service
 
         result = await query_assistant(
-            request=request,
+            request=Mock(spec=Request),
+            body=body,
             db=mock_db,
             current_user=mock_user,
         )
@@ -101,7 +103,7 @@ async def test_query_assistant_success(mock_db, mock_user, sample_query_response
 @pytest.mark.asyncio
 async def test_query_assistant_value_error(mock_db, mock_user):
     """Test assistant query with validation error (e.g., no valid files)."""
-    request = AssistantQueryRequest(
+    body = AssistantQueryRequest(
         file_ids=[999],
         question="Show me data",
     )
@@ -113,7 +115,8 @@ async def test_query_assistant_value_error(mock_db, mock_user):
 
         with pytest.raises(HTTPException) as exc_info:
             await query_assistant(
-                request=request,
+                request=Mock(spec=Request),
+                body=body,
                 db=mock_db,
                 current_user=mock_user,
             )
@@ -124,7 +127,7 @@ async def test_query_assistant_value_error(mock_db, mock_user):
 @pytest.mark.asyncio
 async def test_query_assistant_server_error(mock_db, mock_user):
     """Test assistant query with unexpected server error."""
-    request = AssistantQueryRequest(
+    body = AssistantQueryRequest(
         file_ids=[1],
         question="Analyze this",
     )
@@ -136,7 +139,8 @@ async def test_query_assistant_server_error(mock_db, mock_user):
 
         with pytest.raises(HTTPException) as exc_info:
             await query_assistant(
-                request=request,
+                request=Mock(spec=Request),
+                body=body,
                 db=mock_db,
                 current_user=mock_user,
             )

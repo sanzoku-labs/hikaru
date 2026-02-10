@@ -70,8 +70,7 @@ REPORT_TEMPLATES: List[Dict[str, Any]] = [
         "id": "full_analysis",
         "name": "Full Analysis Report",
         "description": (
-            "Comprehensive analysis including all charts, data tables,"
-            " and detailed insights."
+            "Comprehensive analysis including all charts, data tables," " and detailed insights."
         ),
         "category": "detailed",
         "sections": ["overview", "data_summary", "all_charts", "insights", "raw_data"],

@@ -16,12 +16,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from datetime import datetime, timedelta
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.config import settings
 from app.database import Base
-from app.models.database import User, Project, File, Dashboard, Session as SessionModel, utc_now
+from app.models.database import Dashboard, File, Project
+from app.models.database import Session as SessionModel
+from app.models.database import User, utc_now
 from app.services.auth_service import hash_password
 
 # Sample data configuration
@@ -178,8 +181,8 @@ def seed_projects(session, users):
 def seed_files(session, projects):
     """Create sample file records and copy actual CSV files."""
     print("\n📄 Seeding files...")
-    import shutil
     import os
+    import shutil
 
     files = []
     script_dir = Path(__file__).parent
@@ -292,11 +295,13 @@ def seed_dashboards(session, projects):
                 name=dashboard_data["name"],
                 dashboard_type=dashboard_data["dashboard_type"],
                 project_id=project.id,
-                config_json=json.dumps({
-                    "charts": [],
-                    "layout": "grid",
-                    "theme": "light",
-                }),
+                config_json=json.dumps(
+                    {
+                        "charts": [],
+                        "layout": "grid",
+                        "theme": "light",
+                    }
+                ),
                 created_at=utc_now(),
                 updated_at=utc_now(),
             )
@@ -340,14 +345,16 @@ def main():
         files = seed_files(session, projects)
         seed_dashboards(session, projects)
 
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("✨ Database seeding completed successfully!")
-        print("="*60)
+        print("=" * 60)
         print("\n📝 Sample User Credentials:")
         print("-" * 60)
         for user_data in SAMPLE_USERS:
             role = "Admin" if user_data["is_superuser"] else "User"
-            print(f"  {role:10} | Username: {user_data['username']:10} | Password: {user_data['password']}")
+            print(
+                f"  {role:10} | Username: {user_data['username']:10} | Password: {user_data['password']}"
+            )
         print("-" * 60)
 
         print("\n📊 Summary:")

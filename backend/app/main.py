@@ -1,9 +1,12 @@
+import logging
 import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routes import (
@@ -31,6 +34,10 @@ from app.core.exception_handlers import (
     validation_exception_handler,
 )
 from app.core.exceptions import AppException
+from app.core.rate_limit import limiter
+from app.middleware.security_headers import SecurityHeadersMiddleware
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -43,6 +50,8 @@ async def lifespan(app: FastAPI):
                 "SECRET_KEY is not configured. "
                 "Set the SECRET_KEY environment variable before starting the server."
             )
+        if not settings.encryption_key:
+            logger.warning("ENCRYPTION_KEY not set. OAuth tokens will be stored in plaintext.")
     yield
 
 
@@ -53,13 +62,20 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Rate limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Security headers (added before CORS so it runs after CORS in middleware stack)
+app.add_middleware(SecurityHeadersMiddleware)
+
 # CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
 )
 
 # Exception handlers

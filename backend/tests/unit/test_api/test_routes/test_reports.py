@@ -13,6 +13,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from fastapi import HTTPException, status
+from starlette.requests import Request
 
 from app.api.routes.reports import (
     delete_report,
@@ -102,7 +103,8 @@ async def test_generate_report_success(mock_db, mock_user, sample_report):
         mock_service_class.return_value = mock_service
 
         result = await generate_report(
-            request=request,
+            request=Mock(spec=Request),
+            body=request,
             db=mock_db,
             current_user=mock_user,
         )
@@ -130,7 +132,8 @@ async def test_generate_report_value_error(mock_db, mock_user):
 
         with pytest.raises(HTTPException) as exc_info:
             await generate_report(
-                request=request,
+                request=Mock(spec=Request),
+                body=request,
                 db=mock_db,
                 current_user=mock_user,
             )
@@ -153,7 +156,8 @@ async def test_generate_report_server_error(mock_db, mock_user):
 
         with pytest.raises(HTTPException) as exc_info:
             await generate_report(
-                request=request,
+                request=Mock(spec=Request),
+                body=request,
                 db=mock_db,
                 current_user=mock_user,
             )

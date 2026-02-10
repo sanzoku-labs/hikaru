@@ -13,10 +13,12 @@ from pathlib import Path
 from typing import List
 
 import pandas as pd
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ProjectNotFoundError, ValidationError
+from app.core.file_validation import validate_file_content
+from app.core.rate_limit import limiter
 from app.database import get_db
 from app.middleware.auth import get_current_active_user
 from app.models.database import File as FileModel
@@ -111,9 +113,10 @@ async def create_project(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e.detail))
     except Exception as e:
         db.rollback()
+        logger.error(f"Failed to create project: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create project: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -161,9 +164,10 @@ async def list_projects(
         return ProjectListResponse(projects=project_responses, total=len(project_responses))
 
     except Exception as e:
+        logger.error(f"Failed to list projects: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list projects: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -228,9 +232,10 @@ async def get_project(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Failed to get project: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get project: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -289,9 +294,10 @@ async def update_project(
         raise
     except Exception as e:
         db.rollback()
+        logger.error(f"Failed to update project: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update project: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -333,9 +339,10 @@ async def delete_project(
         raise
     except Exception as e:
         db.rollback()
+        logger.error(f"Failed to delete project: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete project: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -344,7 +351,9 @@ async def delete_project(
     response_model=ProjectFileUploadResponse,
     status_code=status.HTTP_201_CREATED,
 )
+@limiter.limit("10/minute")
 async def upload_file_to_project(
+    request: Request,
     project_id: int,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_active_user),
@@ -380,6 +389,15 @@ async def upload_file_to_project(
                 detail="Only CSV and XLSX files are supported",
             )
 
+        # Validate file content matches extension
+        content = await file.read()
+        if not validate_file_content(content, file.filename):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File content does not match its extension.",
+            )
+        await file.seek(0)
+
         # Generate upload ID
         upload_id = str(uuid.uuid4())
 
@@ -410,7 +428,8 @@ async def upload_file_to_project(
             except Exception as e:
                 if os.path.exists(file_path):
                     os.remove(file_path)
-                raise HTTPException(status_code=400, detail=f"Invalid Excel file: {str(e)}")
+                logger.error(f"Invalid Excel file: {str(e)}", exc_info=True)
+                raise HTTPException(status_code=400, detail="Invalid Excel file.")
         else:
             # CSV: keep existing behavior (immediate validation)
             df = processor.parse_file(str(file_path), file_ext)
@@ -455,14 +474,14 @@ async def upload_file_to_project(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         db.rollback()
         # Clean up file if it was created
         if "file_path" in locals() and os.path.exists(file_path):
             os.remove(file_path)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to upload file: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -514,9 +533,10 @@ async def list_project_files(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Failed to list files: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list files: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -575,9 +595,10 @@ async def delete_project_file(
         raise
     except Exception as e:
         db.rollback()
+        logger.error(f"Failed to delete file: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete file: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -642,9 +663,10 @@ async def download_project_file(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Failed to download file: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to download file: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -726,9 +748,9 @@ async def get_file_sheets(
                     numeric_cols = df.select_dtypes(include=["number"]).columns
                     sheet["has_numeric"] = len(numeric_cols) > 0
 
-                except Exception as e:
+                except Exception:
                     # If this sheet fails, add error but continue with other sheets
-                    sheet["error"] = f"Failed to load sheet: {str(e)}"
+                    sheet["error"] = "Failed to load sheet"
                     sheet["preview"] = None
                     sheet["has_numeric"] = False
 
@@ -740,7 +762,7 @@ async def get_file_sheets(
         logger.error(f"Failed to get sheets for file {file_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get file sheets: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -876,7 +898,7 @@ async def analyze_project_file(
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to analyze file: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -957,7 +979,7 @@ async def get_project_file_analysis(
         logger.error(f"Failed to retrieve analysis for file {file_id}: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve analysis: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -1038,9 +1060,10 @@ async def get_analysis_history(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Failed to retrieve analysis history: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve analysis history: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -1124,7 +1147,7 @@ async def list_file_analyses(
         logger.error(f"Failed to list analyses for file {file_id}: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list analyses: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -1209,7 +1232,7 @@ async def get_file_analysis(
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get analysis: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -1286,5 +1309,5 @@ async def delete_file_analysis(
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete analysis: {str(e)}",
+            detail="An internal error occurred.",
         )

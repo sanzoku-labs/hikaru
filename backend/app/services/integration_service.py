@@ -27,6 +27,7 @@ from urllib.parse import urlencode
 from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.core.encryption import decrypt_token, encrypt_token
 from app.models.database import Integration, Project
 from app.models.schemas import (
     ImportFromProviderResponse,
@@ -286,8 +287,10 @@ class IntegrationService:
 
         if existing:
             # Update existing integration
-            existing.access_token = tokens["access_token"]
-            existing.refresh_token = tokens.get("refresh_token")
+            existing.access_token = encrypt_token(tokens["access_token"])
+            existing.refresh_token = (
+                encrypt_token(tokens["refresh_token"]) if tokens.get("refresh_token") else None
+            )
             existing.token_expires_at = tokens.get("expires_at")
             existing.is_active = True
             existing.updated_at = utc_now()
@@ -301,8 +304,10 @@ class IntegrationService:
             provider=provider_id,
             provider_account_id=user_info.get("id"),
             provider_email=user_info.get("email"),
-            access_token=tokens["access_token"],
-            refresh_token=tokens.get("refresh_token"),
+            access_token=encrypt_token(tokens["access_token"]),
+            refresh_token=(
+                encrypt_token(tokens["refresh_token"]) if tokens.get("refresh_token") else None
+            ),
             token_expires_at=tokens.get("expires_at"),
             scopes=json.dumps(self._get_provider_config(provider_id)["scopes"]),
             is_active=True,
@@ -381,8 +386,9 @@ class IntegrationService:
 
         # Fetch files from provider
         # Note: In production, this would make HTTP requests to the provider API
+        token = decrypt_token(integration.access_token)
         files, folders, breadcrumbs, has_more, next_token = self._fetch_provider_files(
-            integration.provider, integration.access_token, folder_id, page_token
+            integration.provider, token, folder_id, page_token
         )
 
         current_folder = None
@@ -450,8 +456,9 @@ class IntegrationService:
 
         # Fetch file content from provider
         # Note: In production, this would download the actual file
+        token = decrypt_token(integration.access_token)
         file_data, filename, row_count, schema = self._fetch_and_process_file(
-            integration.provider, integration.access_token, file_id
+            integration.provider, token, file_id
         )
 
         # Create file record

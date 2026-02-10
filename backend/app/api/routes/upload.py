@@ -5,10 +5,12 @@ import uuid
 from datetime import datetime
 
 import pandas as pd
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.core.file_validation import validate_file_content
+from app.core.rate_limit import limiter
 from app.database import get_db
 from app.middleware.auth import get_current_active_user
 from app.models.database import User
@@ -26,7 +28,9 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 @router.post("/upload", response_model=UploadResponse)
+@limiter.limit("10/minute")
 async def upload_file(
+    request: Request,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
@@ -52,6 +56,15 @@ async def upload_file(
             status_code=400,
             detail=f"File too large: {file_size / 1024 / 1024:.2f}MB (limit: {settings.max_file_size_mb}MB)",
         )
+
+    # Validate file content matches extension
+    content = await file.read()
+    if not validate_file_content(content, file.filename):
+        raise HTTPException(
+            status_code=400,
+            detail="File content does not match its extension.",
+        )
+    await file.seek(0)
 
     # Generate upload ID and save file
     upload_id = str(uuid.uuid4())
@@ -90,10 +103,11 @@ async def upload_file(
     except pd.errors.ParserError as e:
         if os.path.exists(file_path):
             os.remove(file_path)
-        raise HTTPException(status_code=400, detail=f"Failed to parse file: {str(e)}")
+        logger.error(f"Failed to parse file: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=400, detail="Failed to parse file.")
 
     except Exception as e:
         if os.path.exists(file_path):
             os.remove(file_path)
         logger.error(f"Upload failed for file {file.filename}: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+        raise HTTPException(status_code=500, detail="An internal error occurred.")

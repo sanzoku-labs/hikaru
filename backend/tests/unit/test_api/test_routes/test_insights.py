@@ -10,6 +10,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from fastapi import HTTPException
+from starlette.requests import Request
 
 from app.api.routes.insights import compute_chart_hash, generate_chart_insight
 from app.models.schemas import ChartInsightRequest
@@ -134,7 +135,8 @@ async def test_generate_insight_cached(mock_db, mock_user, sample_request, mock_
     mock_db.query.side_effect = mock_query
 
     result = await generate_chart_insight(
-        request=sample_request,
+        request=Mock(spec=Request),
+        body=sample_request,
         db=mock_db,
         current_user=mock_user,
     )
@@ -150,7 +152,8 @@ async def test_generate_insight_file_not_found(mock_db, mock_user, sample_reques
 
     with pytest.raises(HTTPException) as exc_info:
         await generate_chart_insight(
-            request=sample_request,
+            request=Mock(spec=Request),
+            body=sample_request,
             db=mock_db,
             current_user=mock_user,
         )
@@ -170,7 +173,8 @@ async def test_generate_insight_permission_denied(mock_db, mock_user, sample_req
 
     with pytest.raises(HTTPException) as exc_info:
         await generate_chart_insight(
-            request=sample_request,
+            request=Mock(spec=Request),
+            body=sample_request,
             db=mock_db,
             current_user=mock_user,
         )
@@ -199,7 +203,8 @@ async def test_generate_insight_new(mock_db, mock_user, sample_request, mock_fil
         mock_ai_class.return_value = mock_ai
 
         result = await generate_chart_insight(
-            request=sample_request,
+            request=Mock(spec=Request),
+            body=sample_request,
             db=mock_db,
             current_user=mock_user,
         )
@@ -231,7 +236,8 @@ async def test_generate_insight_ai_unavailable(mock_db, mock_user, sample_reques
 
         with pytest.raises(HTTPException) as exc_info:
             await generate_chart_insight(
-                request=sample_request,
+                request=Mock(spec=Request),
+                body=sample_request,
                 db=mock_db,
                 current_user=mock_user,
             )

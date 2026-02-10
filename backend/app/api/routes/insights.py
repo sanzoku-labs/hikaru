@@ -12,9 +12,10 @@ import json
 import logging
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
+from app.core.rate_limit import limiter
 from app.database import get_db
 from app.middleware.auth import get_current_active_user
 from app.models.database import ChartInsight, File, User
@@ -57,8 +58,10 @@ def compute_chart_hash(chart_data: ChartInsightRequest) -> str:
 
 
 @router.post("/charts/insight", response_model=ChartInsightResponse)
+@limiter.limit("20/minute")
 async def generate_chart_insight(
-    request: ChartInsightRequest,
+    request: Request,
+    body: ChartInsightRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -87,7 +90,7 @@ async def generate_chart_insight(
     - cached: Whether retrieved from cache
     """
     # Verify file exists and user has access
-    file = db.query(File).filter(File.id == request.file_id).first()
+    file = db.query(File).filter(File.id == body.file_id).first()
     if not file:
         raise HTTPException(status_code=404, detail="File not found")
 
@@ -96,12 +99,12 @@ async def generate_chart_insight(
         raise HTTPException(status_code=403, detail="You don't have permission to access this file")
 
     # Compute chart hash for caching
-    chart_hash = compute_chart_hash(request)
+    chart_hash = compute_chart_hash(body)
 
     # Check database for existing insight
     existing_insight = (
         db.query(ChartInsight)
-        .filter(ChartInsight.file_id == request.file_id, ChartInsight.chart_hash == chart_hash)
+        .filter(ChartInsight.file_id == body.file_id, ChartInsight.chart_hash == chart_hash)
         .first()
     )
 
@@ -117,20 +120,20 @@ async def generate_chart_insight(
         )
 
     # Generate new insight using AI service
-    logger.info(f"Generating new advanced insight for chart: {request.chart_title}")
+    logger.info(f"Generating new advanced insight for chart: {body.chart_title}")
 
     # Initialize AI service without cache (database serves as cache)
     ai_service = AIInsightService(cache_service=None)
 
-    # Reconstruct ChartData from request
+    # Reconstruct ChartData from body
     chart_data = ChartData(
-        chart_type=request.chart_type,
-        title=request.chart_title,
-        x_column=request.x_column,
-        y_column=request.y_column,
-        category_column=request.category_column,
-        value_column=request.value_column,
-        data=request.chart_data,
+        chart_type=body.chart_type,
+        title=body.chart_title,
+        x_column=body.x_column,
+        y_column=body.y_column,
+        category_column=body.category_column,
+        value_column=body.value_column,
+        data=body.chart_data,
         priority=1,  # Not used for insights
     )
 
@@ -155,10 +158,10 @@ async def generate_chart_insight(
 
     # Save to database
     new_insight = ChartInsight(
-        file_id=request.file_id,
+        file_id=body.file_id,
         chart_hash=chart_hash,
-        chart_type=request.chart_type,
-        chart_title=request.chart_title,
+        chart_type=body.chart_type,
+        chart_title=body.chart_title,
         insight=insight_text,
         insight_type="advanced",
         generated_at=datetime.utcnow(),

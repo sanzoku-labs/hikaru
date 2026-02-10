@@ -4,6 +4,7 @@ File merging and relationship API endpoints for Phase 7C.
 Handles creating relationships between files and analyzing merged datasets.
 """
 import json
+import logging
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -22,6 +23,8 @@ from app.models.schemas import (
 from app.services.ai_service import AIService
 from app.services.chart_generator import ChartGenerator
 from app.services.merge_service import MergeService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/projects", tags=["merge"])
 
@@ -131,9 +134,10 @@ async def create_relationship(
         raise
     except Exception as e:
         db.rollback()
+        logger.error(f"Failed to create relationship: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create relationship: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -178,9 +182,10 @@ async def list_relationships(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Failed to list relationships: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list relationships: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -238,9 +243,10 @@ async def delete_relationship(
         raise
     except Exception as e:
         db.rollback()
+        logger.error(f"Failed to delete relationship: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete relationship: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -360,7 +366,8 @@ async def analyze_merged_data(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Failed to analyze merged data: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to analyze merged data: {str(e)}",
+            detail="An internal error occurred.",
         )

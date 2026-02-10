@@ -314,9 +314,7 @@ async def test_get_analytics_database_error(mock_db, mock_user):
         )
 
     assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-    assert "Failed to calculate analytics" in str(
-        exc_info.value.detail
-    )  # Fixed: actual error message
+    assert "An internal error occurred." in str(exc_info.value.detail)
 
 
 @pytest.mark.asyncio

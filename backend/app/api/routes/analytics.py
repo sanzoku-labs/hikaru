@@ -253,5 +253,5 @@ async def get_analytics(
         logger.error(f"Failed to calculate analytics: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to calculate analytics: {str(e)}",
+            detail="An internal error occurred.",
         )

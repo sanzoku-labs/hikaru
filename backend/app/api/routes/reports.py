@@ -3,11 +3,13 @@ Reports routes - Template gallery and report generation.
 
 New feature added in Phase 11 (Feature Expansion).
 """
+import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
+from app.core.rate_limit import limiter
 from app.database import get_db
 from app.middleware.auth import get_current_active_user
 from app.models.database import User
@@ -18,6 +20,8 @@ from app.models.schemas import (
     ReportTemplateListResponse,
 )
 from app.services.report_service import ReportService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/reports", tags=["reports"])
 
@@ -40,8 +44,10 @@ async def list_templates(
 
 
 @router.post("/generate", response_model=ReportGenerateResponse)
+@limiter.limit("5/minute")
 async def generate_report(
-    request: ReportGenerateRequest,
+    request: Request,
+    body: ReportGenerateRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ) -> ReportGenerateResponse:
@@ -56,7 +62,7 @@ async def generate_report(
     try:
         response = service.generate_report(
             user_id=current_user.id,
-            request=request,
+            request=body,
         )
         return response
 
@@ -66,9 +72,10 @@ async def generate_report(
             detail=str(e),
         )
     except Exception as e:
+        logger.error(f"Failed to generate report: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate report: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 

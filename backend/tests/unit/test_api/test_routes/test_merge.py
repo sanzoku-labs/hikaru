@@ -729,4 +729,4 @@ async def test_analyze_merged_data_service_error(
                     )
 
                 assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-                assert "Failed to analyze merged data" in str(exc_info.value.detail)
+                assert "An internal error occurred." in str(exc_info.value.detail)

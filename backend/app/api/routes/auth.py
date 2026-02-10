@@ -1,22 +1,27 @@
 """
 Authentication API endpoints for user registration, login, and user management.
 """
+import logging
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
+from app.core.rate_limit import limiter
 from app.database import get_db
 from app.middleware.auth import get_current_active_user, get_current_user
 from app.models.database import User
 from app.models.schemas import TokenResponse, UserLogin, UserRegister, UserResponse
 from app.services import auth_service
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-async def register(user_data: UserRegister, request: Request, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+async def register(request: Request, user_data: UserRegister, db: Session = Depends(get_db)):
     """
     Register a new user.
 
@@ -69,14 +74,16 @@ async def register(user_data: UserRegister, request: Request, db: Session = Depe
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
+        logger.error(f"Registration failed: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Registration failed: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(credentials: UserLogin, request: Request, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+async def login(request: Request, credentials: UserLogin, db: Session = Depends(get_db)):
     """
     Login with username/email and password.
 

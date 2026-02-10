@@ -498,7 +498,7 @@ async def test_compare_files_service_error(
             )
 
         assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-        assert "Failed to compare files" in str(exc_info.value.detail)
+        assert "An internal error occurred." in str(exc_info.value.detail)
         mock_db.rollback.assert_called_once()
 
 

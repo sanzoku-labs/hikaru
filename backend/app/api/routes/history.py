@@ -14,9 +14,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.middleware.auth import get_current_active_user
 from app.models.database import File as FileModel
-from app.models.database import FileAnalysis
+from app.models.database import FileAnalysis, User
 from app.models.database import Project as ProjectModel
-from app.models.database import User
 from app.models.schemas import HistoryItem, HistoryResponse
 
 router = APIRouter(prefix="/api/history", tags=["history"])
@@ -142,5 +141,5 @@ async def get_history(
         logger.error(f"Failed to retrieve history: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve history: {str(e)}",
+            detail="An internal error occurred.",
         )

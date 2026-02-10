@@ -11,6 +11,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.core.rate_limit import limiter
 from app.database import Base, get_db
 from app.main import app
 from app.models.database import User
@@ -130,3 +131,12 @@ def setup_test_env():
     os.environ["DATABASE_URL"] = SQLALCHEMY_DATABASE_URL
     yield
     os.environ.pop("TESTING", None)
+
+
+@pytest.fixture(autouse=True)
+def disable_rate_limiter():
+    """Disable rate limiter globally for all tests."""
+    original = limiter.enabled
+    limiter.enabled = False
+    yield
+    limiter.enabled = original

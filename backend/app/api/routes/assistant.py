@@ -3,10 +3,12 @@ AI Assistant routes - Cross-file AI queries and conversation management.
 
 New feature added in Phase 11 (Feature Expansion).
 """
+import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
+from app.core.rate_limit import limiter
 from app.database import get_db
 from app.middleware.auth import get_current_active_user
 from app.models.database import User
@@ -18,12 +20,16 @@ from app.models.schemas import (
 )
 from app.services.ai_assistant_service import AIAssistantService
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api", tags=["assistant"])
 
 
 @router.post("/assistant/query", response_model=AssistantQueryResponse)
+@limiter.limit("20/minute")
 async def query_assistant(
-    request: AssistantQueryRequest,
+    request: Request,
+    body: AssistantQueryRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ) -> AssistantQueryResponse:
@@ -40,9 +46,9 @@ async def query_assistant(
     try:
         response = service.query_files(
             user_id=current_user.id,
-            file_ids=request.file_ids,
-            question=request.question,
-            conversation_id=request.conversation_id,
+            file_ids=body.file_ids,
+            question=body.question,
+            conversation_id=body.conversation_id,
         )
         return response
 
@@ -52,9 +58,10 @@ async def query_assistant(
             detail=str(e),
         )
     except Exception as e:
+        logger.error(f"Failed to process query: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process query: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 

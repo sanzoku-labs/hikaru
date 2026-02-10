@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 import pandas as pd
 import pytest
 from fastapi import HTTPException
+from starlette.requests import Request
 
 from app.api.routes.analyze import analyze_data
 from app.models.schemas import ChartData, ColumnInfo, DataSchema
@@ -14,8 +15,12 @@ from app.models.schemas import ChartData, ColumnInfo, DataSchema
 
 @pytest.fixture
 def mock_db():
-    """Mock database session"""
-    return Mock()
+    """Mock database session with ownership check returning None."""
+    db = Mock()
+    # Make db.query(...).filter_by(...).first() return None
+    # so the upload ownership check in analyze_data is skipped.
+    db.query.return_value.filter_by.return_value.first.return_value = None
+    return db
 
 
 @pytest.fixture
@@ -98,9 +103,12 @@ async def test_analyze_data_success(mock_db, mock_user, sample_upload_data):
             mock_analysis_service_class.return_value = mock_analysis_service
 
             # Call endpoint
+            mock_request = Mock(spec=Request)
+            mock_body = Mock(user_intent=None)
             result = await analyze_data(
+                request=mock_request,
                 upload_id="test-123",
-                user_intent=None,
+                body=mock_body,
                 current_user=mock_user,
                 db=mock_db,
             )
@@ -131,9 +139,12 @@ async def test_analyze_data_with_user_intent(mock_db, mock_user, sample_upload_d
             mock_analysis_service_class.return_value = mock_analysis_service
 
             # Call endpoint
+            mock_request = Mock(spec=Request)
+            mock_body = Mock(user_intent="Show me revenue trends")
             await analyze_data(
+                request=mock_request,
                 upload_id="test-123",
-                user_intent="Show me revenue trends",
+                body=mock_body,
                 current_user=mock_user,
                 db=mock_db,
             )
@@ -159,16 +170,19 @@ async def test_analyze_data_error_handling(mock_db, mock_user, sample_upload_dat
             mock_analysis_service_class.return_value = mock_analysis_service
 
             # Should raise HTTPException
+            mock_request = Mock(spec=Request)
+            mock_body = Mock(user_intent=None)
             with pytest.raises(HTTPException) as exc_info:
                 await analyze_data(
+                    request=mock_request,
                     upload_id="test-123",
-                    user_intent=None,
+                    body=mock_body,
                     current_user=mock_user,
                     db=mock_db,
                 )
 
             assert exc_info.value.status_code == 500
-            assert "Error analyzing file" in str(exc_info.value.detail)
+            assert "An internal error occurred." in str(exc_info.value.detail)
 
 
 @pytest.mark.asyncio
@@ -189,9 +203,12 @@ async def test_analyze_data_calls_services_correctly(mock_db, mock_user, sample_
             mock_analysis_service_class.return_value = mock_analysis_service
 
             # Call endpoint
+            mock_request = Mock(spec=Request)
+            mock_body = Mock(user_intent=None)
             await analyze_data(
+                request=mock_request,
                 upload_id="test-123",
-                user_intent=None,
+                body=mock_body,
                 current_user=mock_user,
                 db=mock_db,
             )

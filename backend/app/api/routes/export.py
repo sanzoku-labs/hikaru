@@ -312,4 +312,5 @@ async def export_advanced(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate export: {str(e)}")
+        logger.error(f"Failed to generate export: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An internal error occurred.")

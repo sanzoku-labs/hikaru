@@ -3,6 +3,7 @@ Dashboard CRUD API routes for custom dashboard management.
 Implements Mockup 9 - Dashboard Builder backend support.
 """
 import json
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -16,6 +17,8 @@ from app.models.schemas import (
     DashboardResponse,
     DashboardUpdate,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/projects", tags=["dashboards"])
 
@@ -87,9 +90,10 @@ async def create_dashboard(
         raise
     except Exception as e:
         db.rollback()
+        logger.error(f"Failed to create dashboard: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create dashboard: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -142,9 +146,10 @@ async def list_dashboards(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Failed to list dashboards: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list dashboards: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -201,9 +206,10 @@ async def get_dashboard(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Failed to get dashboard: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get dashboard: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -285,9 +291,10 @@ async def update_dashboard(
         raise
     except Exception as e:
         db.rollback()
+        logger.error(f"Failed to update dashboard: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update dashboard: {str(e)}",
+            detail="An internal error occurred.",
         )
 
 
@@ -347,7 +354,8 @@ async def delete_dashboard(
         raise
     except Exception as e:
         db.rollback()
+        logger.error(f"Failed to delete dashboard: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete dashboard: {str(e)}",
+            detail="An internal error occurred.",
         )

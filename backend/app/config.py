@@ -28,7 +28,15 @@ class Settings(BaseSettings):
     # JWT Authentication
     secret_key: str = ""  # MUST be set via SECRET_KEY env var
     algorithm: str = "HS256"
-    access_token_expire_days: int = 7
+    access_token_expire_days: int = 1
+
+    # Encryption
+    encryption_key: str = ""  # Set ENCRYPTION_KEY env var for token encryption
+    encryption_salt: str = "hikaru-salt-v1"
+
+    # Rate Limiting
+    rate_limit_enabled: bool = True
+    rate_limit_storage_uri: str = "memory://"
 
     @field_validator("cors_origins", mode="before")
     @classmethod

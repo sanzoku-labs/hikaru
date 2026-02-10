@@ -4,6 +4,7 @@ File comparison API endpoints for Phase 7B.
 Handles comparing two files within a project.
 """
 import json
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -15,6 +16,8 @@ from app.models.database import FileRelationship, Project, User
 from app.models.schemas import ComparisonRequest, ComparisonResponse, FileInProject
 from app.services.ai_service import AIService
 from app.services.comparison_service import ComparisonService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/projects", tags=["comparison"])
 
@@ -145,7 +148,8 @@ async def compare_files(
         raise
     except Exception as e:
         db.rollback()
+        logger.error(f"Failed to compare files: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to compare files: {str(e)}",
+            detail="An internal error occurred.",
         )

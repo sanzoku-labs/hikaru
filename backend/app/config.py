@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     rate_limit_enabled: bool = True
     rate_limit_storage_uri: str = "memory://"
 
+    # Feature Flags
+    feature_integrations_enabled: bool = False
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v):

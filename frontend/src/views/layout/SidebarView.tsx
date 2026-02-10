@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { FEATURES } from '@/config/features'
 import { Link, useLocation } from 'react-router-dom'
 import {
   Zap,
@@ -114,7 +115,10 @@ export function SidebarView({ collapsed, onToggle }: SidebarViewProps) {
       {/* Navigation */}
       <nav className="flex-1 py-4 px-3 overflow-y-auto">
         <ul className="space-y-1">
-          {navItems.map((item) => {
+          {navItems.filter((item) => {
+            if (item.path === '/integrations') return FEATURES.integrations
+            return true
+          }).map((item) => {
             const active = isActive(item.path)
             return (
               <li key={item.path}>

@@ -19,7 +19,6 @@ from app.api.routes import (
     export,
     history,
     insights,
-    integrations,
     merge,
     projects,
     query,
@@ -99,7 +98,11 @@ app.include_router(insights.router)  # Phase 10: Advanced chart insights
 app.include_router(history.router)  # History: Browse all analyses
 app.include_router(assistant.router)  # AI Assistant: Cross-file queries
 app.include_router(reports.router)  # Reports: Template gallery and generation
-app.include_router(integrations.router)  # Integrations: Third-party data sources
+
+if settings.feature_integrations_enabled:
+    from app.api.routes import integrations
+
+    app.include_router(integrations.router)  # Integrations: Third-party data sources
 
 
 @app.get("/health")

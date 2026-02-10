@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { FEATURES } from '@/config/features'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
@@ -172,23 +173,27 @@ export default function App() {
               }
             />
 
-            <Route
-              path="/integrations"
-              element={
-                <ProtectedRouteWithErrorBoundary>
-                  <IntegrationsPage />
-                </ProtectedRouteWithErrorBoundary>
-              }
-            />
+            {FEATURES.integrations && (
+              <>
+                <Route
+                  path="/integrations"
+                  element={
+                    <ProtectedRouteWithErrorBoundary>
+                      <IntegrationsPage />
+                    </ProtectedRouteWithErrorBoundary>
+                  }
+                />
 
-            <Route
-              path="/integrations/callback"
-              element={
-                <ProtectedRouteWithErrorBoundary>
-                  <OAuthCallbackPage />
-                </ProtectedRouteWithErrorBoundary>
-              }
-            />
+                <Route
+                  path="/integrations/callback"
+                  element={
+                    <ProtectedRouteWithErrorBoundary>
+                      <OAuthCallbackPage />
+                    </ProtectedRouteWithErrorBoundary>
+                  }
+                />
+              </>
+            )}
 
             {/* Catch all - redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />

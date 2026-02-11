@@ -7,8 +7,8 @@ on:
     branches: [main, develop]
 
 jobs:
-  backend-lint:
-    name: Backend Lint
+  backend-quality:
+    name: Backend Quality
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -46,43 +46,12 @@ jobs:
       - name: Run isort
         run: poetry run isort --check-only app/
 
-  backend-typecheck:
-    name: Backend Typecheck
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - uses: snok/install-poetry@v1
-        with:
-          version: latest
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      - name: Cache Poetry dependencies
-        uses: actions/cache@v4
-        with:
-          path: backend/.venv
-          key: venv-${{ runner.os }}-${{ hashFiles('backend/poetry.lock') }}
-          restore-keys: |
-            venv-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: poetry install --no-interaction --no-root
-
       - name: Run mypy
-        continue-on-error: true
         run: poetry run mypy app/
 
   backend-test:
     name: Backend Test
-    needs: backend-lint
+    needs: backend-quality
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -114,8 +83,42 @@ jobs:
       - name: Run pytest
         run: poetry run pytest
 
-  frontend-lint:
-    name: Frontend Lint
+  backend-build:
+    name: Backend Build
+    needs: backend-quality
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v4
+        with:
+          path: backend/.venv
+          key: venv-${{ runner.os }}-${{ hashFiles('backend/poetry.lock') }}
+          restore-keys: |
+            venv-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root
+
+      - name: Verify app starts
+        run: poetry run python -c "from app.main import app; print('Backend app imports OK')"
+
+  frontend-quality:
+    name: Frontend Quality
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -135,8 +138,12 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
-  frontend-typecheck:
-    name: Frontend Typecheck
+      - name: Run TypeScript check
+        run: npx tsc --noEmit
+
+  frontend-test:
+    name: Frontend Test
+    needs: frontend-quality
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -153,11 +160,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run TypeScript check
-        run: npx tsc --noEmit
+      - name: Run tests
+        run: npm run test
 
   frontend-build:
     name: Frontend Build
+    needs: frontend-quality
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -177,23 +185,23 @@ jobs:
       - name: Build
         run: npm run build
 
-  frontend-test:
-    name: Frontend Test
+  deploy:
+    name: Deploy to Railway
+    needs:
+      - backend-test
+      - backend-build
+      - frontend-test
+      - frontend-build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./frontend
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests
-        run: npm run test
+      - name: Deploy
+        run: railway up --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}

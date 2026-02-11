@@ -5,7 +5,7 @@ Handles comparing two files side-by-side, generating overlay charts,
 and calculating difference metrics.
 """
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 
@@ -25,14 +25,14 @@ class ComparisonService:
         Returns:
             DataFrame containing the file data
         """
-        file_path = Path(file_path)
+        path = Path(file_path)
 
-        if file_path.suffix == ".csv":
-            return pd.read_csv(file_path)
-        elif file_path.suffix == ".xlsx":
-            return pd.read_excel(file_path)
+        if path.suffix == ".csv":
+            return pd.read_csv(path)
+        elif path.suffix == ".xlsx":
+            return pd.read_excel(path)
         else:
-            raise ValueError(f"Unsupported file type: {file_path.suffix}")
+            raise ValueError(f"Unsupported file type: {path.suffix}")
 
     def find_common_columns(
         self, df_a: pd.DataFrame, df_b: pd.DataFrame
@@ -133,7 +133,7 @@ class ComparisonService:
         numeric_col: str,
         file_a_name: str,
         file_b_name: str,
-    ) -> OverlayChartData:
+    ) -> Optional[OverlayChartData]:
         """Create overlay line chart for time series data."""
         try:
             # Prepare data for file A
@@ -175,7 +175,7 @@ class ComparisonService:
         num_col: str,
         file_a_name: str,
         file_b_name: str,
-    ) -> OverlayChartData:
+    ) -> Optional[OverlayChartData]:
         """Create overlay bar chart for categorical data."""
         try:
             # Aggregate data for file A
@@ -211,7 +211,7 @@ class ComparisonService:
         y_col: str,
         file_a_name: str,
         file_b_name: str,
-    ) -> OverlayChartData:
+    ) -> Optional[OverlayChartData]:
         """Create overlay scatter plot."""
         try:
             # Sample data for file A
@@ -254,7 +254,7 @@ class ComparisonService:
         """
         numeric_cols, _, _ = self.find_common_columns(df_a, df_b)
 
-        metrics = {
+        metrics: Dict[str, Any] = {
             "row_count_a": len(df_a),
             "row_count_b": len(df_b),
             "row_count_diff": len(df_b) - len(df_a),

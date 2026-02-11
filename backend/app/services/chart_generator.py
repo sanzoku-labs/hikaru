@@ -19,7 +19,7 @@ class ChartConfig:
         y_column: Optional[str] = None,
         category_column: Optional[str] = None,
         value_column: Optional[str] = None,
-        data: List[Dict[str, Any]] = None,
+        data: Optional[List[Dict[str, Any]]] = None,
         priority: int = 0,
     ):
         self.chart_type = chart_type
@@ -121,9 +121,9 @@ class ChartGenerator:
 
         # Priority 2: Categorical (2-8 unique) + Numeric → Pie Chart
         for cat_col in categorical_cols:
-            col_info = next((c for c in schema.columns if c.name == cat_col), None)
+            cat_col_info = next((c for c in schema.columns if c.name == cat_col), None)
             # Require at least 2 unique values to avoid useless single-category pie charts
-            if col_info and col_info.unique_values and 2 <= col_info.unique_values <= 8:
+            if cat_col_info and cat_col_info.unique_values and 2 <= cat_col_info.unique_values <= 8:
                 for num_col in numeric_cols:
                     chart = ChartGenerator._create_pie_chart(df, cat_col, num_col, priority=2)
                     if chart:

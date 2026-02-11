@@ -1,9 +1,11 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Literal, Optional, Tuple, cast
 
 import numpy as np
 import pandas as pd
 
 from app.models.schemas import ColumnInfo, DataSchema
+
+ColumnType = Literal["numeric", "categorical", "datetime"]
 
 
 class DataProcessor:
@@ -178,7 +180,7 @@ class DataProcessor:
 
             col_info = ColumnInfo(
                 name=col,
-                type=col_type,
+                type=cast(ColumnType, col_type),
                 null_count=int(series.isnull().sum()),
                 unique_values=int(series.nunique()) if col_type == "categorical" else None,
                 sample_values=sample_values,

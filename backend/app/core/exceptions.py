@@ -24,7 +24,7 @@ class AppException(Exception):
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert exception to dictionary for API response."""
-        result = {
+        result: Dict[str, Any] = {
             "error_code": self.error_code,
             "detail": self.detail,
         }

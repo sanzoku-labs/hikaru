@@ -132,7 +132,7 @@ def create_user(
         email=email,
         username=username,
         hashed_password=hashed_password,
-        full_name=full_name,
+        full_name=full_name,  # type: ignore[arg-type]
         is_active=True,
         is_superuser=False,
     )
@@ -197,8 +197,8 @@ def create_session(
         user_id=user_id,
         token_jti=token_jti,
         expires_at=expires_at,
-        ip_address=ip_address,
-        user_agent=user_agent,
+        ip_address=ip_address,  # type: ignore[arg-type]
+        user_agent=user_agent,  # type: ignore[arg-type]
         is_revoked=False,
     )
 

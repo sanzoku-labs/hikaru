@@ -33,11 +33,11 @@ class AIConversationService:
 
     def __init__(self) -> None:
         """Initialize AIConversationService."""
+        self.client: Optional[Anthropic] = None
         if settings.anthropic_api_key:
             self.client = Anthropic(api_key=settings.anthropic_api_key)
             self.enabled = True
         else:
-            self.client = None
             self.enabled = False
             logger.warning("ANTHROPIC_API_KEY not set. AI Q&A will be disabled.")
 
@@ -77,13 +77,14 @@ class AIConversationService:
         prompt = self._build_query_prompt(question, schema, conversation)
 
         try:
+            assert self.client is not None
             message = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=600,
                 messages=[{"role": "user", "content": prompt}],
             )
 
-            answer = message.content[0].text.strip()
+            answer = message.content[0].text.strip()  # type: ignore[union-attr]
 
             # Parse response for chart generation request
             chart_config = self._parse_chart_request(answer)

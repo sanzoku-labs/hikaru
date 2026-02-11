@@ -72,37 +72,35 @@ def _generate_chart_from_config(df: pd.DataFrame, schema, config: dict) -> Chart
     title = config.get("title", "Generated Chart")
 
     chart_generator = ChartGenerator()
+    chart_config = None
 
     if chart_type == "line":
         x_col = config.get("x_column")
         y_col = config.get("y_column")
         if x_col and y_col and x_col in df.columns and y_col in df.columns:
-            chart_data = chart_generator._generate_line_chart(df, x_col, y_col, schema)
-            chart_data["title"] = title
-            return ChartData(**chart_data)
+            chart_config = chart_generator._create_line_chart(df, x_col, y_col, priority=1)
 
     elif chart_type == "bar":
         cat_col = config.get("category_column") or config.get("x_column")
         val_col = config.get("value_column") or config.get("y_column")
         if cat_col and val_col and cat_col in df.columns and val_col in df.columns:
-            chart_data = chart_generator._generate_bar_chart(df, cat_col, val_col)
-            chart_data["title"] = title
-            return ChartData(**chart_data)
+            chart_config = chart_generator._create_bar_chart(df, cat_col, val_col, priority=1)
 
     elif chart_type == "pie":
         cat_col = config.get("category_column")
         val_col = config.get("value_column")
         if cat_col and val_col and cat_col in df.columns and val_col in df.columns:
-            chart_data = chart_generator._generate_pie_chart(df, cat_col, val_col)
-            chart_data["title"] = title
-            return ChartData(**chart_data)
+            chart_config = chart_generator._create_pie_chart(df, cat_col, val_col, priority=1)
 
     elif chart_type == "scatter":
         x_col = config.get("x_column")
         y_col = config.get("y_column")
         if x_col and y_col and x_col in df.columns and y_col in df.columns:
-            chart_data = chart_generator._generate_scatter_chart(df, x_col, y_col)
-            chart_data["title"] = title
-            return ChartData(**chart_data)
+            chart_config = chart_generator._create_scatter_chart(df, x_col, y_col, priority=1)
 
-    raise ValueError(f"Invalid chart configuration: {config}")
+    if chart_config is None:
+        raise ValueError(f"Invalid chart configuration: {config}")
+
+    chart_dict = chart_config.to_dict()
+    chart_dict["title"] = title
+    return ChartData(**chart_dict)

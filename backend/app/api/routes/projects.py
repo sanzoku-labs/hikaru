@@ -107,7 +107,7 @@ async def create_project(
             "file_count": 0,
             "files": None,
         }
-        return ProjectResponse(**project_dict)
+        return ProjectResponse.model_validate(project_dict)
 
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e.detail))
@@ -158,7 +158,7 @@ async def list_projects(
                 "file_count": len(project.files) if project.files else 0,
                 "files": None,  # Don't include files in list view
             }
-            project_response = ProjectResponse(**project_dict)
+            project_response = ProjectResponse.model_validate(project_dict)
             project_responses.append(project_response)
 
         return ProjectListResponse(projects=project_responses, total=len(project_responses))
@@ -210,7 +210,7 @@ async def get_project(
                 "has_analysis": f.analysis_json is not None,
                 "analyzed_at": f.analysis_timestamp,
             }
-            files_with_analysis.append(FileInProject(**file_dict))
+            files_with_analysis.append(FileInProject.model_validate(file_dict))
 
         # Build project response
         project_dict = {
@@ -225,7 +225,7 @@ async def get_project(
             "files": files_with_analysis,
         }
 
-        return ProjectResponse(**project_dict)
+        return ProjectResponse.model_validate(project_dict)
 
     except ProjectNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e.detail))
@@ -284,7 +284,7 @@ async def update_project(
             "file_count": len(project.files),
             "files": None,
         }
-        return ProjectResponse(**project_dict)
+        return ProjectResponse.model_validate(project_dict)
 
     except ProjectNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e.detail))
@@ -382,8 +382,16 @@ async def upload_file_to_project(
         # Verify project exists and user owns it
         project = project_service.get_project(project_id=project_id, user_id=current_user.id)
 
+        # Validate filename exists
+        filename = file.filename
+        if not filename:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Filename is required",
+            )
+
         # Validate file type
-        if not file.filename.endswith((".csv", ".xlsx")):
+        if not filename.endswith((".csv", ".xlsx")):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Only CSV and XLSX files are supported",
@@ -391,7 +399,7 @@ async def upload_file_to_project(
 
         # Validate file content matches extension
         content = await file.read()
-        if not validate_file_content(content, file.filename):
+        if not validate_file_content(content, filename):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="File content does not match its extension.",
@@ -406,7 +414,7 @@ async def upload_file_to_project(
         storage_dir.mkdir(parents=True, exist_ok=True)
 
         # Save file
-        file_extension = Path(file.filename).suffix
+        file_extension = Path(filename).suffix
         file_path = storage_dir / f"{upload_id}{file_extension}"
 
         with open(file_path, "wb") as buffer:
@@ -414,7 +422,7 @@ async def upload_file_to_project(
 
         # Process file with DataProcessor
         processor = DataProcessor()
-        file_ext = Path(file.filename).suffix.lstrip(".")
+        file_ext = Path(filename).suffix.lstrip(".")
 
         # For Excel files: only extract metadata, no DataFrame parsing
         if file_ext in ["xlsx", "xls"]:
@@ -445,13 +453,13 @@ async def upload_file_to_project(
         # Create file record
         new_file = FileModel(
             project_id=project_id,
-            filename=file.filename,
+            filename=filename,
             upload_id=upload_id,
             file_path=str(file_path),
             file_size=os.path.getsize(file_path),
-            row_count=row_count,
-            schema_json=schema.model_dump_json() if schema else None,
-            available_sheets_json=available_sheets_json,
+            row_count=row_count,  # type: ignore[arg-type]
+            schema_json=schema.model_dump_json() if schema else None,  # type: ignore[arg-type]
+            available_sheets_json=available_sheets_json,  # type: ignore[arg-type]
         )
 
         db.add(new_file)
@@ -465,13 +473,15 @@ async def upload_file_to_project(
         return ProjectFileUploadResponse(
             file_id=new_file.id,
             upload_id=upload_id,
-            filename=file.filename,
+            filename=filename,
             file_size=new_file.file_size,
             row_count=row_count,
             data_schema=schema,
             uploaded_at=new_file.uploaded_at,
         )
 
+    except ProjectNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e.detail))
     except HTTPException:
         raise
     except Exception:
@@ -524,7 +534,7 @@ async def list_project_files(
                 "has_analysis": f.analysis_json is not None,
                 "analyzed_at": f.analysis_timestamp,
             }
-            files_with_analysis.append(FileInProject(**file_dict))
+            files_with_analysis.append(FileInProject.model_validate(file_dict))
 
         return files_with_analysis
 
@@ -870,8 +880,8 @@ async def analyze_project_file(
             file_analysis = FileAnalysis(
                 file_id=file.id,
                 analysis_json=json.dumps(analysis_json_dict, cls=CustomJSONEncoder),
-                user_intent=request.user_intent,
-                sheet_name=request.sheet_name,  # Store which sheet was analyzed
+                user_intent=request.user_intent,  # type: ignore[arg-type]
+                sheet_name=request.sheet_name,  # type: ignore[arg-type]
             )
 
             db.add(file_analysis)

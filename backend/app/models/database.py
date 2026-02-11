@@ -2,9 +2,10 @@
 Database models for user authentication and session management.
 """
 from datetime import datetime, timezone
+from typing import List
 
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import Mapped, declarative_base, relationship
 
 Base = declarative_base()
 
@@ -19,20 +20,28 @@ class User(Base):
 
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String(255), unique=True, index=True, nullable=False)
-    username = Column(String(100), unique=True, index=True, nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    full_name = Column(String(255), nullable=True)
-    is_active = Column(Boolean, default=True, nullable=False)
-    is_superuser = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=utc_now, nullable=False)
-    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
+    id: Mapped[int] = Column(Integer, primary_key=True, index=True)
+    email: Mapped[str] = Column(String(255), unique=True, index=True, nullable=False)
+    username: Mapped[str] = Column(String(100), unique=True, index=True, nullable=False)
+    hashed_password: Mapped[str] = Column(String(255), nullable=False)
+    full_name: Mapped[str] = Column(String(255), nullable=True)
+    is_active: Mapped[bool] = Column(Boolean, default=True, nullable=False)
+    is_superuser: Mapped[bool] = Column(Boolean, default=False, nullable=False)
+    created_at: Mapped[datetime] = Column(DateTime, default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = Column(
+        DateTime, default=utc_now, onupdate=utc_now, nullable=False
+    )
 
     # Relationships
-    sessions = relationship("Session", back_populates="user", cascade="all, delete-orphan")
-    uploads = relationship("Upload", back_populates="user", cascade="all, delete-orphan")
-    projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")
+    sessions: Mapped[List["Session"]] = relationship(
+        "Session", back_populates="user", cascade="all, delete-orphan"
+    )
+    uploads: Mapped[List["Upload"]] = relationship(
+        "Upload", back_populates="user", cascade="all, delete-orphan"
+    )
+    projects: Mapped[List["Project"]] = relationship(
+        "Project", back_populates="user", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email}, username={self.username})>"
@@ -43,20 +52,20 @@ class Session(Base):
 
     __tablename__ = "sessions"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    token_jti = Column(
+    id: Mapped[int] = Column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = Column(Integer, ForeignKey("users.id"), nullable=False)
+    token_jti: Mapped[str] = Column(
         String(255), unique=True, index=True, nullable=False
     )  # JWT ID for token tracking
-    created_at = Column(DateTime, default=utc_now, nullable=False)
-    expires_at = Column(DateTime, nullable=False)
-    last_activity = Column(DateTime, default=utc_now, nullable=False)
-    ip_address = Column(String(45), nullable=True)  # IPv6 can be up to 45 chars
-    user_agent = Column(Text, nullable=True)
-    is_revoked = Column(Boolean, default=False, nullable=False)
+    created_at: Mapped[datetime] = Column(DateTime, default=utc_now, nullable=False)
+    expires_at: Mapped[datetime] = Column(DateTime, nullable=False)
+    last_activity: Mapped[datetime] = Column(DateTime, default=utc_now, nullable=False)
+    ip_address: Mapped[str] = Column(String(45), nullable=True)  # IPv6 can be up to 45 chars
+    user_agent: Mapped[str] = Column(Text, nullable=True)
+    is_revoked: Mapped[bool] = Column(Boolean, default=False, nullable=False)
 
     # Relationships
-    user = relationship("User", back_populates="sessions")
+    user: Mapped[User] = relationship("User", back_populates="sessions")
 
     def __repr__(self):
         return f"<Session(id={self.id}, user_id={self.user_id}, expires_at={self.expires_at})>"
@@ -67,31 +76,31 @@ class Upload(Base):
 
     __tablename__ = "uploads"
 
-    id = Column(Integer, primary_key=True, index=True)
-    upload_id = Column(
+    id: Mapped[int] = Column(Integer, primary_key=True, index=True)
+    upload_id: Mapped[str] = Column(
         String(255), unique=True, index=True, nullable=False
     )  # UUID from existing system
-    user_id = Column(
+    user_id: Mapped[int] = Column(
         Integer, ForeignKey("users.id"), nullable=True
     )  # Made nullable for backward compatibility
-    filename = Column(String(255), nullable=False)
-    file_size = Column(
+    filename: Mapped[str] = Column(String(255), nullable=False)
+    file_size: Mapped[int] = Column(
         Integer, nullable=True
     )  # Size in bytes - nullable for backward compatibility
-    uploaded_at = Column(DateTime, default=utc_now, nullable=False)
-    expires_at = Column(
+    uploaded_at: Mapped[datetime] = Column(DateTime, default=utc_now, nullable=False)
+    expires_at: Mapped[datetime] = Column(
         DateTime, nullable=True
     )  # Auto-cleanup after 1 hour - nullable for backward compatibility
 
     # Data storage fields (replaces in-memory storage.py)
-    schema_json = Column(Text, nullable=True)  # JSON string of DataSchema
-    data_csv = Column(Text, nullable=True)  # CSV string of DataFrame
-    upload_date = Column(
+    schema_json: Mapped[str] = Column(Text, nullable=True)  # JSON string of DataSchema
+    data_csv: Mapped[str] = Column(Text, nullable=True)  # CSV string of DataFrame
+    upload_date: Mapped[datetime] = Column(
         DateTime, default=utc_now, nullable=False
     )  # Duplicate of uploaded_at for compatibility
 
     # Relationships
-    user = relationship("User", back_populates="uploads")
+    user: Mapped["User"] = relationship("User", back_populates="uploads")
 
     def __repr__(self):
         return f"<Upload(id={self.id}, upload_id={self.upload_id}, user_id={self.user_id}, filename={self.filename})>"
@@ -102,19 +111,25 @@ class Project(Base):
 
     __tablename__ = "projects"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), nullable=False)
-    description = Column(Text, nullable=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, default=utc_now, nullable=False)
-    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
-    is_archived = Column(Boolean, default=False, nullable=False)
+    id: Mapped[int] = Column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = Column(String(255), nullable=False)
+    description: Mapped[str] = Column(Text, nullable=True)
+    user_id: Mapped[int] = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at: Mapped[datetime] = Column(DateTime, default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = Column(
+        DateTime, default=utc_now, onupdate=utc_now, nullable=False
+    )
+    is_archived: Mapped[bool] = Column(Boolean, default=False, nullable=False)
 
     # Relationships
-    user = relationship("User", back_populates="projects")
-    files = relationship("File", back_populates="project", cascade="all, delete-orphan")
-    dashboards = relationship("Dashboard", back_populates="project", cascade="all, delete-orphan")
-    relationships = relationship(
+    user: Mapped[User] = relationship("User", back_populates="projects")
+    files: Mapped[List["File"]] = relationship(
+        "File", back_populates="project", cascade="all, delete-orphan"
+    )
+    dashboards: Mapped[List["Dashboard"]] = relationship(
+        "Dashboard", back_populates="project", cascade="all, delete-orphan"
+    )
+    relationships: Mapped[List["FileRelationship"]] = relationship(
         "FileRelationship", back_populates="project", cascade="all, delete-orphan"
     )
 
@@ -127,32 +142,32 @@ class File(Base):
 
     __tablename__ = "files"
 
-    id = Column(Integer, primary_key=True, index=True)
-    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False)
-    filename = Column(String(255), nullable=False)
-    upload_id = Column(
+    id: Mapped[int] = Column(Integer, primary_key=True, index=True)
+    project_id: Mapped[int] = Column(Integer, ForeignKey("projects.id"), nullable=False)
+    filename: Mapped[str] = Column(String(255), nullable=False)
+    upload_id: Mapped[str] = Column(
         String(255), unique=True, index=True, nullable=False
     )  # Links to existing upload system
-    file_path = Column(String(512), nullable=False)  # Storage path
-    file_size = Column(Integer, nullable=False)  # Size in bytes
-    row_count = Column(Integer, nullable=True)  # Number of rows in dataset
-    schema_json = Column(Text, nullable=True)  # JSON string of column schema
-    uploaded_at = Column(DateTime, default=utc_now, nullable=False)
+    file_path: Mapped[str] = Column(String(512), nullable=False)  # Storage path
+    file_size: Mapped[int] = Column(Integer, nullable=False)  # Size in bytes
+    row_count: Mapped[int] = Column(Integer, nullable=True)  # Number of rows in dataset
+    schema_json: Mapped[str] = Column(Text, nullable=True)  # JSON string of column schema
+    uploaded_at: Mapped[datetime] = Column(DateTime, default=utc_now, nullable=False)
 
     # Excel sheet support
-    sheet_name = Column(String(255), nullable=True)  # For Excel files: which sheet
-    sheet_index = Column(Integer, nullable=True, default=0)  # Sheet index (0-based)
-    available_sheets_json = Column(Text, nullable=True)  # JSON array of sheet names
+    sheet_name: Mapped[str] = Column(String(255), nullable=True)
+    sheet_index: Mapped[int] = Column(Integer, nullable=True, default=0)
+    available_sheets_json: Mapped[str] = Column(Text, nullable=True)
 
     # Analysis fields (for persistent analysis results)
-    analysis_json = Column(
+    analysis_json: Mapped[str] = Column(
         Text, nullable=True
     )  # JSON string of analysis results (charts, insights)
-    analysis_timestamp = Column(DateTime, nullable=True)  # When analysis was last run
-    user_intent = Column(Text, nullable=True)  # User's intent when analysis was run
+    analysis_timestamp: Mapped[datetime] = Column(DateTime, nullable=True)
+    user_intent: Mapped[str] = Column(Text, nullable=True)
 
     # Relationships
-    project = relationship("Project", back_populates="files")
+    project: Mapped[Project] = relationship("Project", back_populates="files")
 
     def __repr__(self):
         return f"<File(id={self.id}, filename={self.filename}, project_id={self.project_id})>"
@@ -163,18 +178,18 @@ class FileRelationship(Base):
 
     __tablename__ = "file_relationships"
 
-    id = Column(Integer, primary_key=True, index=True)
-    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False)
-    file_a_id = Column(Integer, ForeignKey("files.id"), nullable=False)
-    file_b_id = Column(Integer, ForeignKey("files.id"), nullable=False)
-    relationship_type = Column(String(50), nullable=False)  # 'comparison' or 'merge'
-    config_json = Column(Text, nullable=True)  # JSON config: join_type, keys, suffixes, etc.
-    created_at = Column(DateTime, default=utc_now, nullable=False)
+    id: Mapped[int] = Column(Integer, primary_key=True, index=True)
+    project_id: Mapped[int] = Column(Integer, ForeignKey("projects.id"), nullable=False)
+    file_a_id: Mapped[int] = Column(Integer, ForeignKey("files.id"), nullable=False)
+    file_b_id: Mapped[int] = Column(Integer, ForeignKey("files.id"), nullable=False)
+    relationship_type: Mapped[str] = Column(String(50), nullable=False)
+    config_json: Mapped[str] = Column(Text, nullable=True)
+    created_at: Mapped[datetime] = Column(DateTime, default=utc_now, nullable=False)
 
     # Relationships
-    project = relationship("Project", back_populates="relationships")
-    file_a = relationship("File", foreign_keys=[file_a_id])
-    file_b = relationship("File", foreign_keys=[file_b_id])
+    project: Mapped[Project] = relationship("Project", back_populates="relationships")
+    file_a: Mapped[File] = relationship("File", foreign_keys=[file_a_id])
+    file_b: Mapped[File] = relationship("File", foreign_keys=[file_b_id])
 
     def __repr__(self):
         return f"<FileRelationship(id={self.id}, type={self.relationship_type}, file_a={self.file_a_id}, file_b={self.file_b_id})>"
@@ -185,17 +200,19 @@ class Dashboard(Base):
 
     __tablename__ = "dashboards"
 
-    id = Column(Integer, primary_key=True, index=True)
-    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False)
-    name = Column(String(255), nullable=False)
-    dashboard_type = Column(String(50), nullable=False)  # 'single_file', 'comparison', 'merged'
-    config_json = Column(Text, nullable=False)  # JSON containing chart configs, file IDs, etc.
-    chart_data = Column(Text, nullable=True)  # Cached chart data JSON
-    created_at = Column(DateTime, default=utc_now, nullable=False)
-    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
+    id: Mapped[int] = Column(Integer, primary_key=True, index=True)
+    project_id: Mapped[int] = Column(Integer, ForeignKey("projects.id"), nullable=False)
+    name: Mapped[str] = Column(String(255), nullable=False)
+    dashboard_type: Mapped[str] = Column(String(50), nullable=False)
+    config_json: Mapped[str] = Column(Text, nullable=False)
+    chart_data: Mapped[str] = Column(Text, nullable=True)
+    created_at: Mapped[datetime] = Column(DateTime, default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = Column(
+        DateTime, default=utc_now, onupdate=utc_now, nullable=False
+    )
 
     # Relationships
-    project = relationship("Project", back_populates="dashboards")
+    project: Mapped[Project] = relationship("Project", back_populates="dashboards")
 
     def __repr__(self):
         return f"<Dashboard(id={self.id}, name={self.name}, type={self.dashboard_type}, project_id={self.project_id})>"
@@ -206,18 +223,18 @@ class ChartInsight(Base):
 
     __tablename__ = "chart_insights"
 
-    id = Column(Integer, primary_key=True, index=True)
-    file_id = Column(Integer, ForeignKey("files.id"), nullable=False)
-    chart_hash = Column(String(64), index=True, nullable=False)  # MD5 of chart config
-    chart_type = Column(String(20), nullable=False)  # line, bar, pie, scatter
-    chart_title = Column(String(255), nullable=False)
-    insight = Column(Text, nullable=False)
-    insight_type = Column(String(20), default="basic", nullable=False)  # basic, advanced
-    generated_at = Column(DateTime, default=utc_now, nullable=False)
-    model_version = Column(String(50), nullable=False)  # e.g., claude-sonnet-4-20250514
+    id: Mapped[int] = Column(Integer, primary_key=True, index=True)
+    file_id: Mapped[int] = Column(Integer, ForeignKey("files.id"), nullable=False)
+    chart_hash: Mapped[str] = Column(String(64), index=True, nullable=False)
+    chart_type: Mapped[str] = Column(String(20), nullable=False)
+    chart_title: Mapped[str] = Column(String(255), nullable=False)
+    insight: Mapped[str] = Column(Text, nullable=False)
+    insight_type: Mapped[str] = Column(String(20), default="basic", nullable=False)
+    generated_at: Mapped[datetime] = Column(DateTime, default=utc_now, nullable=False)
+    model_version: Mapped[str] = Column(String(50), nullable=False)
 
     # Relationships
-    file = relationship("File", backref="chart_insights")
+    file: Mapped[File] = relationship("File", backref="chart_insights")
 
     def __repr__(self):
         return (
@@ -230,19 +247,19 @@ class FileAnalysis(Base):
 
     __tablename__ = "file_analyses"
 
-    id = Column(Integer, primary_key=True, index=True)
-    file_id = Column(Integer, ForeignKey("files.id"), nullable=False)
+    id: Mapped[int] = Column(Integer, primary_key=True, index=True)
+    file_id: Mapped[int] = Column(Integer, ForeignKey("files.id"), nullable=False)
 
     # Analysis content
-    analysis_json = Column(Text, nullable=False)  # JSON: {charts, global_summary, schema}
-    user_intent = Column(Text, nullable=True)  # User's intent for this analysis
-    sheet_name = Column(String(255), nullable=True)  # Which sheet was analyzed (for Excel)
+    analysis_json: Mapped[str] = Column(Text, nullable=False)
+    user_intent: Mapped[str] = Column(Text, nullable=True)
+    sheet_name: Mapped[str] = Column(String(255), nullable=True)
 
     # Metadata
-    created_at = Column(DateTime, default=utc_now, nullable=False)
+    created_at: Mapped[datetime] = Column(DateTime, default=utc_now, nullable=False)
 
     # Relationships
-    file = relationship("File", backref="file_analyses")
+    file: Mapped[File] = relationship("File", backref="file_analyses")
 
     def __repr__(self):
         return f"<FileAnalysis(id={self.id}, file_id={self.file_id}, created_at={self.created_at})>"
@@ -253,19 +270,19 @@ class Conversation(Base):
 
     __tablename__ = "conversations"
 
-    id = Column(Integer, primary_key=True, index=True)
-    conversation_id = Column(String(36), unique=True, index=True, nullable=False)  # UUID
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    title = Column(String(255), nullable=True)  # Auto-generated or user-set
-    file_context_json = Column(
-        Text, nullable=True
-    )  # JSON array of {file_id, filename, project_name}
-    created_at = Column(DateTime, default=utc_now, nullable=False)
-    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
+    id: Mapped[int] = Column(Integer, primary_key=True, index=True)
+    conversation_id: Mapped[str] = Column(String(36), unique=True, index=True, nullable=False)
+    user_id: Mapped[int] = Column(Integer, ForeignKey("users.id"), nullable=False)
+    title: Mapped[str] = Column(String(255), nullable=True)
+    file_context_json: Mapped[str] = Column(Text, nullable=True)
+    created_at: Mapped[datetime] = Column(DateTime, default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = Column(
+        DateTime, default=utc_now, onupdate=utc_now, nullable=False
+    )
 
     # Relationships
-    user = relationship("User", backref="conversations")
-    messages = relationship(
+    user: Mapped[User] = relationship("User", backref="conversations")
+    messages: Mapped[List["ConversationMessage"]] = relationship(
         "ConversationMessage", back_populates="conversation", cascade="all, delete-orphan"
     )
 
@@ -278,15 +295,15 @@ class ConversationMessage(Base):
 
     __tablename__ = "conversation_messages"
 
-    id = Column(Integer, primary_key=True, index=True)
-    conversation_id = Column(Integer, ForeignKey("conversations.id"), nullable=False)
-    role = Column(String(20), nullable=False)  # 'user' or 'assistant'
-    content = Column(Text, nullable=False)
-    chart_json = Column(Text, nullable=True)  # JSON for any chart generated in response
-    created_at = Column(DateTime, default=utc_now, nullable=False)
+    id: Mapped[int] = Column(Integer, primary_key=True, index=True)
+    conversation_id: Mapped[int] = Column(Integer, ForeignKey("conversations.id"), nullable=False)
+    role: Mapped[str] = Column(String(20), nullable=False)  # 'user' or 'assistant'
+    content: Mapped[str] = Column(Text, nullable=False)
+    chart_json: Mapped[str] = Column(Text, nullable=True)
+    created_at: Mapped[datetime] = Column(DateTime, default=utc_now, nullable=False)
 
     # Relationships
-    conversation = relationship("Conversation", back_populates="messages")
+    conversation: Mapped[Conversation] = relationship("Conversation", back_populates="messages")
 
     def __repr__(self):
         return f"<ConversationMessage(id={self.id}, role={self.role}, conversation_id={self.conversation_id})>"
@@ -297,30 +314,30 @@ class Integration(Base):
 
     __tablename__ = "integrations"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    id: Mapped[int] = Column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     # Provider info
-    provider = Column(
-        String(50), nullable=False
-    )  # 'google_sheets', 'airtable', 'notion', 'dropbox'
-    provider_account_id = Column(String(255), nullable=True)  # User ID on provider side
-    provider_email = Column(String(255), nullable=True)  # Email on provider side
+    provider: Mapped[str] = Column(String(50), nullable=False)
+    provider_account_id: Mapped[str] = Column(String(255), nullable=True)
+    provider_email: Mapped[str] = Column(String(255), nullable=True)
 
     # OAuth tokens (encrypted in production)
-    access_token = Column(Text, nullable=False)
-    refresh_token = Column(Text, nullable=True)
-    token_expires_at = Column(DateTime, nullable=True)
+    access_token: Mapped[str] = Column(Text, nullable=False)
+    refresh_token: Mapped[str] = Column(Text, nullable=True)
+    token_expires_at: Mapped[datetime] = Column(DateTime, nullable=True)
 
     # Metadata
-    scopes = Column(Text, nullable=True)  # JSON array of granted scopes
-    is_active = Column(Boolean, default=True, nullable=False)
-    created_at = Column(DateTime, default=utc_now, nullable=False)
-    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
-    last_used_at = Column(DateTime, nullable=True)
+    scopes: Mapped[str] = Column(Text, nullable=True)
+    is_active: Mapped[bool] = Column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = Column(DateTime, default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = Column(
+        DateTime, default=utc_now, onupdate=utc_now, nullable=False
+    )
+    last_used_at: Mapped[datetime] = Column(DateTime, nullable=True)
 
     # Relationships
-    user = relationship("User", backref="integrations")
+    user: Mapped[User] = relationship("User", backref="integrations")
 
     def __repr__(self):
         return f"<Integration(id={self.id}, provider={self.provider}, user_id={self.user_id})>"

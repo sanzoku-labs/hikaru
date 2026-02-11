@@ -44,7 +44,10 @@ class ProjectService:
 
         # Create project
         project = Project(
-            user_id=user_id, name=name.strip(), description=description, is_archived=False
+            user_id=user_id,
+            name=name.strip(),
+            description=description,  # type: ignore[arg-type]
+            is_archived=False,
         )
 
         self.db.add(project)

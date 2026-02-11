@@ -3,7 +3,7 @@
 import logging
 from datetime import datetime, timezone
 from io import StringIO
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import pandas as pd
 from sqlalchemy.orm import Session
@@ -28,7 +28,7 @@ class UploadService:
         filename: str,
         schema: DataSchema,
         df: pd.DataFrame,
-        user_id: int = None,
+        user_id: Optional[int] = None,
     ) -> str:
         """
         Store upload metadata and dataframe in the database.
@@ -58,7 +58,7 @@ class UploadService:
             schema_json=schema_json,
             data_csv=data_csv,
             upload_date=datetime.now(timezone.utc),
-            user_id=user_id,
+            user_id=user_id,  # type: ignore[arg-type]
         )
 
         self.db.add(upload)

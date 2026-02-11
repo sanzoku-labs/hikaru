@@ -4,12 +4,14 @@ Merge service for Phase 7C - File Merging.
 Handles merging two files using SQL-like joins (inner, left, right, outer).
 """
 from pathlib import Path
-from typing import Tuple
+from typing import Any, Dict, Literal, Tuple
 
 import pandas as pd
 
 from app.models.schemas import ColumnInfo, DataSchema
 from app.services.data_processor import DataProcessor
+
+ColumnType = Literal["numeric", "categorical", "datetime"]
 
 
 class MergeService:
@@ -28,14 +30,14 @@ class MergeService:
         Returns:
             DataFrame containing the file data
         """
-        file_path = Path(file_path)
+        path = Path(file_path)
 
-        if file_path.suffix == ".csv":
-            return pd.read_csv(file_path)
-        elif file_path.suffix == ".xlsx":
-            return pd.read_excel(file_path)
+        if path.suffix == ".csv":
+            return pd.read_csv(path)
+        elif path.suffix == ".xlsx":
+            return pd.read_excel(path)
         else:
-            raise ValueError(f"Unsupported file type: {file_path.suffix}")
+            raise ValueError(f"Unsupported file type: {path.suffix}")
 
     def merge_files(
         self,
@@ -110,7 +112,7 @@ class MergeService:
 
             # Detect column type
             if pd.api.types.is_numeric_dtype(col_data):
-                col_type = "numeric"
+                col_type: ColumnType = "numeric"
                 null_count = int(col_data.isnull().sum())
                 min_val = float(col_data.min()) if not col_data.empty else None
                 max_val = float(col_data.max()) if not col_data.empty else None
@@ -129,24 +131,24 @@ class MergeService:
                 )
 
             elif pd.api.types.is_datetime64_any_dtype(col_data):
-                col_type = "datetime"
+                dt_type: ColumnType = "datetime"
                 null_count = int(col_data.isnull().sum())
 
                 column_info = ColumnInfo(
                     name=col_name,
-                    type=col_type,
+                    type=dt_type,
                     null_count=null_count,
                     sample_values=col_data.dropna().astype(str).head(5).tolist(),
                 )
 
             else:
-                col_type = "categorical"
+                cat_type: ColumnType = "categorical"
                 null_count = int(col_data.isnull().sum())
                 unique_values = int(col_data.nunique())
 
                 column_info = ColumnInfo(
                     name=col_name,
-                    type=col_type,
+                    type=cat_type,
                     null_count=null_count,
                     unique_values=unique_values,
                     sample_values=col_data.dropna().head(5).tolist(),
@@ -174,7 +176,7 @@ class MergeService:
         Returns:
             Dictionary with compatibility info
         """
-        result = {
+        result: Dict[str, Any] = {
             "compatible": True,
             "warnings": [],
             "estimated_row_count": {"inner": 0, "left": len(df_a), "right": len(df_b), "outer": 0},

@@ -27,11 +27,11 @@ class AIAnalysisService:
 
     def __init__(self) -> None:
         """Initialize AIAnalysisService."""
+        self.client: Optional[Anthropic] = None
         if settings.anthropic_api_key:
             self.client = Anthropic(api_key=settings.anthropic_api_key)
             self.enabled = True
         else:
-            self.client = None
             self.enabled = False
             logger.warning("ANTHROPIC_API_KEY not set. AI analysis will be disabled.")
 
@@ -57,13 +57,14 @@ class AIAnalysisService:
             logger.info(f"Suggesting charts with user_intent: {user_intent or 'None'}")
             prompt = self._build_chart_suggestion_prompt(schema, user_intent)
 
+            assert self.client is not None
             message = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=1000,
                 messages=[{"role": "user", "content": prompt}],
             )
 
-            response_text = message.content[0].text.strip()
+            response_text = message.content[0].text.strip()  # type: ignore[union-attr]
             logger.debug(f"Raw AI response: {response_text[:500]}...")  # Log first 500 chars
 
             # Parse JSON response
@@ -125,13 +126,14 @@ Focus on:
 
 Provide a concise summary highlighting the most important findings."""
 
+            assert self.client is not None
             message = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=300,
                 messages=[{"role": "user", "content": prompt}],
             )
 
-            return message.content[0].text.strip()
+            return message.content[0].text.strip()  # type: ignore[union-attr]
 
         except Exception as e:
             logger.error(f"Error generating comparison insight: {e}")
@@ -170,13 +172,14 @@ Metrics for {chart.y_column}:
 
 Focus on the most notable difference or trend visible in this specific chart."""
 
+            assert self.client is not None
             message = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=150,
                 messages=[{"role": "user", "content": prompt}],
             )
 
-            return message.content[0].text.strip()
+            return message.content[0].text.strip()  # type: ignore[union-attr]
 
         except Exception:
             return None

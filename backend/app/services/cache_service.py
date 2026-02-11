@@ -46,9 +46,10 @@ class CacheService:
         value = self.redis.get(key)
         if value:
             logger.debug(f"Cache hit for key: {key}")
+            return str(value) if not isinstance(value, str) else value
         else:
             logger.debug(f"Cache miss for key: {key}")
-        return value
+            return None
 
     def delete(self, key: str) -> None:
         """

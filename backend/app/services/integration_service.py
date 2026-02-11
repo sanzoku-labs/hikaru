@@ -288,9 +288,11 @@ class IntegrationService:
             # Update existing integration
             existing.access_token = encrypt_token(tokens["access_token"])
             existing.refresh_token = (
-                encrypt_token(tokens["refresh_token"]) if tokens.get("refresh_token") else None
+                encrypt_token(tokens["refresh_token"])
+                if tokens.get("refresh_token")
+                else None  # type: ignore[assignment]
             )
-            existing.token_expires_at = tokens.get("expires_at")
+            existing.token_expires_at = tokens.get("expires_at")  # type: ignore[assignment]
             existing.is_active = True
             existing.updated_at = utc_now()
             self.db.commit()
@@ -298,17 +300,20 @@ class IntegrationService:
             return IntegrationResponse.model_validate(existing)
 
         # Create new integration
+        provider_config = self._get_provider_config(provider_id)
+        scopes_json = json.dumps(provider_config["scopes"]) if provider_config else "[]"
+        encrypted_refresh = (
+            encrypt_token(tokens["refresh_token"]) if tokens.get("refresh_token") else None
+        )
         integration = Integration(
             user_id=user_id,
             provider=provider_id,
-            provider_account_id=user_info.get("id"),
-            provider_email=user_info.get("email"),
+            provider_account_id=user_info.get("id"),  # type: ignore[arg-type]
+            provider_email=user_info.get("email"),  # type: ignore[arg-type]
             access_token=encrypt_token(tokens["access_token"]),
-            refresh_token=(
-                encrypt_token(tokens["refresh_token"]) if tokens.get("refresh_token") else None
-            ),
-            token_expires_at=tokens.get("expires_at"),
-            scopes=json.dumps(self._get_provider_config(provider_id)["scopes"]),
+            refresh_token=encrypted_refresh,  # type: ignore[arg-type]
+            token_expires_at=tokens.get("expires_at"),  # type: ignore[arg-type]
+            scopes=scopes_json,
             is_active=True,
         )
 

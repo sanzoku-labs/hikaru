@@ -33,6 +33,7 @@ class ExportService:
         schema: DataSchema,
         charts: List[ChartData],
         global_summary: str | None = None,
+        custom_title: str | None = None,
     ) -> str:
         """
         Generate PDF report from dashboard data.

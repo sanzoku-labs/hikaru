@@ -247,7 +247,13 @@ async def export_advanced(
         # Generate export based on format
         export_service = ExportService()
         export_id = None
-        file_extension = request.export_format
+        file_extension: str = request.export_format
+
+        # Ensure schema has a default if None
+        if schema is None:
+            from app.models.schemas import DataSchema
+
+            schema = DataSchema(columns=[], row_count=0, preview=[])
 
         if request.export_format == "pdf":
             export_id = export_service.generate_pdf(

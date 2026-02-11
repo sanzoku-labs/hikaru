@@ -55,6 +55,8 @@ async def login(request: Request, credentials: UserLogin, db: Session = Depends(
 
     # Decode token to get expiration and JTI
     payload = auth_service.decode_access_token(access_token)
+    if payload is None:
+        raise HTTPException(status_code=401, detail="Invalid token payload")
     expires_at = datetime.utcfromtimestamp(payload["exp"])
     token_jti = payload["jti"]
 
@@ -92,7 +94,7 @@ async def get_me(current_user: User = Depends(get_current_active_user)):
 @router.post("/logout", status_code=status.HTTP_200_OK)
 async def logout(
     current_user: User = Depends(get_current_user),
-    request: Request = None,
+    request: Request = None,  # type: ignore[assignment]
     db: Session = Depends(get_db),
 ):
     """

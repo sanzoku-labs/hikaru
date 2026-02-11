@@ -149,6 +149,21 @@ def get_optional_current_user(
     if credentials is None:
         return None
 
+    # Try to validate token, return None if invalid
+    try:
+        token = credentials.credentials
+        payload = auth_service.decode_access_token(token)
+        if payload is None:
+            return None
+
+        user_id = payload.get("sub")
+        if user_id is None:
+            return None
+
+        return auth_service.get_user_by_id(db, int(user_id))
+    except Exception:
+        return None
+
 
 async def get_user_project(
     project_id: int,

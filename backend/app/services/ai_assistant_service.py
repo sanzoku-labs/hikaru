@@ -14,7 +14,7 @@ import json
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Literal, Optional, Tuple, cast
 
 from anthropic import Anthropic
 from sqlalchemy.orm import Session
@@ -52,11 +52,11 @@ class AIAssistantService:
         """
         self.db = db
 
+        self.client: Optional[Anthropic] = None
         if settings.anthropic_api_key:
             self.client = Anthropic(api_key=settings.anthropic_api_key)
             self.enabled = True
         else:
-            self.client = None
             self.enabled = False
             logger.warning("ANTHROPIC_API_KEY not set. AI Assistant will be disabled.")
 
@@ -107,7 +107,7 @@ class AIAssistantService:
             conversation = Conversation(
                 conversation_id=conversation_id,
                 user_id=user_id,
-                title=None,  # Will be auto-generated from first question
+                title=None,  # type: ignore[arg-type]  # Will be auto-generated from first question
                 file_context_json=json.dumps([fc.model_dump() for fc in files_used]),
                 created_at=utc_now(),
                 updated_at=utc_now(),
@@ -118,17 +118,21 @@ class AIAssistantService:
         # Get conversation history
         history = self._get_conversation_messages(conversation.id)
 
+        # At this point conversation_id is always set (either from param or uuid4)
+        assert conversation_id is not None
+
         # Build multi-file prompt
         prompt = self._build_multi_file_prompt(question, files_data, history)
 
         try:
+            assert self.client is not None
             message = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=800,
                 messages=[{"role": "user", "content": prompt}],
             )
 
-            answer = message.content[0].text.strip()
+            answer = message.content[0].text.strip()  # type: ignore[union-attr]
 
             # Parse response for chart generation request
             chart_config = self._parse_chart_request(answer)
@@ -266,7 +270,7 @@ class AIAssistantService:
             messages.append(
                 ConversationMessageDetail(
                     id=msg.id,
-                    role=msg.role,
+                    role=cast(Literal["user", "assistant"], msg.role),
                     content=msg.content,
                     chart=chart,
                     created_at=msg.created_at,
@@ -377,7 +381,7 @@ class AIAssistantService:
             conversation_id=conversation_db_id,
             role=role,
             content=content,
-            chart_json=chart_json,
+            chart_json=chart_json,  # type: ignore[arg-type]
             created_at=utc_now(),
         )
         self.db.add(message)

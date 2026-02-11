@@ -344,16 +344,16 @@ async def analyze_merged_data(
 
         charts_with_insights = []
         for chart_data in charts_data:
-            insight = ai_service.generate_chart_insight(chart_data, merged_schema)
-            chart_dict = chart_data if isinstance(chart_data, dict) else chart_data.model_dump()
+            chart_obj = ChartData(**chart_data) if isinstance(chart_data, dict) else chart_data
+            insight = ai_service.generate_chart_insight(chart_obj, merged_schema)
+            chart_dict = chart_obj.model_dump()
             chart_dict["insight"] = insight
             charts_with_insights.append(ChartData(**chart_dict))
 
         # Generate global summary
         global_summary = ai_service.generate_global_summary(
-            filename=f"Merged: {file_a.filename} + {file_b.filename}",
-            schema=merged_schema,
             charts=charts_with_insights,
+            schema=merged_schema,
         )
 
         return MergeAnalyzeResponse(

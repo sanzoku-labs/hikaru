@@ -238,7 +238,7 @@ class FileInProject(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def data_schema(self) -> Optional["DataSchema"]:
         """Parse data_schema_json into DataSchema object."""

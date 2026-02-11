@@ -32,11 +32,11 @@ class AIInsightService:
         Args:
             cache_service: Optional CacheService for caching insights
         """
+        self.client: Optional[Anthropic] = None
         if settings.anthropic_api_key:
             self.client = Anthropic(api_key=settings.anthropic_api_key)
             self.enabled = True
         else:
-            self.client = None
             self.enabled = False
             logger.warning("ANTHROPIC_API_KEY not set. AI insights will be disabled.")
 
@@ -68,13 +68,14 @@ class AIInsightService:
         try:
             prompt = self._build_chart_prompt(chart, schema)
 
+            assert self.client is not None
             message = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=200,
                 messages=[{"role": "user", "content": prompt}],
             )
 
-            insight = message.content[0].text.strip()
+            insight = message.content[0].text.strip()  # type: ignore[union-attr]
 
             # Cache the result if cache available
             if self.cache and cache_key:
@@ -112,13 +113,14 @@ class AIInsightService:
         try:
             prompt = self._build_summary_prompt(charts, schema)
 
+            assert self.client is not None
             message = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=300,
                 messages=[{"role": "user", "content": prompt}],
             )
 
-            summary = message.content[0].text.strip()
+            summary = message.content[0].text.strip()  # type: ignore[union-attr]
 
             # Cache the result if cache available
             if self.cache and cache_key:
@@ -280,13 +282,14 @@ Be concise and specific. Avoid generic statements."""
         try:
             prompt = self._build_advanced_chart_prompt(chart, schema)
 
+            assert self.client is not None
             message = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=400,  # More tokens for detailed analysis
                 messages=[{"role": "user", "content": prompt}],
             )
 
-            insight = message.content[0].text.strip()
+            insight = message.content[0].text.strip()  # type: ignore[union-attr]
 
             # Cache the result if cache available
             if self.cache and cache_key:

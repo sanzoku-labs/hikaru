@@ -37,8 +37,13 @@ async def upload_file(
 ):
     """Upload CSV or XLSX file for analysis"""
 
+    # Validate filename exists
+    filename = file.filename
+    if not filename:
+        raise HTTPException(status_code=400, detail="Filename is required")
+
     # Validate file extension
-    file_extension = file.filename.split(".")[-1].lower()
+    file_extension = filename.split(".")[-1].lower()
     if file_extension not in settings.allowed_extensions:
         raise HTTPException(
             status_code=400,
@@ -62,7 +67,7 @@ async def upload_file(
 
     # Validate file content matches extension
     content = await file.read()
-    if not validate_file_content(content, file.filename):
+    if not validate_file_content(content, filename):
         raise HTTPException(
             status_code=400,
             detail="File content does not match its extension.",
@@ -92,13 +97,11 @@ async def upload_file(
 
         # Store in database using UploadService (replaces in-memory storage)
         upload_service = UploadService(db)
-        upload_service.store_upload(
-            upload_id=upload_id, filename=file.filename, schema=schema, df=df
-        )
+        upload_service.store_upload(upload_id=upload_id, filename=filename, schema=schema, df=df)
 
         return UploadResponse(
             upload_id=upload_id,
-            filename=file.filename,
+            filename=filename,
             data_schema=schema,
             upload_timestamp=datetime.now(),
         )
@@ -112,5 +115,5 @@ async def upload_file(
     except Exception as e:
         if os.path.exists(file_path):
             os.remove(file_path)
-        logger.error(f"Upload failed for file {file.filename}: {str(e)}", exc_info=True)
+        logger.error(f"Upload failed for file {filename}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="An internal error occurred.")

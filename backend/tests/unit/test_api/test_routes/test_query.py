@@ -215,13 +215,15 @@ def test_generate_chart_from_config_bar():
 
     with patch("app.api.routes.query.ChartGenerator") as mock_chart_gen_class:
         mock_chart_gen = Mock()
-        mock_chart_gen._generate_bar_chart.return_value = {
+        mock_chart_config = Mock()
+        mock_chart_config.to_dict.return_value = {
             "chart_type": "bar",
             "x_column": "category",
             "y_column": "value",
             "data": [{"category": "A", "value": 100}],
             "priority": 1,
         }
+        mock_chart_gen._create_bar_chart.return_value = mock_chart_config
         mock_chart_gen_class.return_value = mock_chart_gen
 
         result = _generate_chart_from_config(df, schema, config)
@@ -238,19 +240,76 @@ def test_generate_chart_from_config_line():
 
     with patch("app.api.routes.query.ChartGenerator") as mock_chart_gen_class:
         mock_chart_gen = Mock()
-        mock_chart_gen._generate_line_chart.return_value = {
+        mock_chart_config = Mock()
+        mock_chart_config.to_dict.return_value = {
             "chart_type": "line",
             "x_column": "x",
             "y_column": "y",
             "data": [{"x": 1, "y": 10}],
             "priority": 1,
         }
+        mock_chart_gen._create_line_chart.return_value = mock_chart_config
         mock_chart_gen_class.return_value = mock_chart_gen
 
         result = _generate_chart_from_config(df, schema, config)
 
         assert result.chart_type == "line"
         assert result.title == "Test Line"
+
+
+def test_generate_chart_from_config_pie():
+    """Test generating pie chart from config"""
+    df = pd.DataFrame({"category": ["A", "B", "C"], "value": [10, 20, 30]})
+    schema = Mock()
+    config = {
+        "chart_type": "pie",
+        "category_column": "category",
+        "value_column": "value",
+        "title": "Test Pie",
+    }
+
+    with patch("app.api.routes.query.ChartGenerator") as mock_chart_gen_class:
+        mock_chart_gen = Mock()
+        mock_chart_config = Mock()
+        mock_chart_config.to_dict.return_value = {
+            "chart_type": "pie",
+            "x_column": "category",
+            "y_column": "value",
+            "data": [{"category": "A", "value": 10}],
+            "priority": 1,
+        }
+        mock_chart_gen._create_pie_chart.return_value = mock_chart_config
+        mock_chart_gen_class.return_value = mock_chart_gen
+
+        result = _generate_chart_from_config(df, schema, config)
+
+        assert result.chart_type == "pie"
+        assert result.title == "Test Pie"
+
+
+def test_generate_chart_from_config_scatter():
+    """Test generating scatter chart from config"""
+    df = pd.DataFrame({"x": [1, 2, 3], "y": [10, 20, 30]})
+    schema = Mock()
+    config = {"chart_type": "scatter", "x_column": "x", "y_column": "y", "title": "Test Scatter"}
+
+    with patch("app.api.routes.query.ChartGenerator") as mock_chart_gen_class:
+        mock_chart_gen = Mock()
+        mock_chart_config = Mock()
+        mock_chart_config.to_dict.return_value = {
+            "chart_type": "scatter",
+            "x_column": "x",
+            "y_column": "y",
+            "data": [{"x": 1, "y": 10}],
+            "priority": 1,
+        }
+        mock_chart_gen._create_scatter_chart.return_value = mock_chart_config
+        mock_chart_gen_class.return_value = mock_chart_gen
+
+        result = _generate_chart_from_config(df, schema, config)
+
+        assert result.chart_type == "scatter"
+        assert result.title == "Test Scatter"
 
 
 def test_generate_chart_from_config_invalid():

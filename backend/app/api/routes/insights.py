@@ -11,6 +11,7 @@ import hashlib
 import json
 import logging
 from datetime import datetime
+from typing import Literal, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
@@ -112,7 +113,7 @@ async def generate_chart_insight(
         logger.info(f"Database cache hit for chart insight: {chart_hash}")
         return ChartInsightResponse(
             insight=existing_insight.insight,
-            insight_type=existing_insight.insight_type,
+            insight_type=cast(Literal["basic", "advanced"], existing_insight.insight_type),
             chart_hash=existing_insight.chart_hash,
             generated_at=existing_insight.generated_at,
             model_version=existing_insight.model_version,
@@ -175,7 +176,7 @@ async def generate_chart_insight(
 
     return ChartInsightResponse(
         insight=new_insight.insight,
-        insight_type=new_insight.insight_type,
+        insight_type=cast(Literal["basic", "advanced"], new_insight.insight_type),
         chart_hash=new_insight.chart_hash,
         generated_at=new_insight.generated_at,
         model_version=new_insight.model_version,

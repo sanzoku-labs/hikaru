@@ -91,7 +91,7 @@ The frontend dev server proxies `/api` to `http://localhost:8004`. If running ba
 - mypy: strict mode with `ignore_missing_imports`
 - isort profile: black
 - Test pattern: `tests/unit/test_{feature}/test_{module}.py` with `Test*` classes
-- pytest runs with `--cov=app --cov-fail-under=80` by default
+- pytest runs with `--cov=app --cov-fail-under=75` by default
 
 ### Frontend
 - Path imports use `@/` alias (e.g., `import { Button } from '@/components/ui/button'`)

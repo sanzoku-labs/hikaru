@@ -292,6 +292,11 @@ def main():
         action="store_true",
         help="Clear existing data before seeding",
     )
+    parser.add_argument(
+        "--user-only",
+        action="store_true",
+        help="Only seed the user, skip projects/files/dashboards",
+    )
     args = parser.parse_args()
 
     print("🌱 Starting database seeding...\n")
@@ -314,9 +319,12 @@ def main():
 
         # Seed data
         users = seed_users(session)
-        projects = seed_projects(session, users)
-        files = seed_files(session, projects)
-        seed_dashboards(session, projects)
+        files = []
+
+        if not args.user_only:
+            projects = seed_projects(session, users)
+            files = seed_files(session, projects)
+            seed_dashboards(session, projects)
 
         print("\n" + "=" * 60)
         print("✨ Database seeding completed successfully!")
@@ -332,9 +340,10 @@ def main():
 
         print("\n📊 Summary:")
         print(f"  • Users created: {len(SAMPLE_USERS)}")
-        print(f"  • Projects created: {len(SAMPLE_PROJECTS)}")
-        print(f"  • Files created: {len(files)}")
-        print(f"  • Dashboards created: {len(SAMPLE_DASHBOARDS)}")
+        if not args.user_only:
+            print(f"  • Projects created: {len(SAMPLE_PROJECTS)}")
+            print(f"  • Files created: {len(files)}")
+            print(f"  • Dashboards created: {len(SAMPLE_DASHBOARDS)}")
 
         print("\n💡 Next steps:")
         print("  1. Start the backend: poetry run uvicorn app.main:app --reload")

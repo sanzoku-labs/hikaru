@@ -435,6 +435,9 @@ class TestAnalysisServicePerformFullAnalysis:
         ]
         mock_chart_gen.generate_charts.return_value = mock_charts
 
+        # Mock AI suggest_charts to avoid len(Mock()) error in AI path
+        mock_ai_service.suggest_charts.return_value = []
+
         # Mock insights
         mock_ai_service.generate_chart_insight.return_value = "Chart insight"
 
@@ -443,8 +446,10 @@ class TestAnalysisServicePerformFullAnalysis:
 
         service = AnalysisService(chart_generator=mock_chart_gen, ai_service=mock_ai_service)
 
-        # Execute full analysis
-        result = service.perform_full_analysis(sample_dataframe, sample_schema)
+        # Execute full analysis with include_chart_insights=True
+        result = service.perform_full_analysis(
+            sample_dataframe, sample_schema, include_chart_insights=True
+        )
 
         # Verify result structure
         assert "charts" in result

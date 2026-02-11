@@ -105,6 +105,7 @@ def auth_headers(test_user: User) -> dict:
     return {"Authorization": f"Bearer {token}"}
 
 
+@pytest.mark.skip(reason="Register endpoint not implemented (single-user lockdown mode)")
 class TestRegisterEndpoint:
     """Test suite for /api/auth/register endpoint"""
 

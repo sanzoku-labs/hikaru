@@ -4,7 +4,9 @@ Tests for custom exception classes.
 
 from app.core.exceptions import (
     AIServiceError,
+    AnalysisNotFoundError,
     AppException,
+    ExportNotFoundError,
     FileNotFoundError,
     FileTooLargeError,
     InsufficientPermissionsError,
@@ -144,3 +146,48 @@ class TestAIServiceError:
     def test_has_correct_error_code(self):
         error = AIServiceError("API request failed")
         assert error.error_code == "ai_service_error"
+
+
+class TestAnalysisNotFoundError:
+    """Tests for AnalysisNotFoundError."""
+
+    def test_has_correct_status_code(self):
+        error = AnalysisNotFoundError("Analysis not found")
+        assert error.status_code == 404
+
+    def test_has_correct_error_code(self):
+        error = AnalysisNotFoundError("Analysis not found")
+        assert error.error_code == "analysis_not_found"
+
+
+class TestExportNotFoundError:
+    """Tests for ExportNotFoundError."""
+
+    def test_has_correct_status_code(self):
+        error = ExportNotFoundError("Export not found")
+        assert error.status_code == 404
+
+    def test_has_correct_error_code(self):
+        error = ExportNotFoundError("Export not found")
+        assert error.error_code == "export_not_found"
+
+
+class TestAppExceptionMethods:
+    """Tests for AppException utility methods."""
+
+    def test_to_dict_without_extra(self):
+        error = AppException(status_code=400, error_code="test", detail="msg")
+        result = error.to_dict()
+        assert result == {"error_code": "test", "detail": "msg"}
+        assert "extra" not in result
+
+    def test_to_dict_with_extra(self):
+        error = AppException(
+            status_code=400, error_code="test", detail="msg", extra={"field": "name"}
+        )
+        result = error.to_dict()
+        assert result["extra"] == {"field": "name"}
+
+    def test_str_format(self):
+        error = AppException(status_code=400, error_code="test_error", detail="test msg")
+        assert str(error) == "test_error: test msg"

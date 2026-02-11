@@ -72,7 +72,9 @@ class TestAnalyzeEndpoint:
         self, client: TestClient, uploaded_file: str, auth_headers: dict
     ):
         """Test successful analysis without user intent"""
-        response = client.get(f"/api/analyze/{uploaded_file}", headers=auth_headers)
+        response = client.post(
+            f"/api/analyze/{uploaded_file}", json={}, headers=auth_headers
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -110,8 +112,10 @@ class TestAnalyzeEndpoint:
         """Test successful analysis with user intent"""
         user_intent = "Show me sales by category"
 
-        response = client.get(
-            f"/api/analyze/{uploaded_file}?user_intent={user_intent}", headers=auth_headers
+        response = client.post(
+            f"/api/analyze/{uploaded_file}",
+            json={"user_intent": user_intent},
+            headers=auth_headers,
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -131,7 +135,9 @@ class TestAnalyzeEndpoint:
         """Test analysis response structure supports AI insights"""
         # Note: AI is disabled in test environment (no valid API key)
         # This test verifies the endpoint structure supports insights fields
-        response = client.get(f"/api/analyze/{uploaded_file}", headers=auth_headers)
+        response = client.post(
+            f"/api/analyze/{uploaded_file}", json={}, headers=auth_headers
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -145,14 +151,16 @@ class TestAnalyzeEndpoint:
         """Test analysis with non-existent upload_id returns 404"""
         fake_upload_id = str(uuid.uuid4())
 
-        response = client.get(f"/api/analyze/{fake_upload_id}", headers=auth_headers)
+        response = client.post(
+            f"/api/analyze/{fake_upload_id}", json={}, headers=auth_headers
+        )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert "not found" in response.json()["detail"].lower()
 
     def test_analyze_without_authentication(self, client: TestClient, uploaded_file: str):
         """Test analysis without authentication returns 403"""
-        response = client.get(f"/api/analyze/{uploaded_file}")
+        response = client.post(f"/api/analyze/{uploaded_file}", json={})
 
         # FastAPI returns 403 when no credentials provided
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -161,7 +169,9 @@ class TestAnalyzeEndpoint:
         """Test analysis with invalid token returns 401"""
         headers = {"Authorization": "Bearer invalid_token"}
 
-        response = client.get(f"/api/analyze/{uploaded_file}", headers=headers)
+        response = client.post(
+            f"/api/analyze/{uploaded_file}", json={}, headers=headers
+        )
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -175,7 +185,9 @@ class TestAnalyzeEndpoint:
     ):
         """Test that users cannot analyze other users' uploads"""
         # uploaded_file belongs to test_user, trying to access with superuser
-        response = client.get(f"/api/analyze/{uploaded_file}", headers=superuser_headers)
+        response = client.post(
+            f"/api/analyze/{uploaded_file}", json={}, headers=superuser_headers
+        )
 
         # Should return 404 (file not found for this user)
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -184,7 +196,9 @@ class TestAnalyzeEndpoint:
         self, client: TestClient, uploaded_file: str, auth_headers: dict
     ):
         """Test that analysis generates diverse chart types"""
-        response = client.get(f"/api/analyze/{uploaded_file}", headers=auth_headers)
+        response = client.post(
+            f"/api/analyze/{uploaded_file}", json={}, headers=auth_headers
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -200,7 +214,9 @@ class TestAnalyzeEndpoint:
         self, client: TestClient, uploaded_file: str, auth_headers: dict
     ):
         """Test that response includes all required fields per schema"""
-        response = client.get(f"/api/analyze/{uploaded_file}", headers=auth_headers)
+        response = client.post(
+            f"/api/analyze/{uploaded_file}", json={}, headers=auth_headers
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -226,7 +242,9 @@ class TestAnalyzeEndpoint:
         self, client: TestClient, uploaded_file: str, auth_headers: dict
     ):
         """Test that generated charts contain valid data points"""
-        response = client.get(f"/api/analyze/{uploaded_file}", headers=auth_headers)
+        response = client.post(
+            f"/api/analyze/{uploaded_file}", json={}, headers=auth_headers
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()

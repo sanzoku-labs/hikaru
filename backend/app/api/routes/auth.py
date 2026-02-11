@@ -11,74 +11,12 @@ from app.core.rate_limit import limiter
 from app.database import get_db
 from app.middleware.auth import get_current_active_user, get_current_user
 from app.models.database import User
-from app.models.schemas import TokenResponse, UserLogin, UserRegister, UserResponse
+from app.models.schemas import TokenResponse, UserLogin, UserResponse
 from app.services import auth_service
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
-
-
-@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-@limiter.limit("5/minute")
-async def register(request: Request, user_data: UserRegister, db: Session = Depends(get_db)):
-    """
-    Register a new user.
-
-    Creates a new user account and returns a JWT access token.
-
-    Args:
-        user_data: User registration data (email, username, password, full_name)
-        request: FastAPI request object (for IP and user agent)
-        db: Database session
-
-    Returns:
-        TokenResponse with access_token and user information
-
-    Raises:
-        HTTP 400: If email or username already exists
-        HTTP 500: If registration fails
-    """
-    try:
-        # Create user
-        user = auth_service.create_user(
-            db=db,
-            email=user_data.email,
-            username=user_data.username,
-            password=user_data.password,
-            full_name=user_data.full_name,
-        )
-
-        # Generate JWT token
-        access_token = auth_service.create_access_token(data={"sub": str(user.id)})
-
-        # Decode token to get expiration and JTI
-        payload = auth_service.decode_access_token(access_token)
-        expires_at = datetime.utcfromtimestamp(payload["exp"])
-        token_jti = payload["jti"]
-
-        # Create session record
-        auth_service.create_session(
-            db=db,
-            user_id=user.id,
-            token_jti=token_jti,
-            expires_at=expires_at,
-            ip_address=request.client.host if request.client else None,
-            user_agent=request.headers.get("user-agent"),
-        )
-
-        return TokenResponse(
-            access_token=access_token, token_type="bearer", user=UserResponse.model_validate(user)
-        )
-
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:
-        logger.error(f"Registration failed: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An internal error occurred.",
-        )
 
 
 @router.post("/login", response_model=TokenResponse)

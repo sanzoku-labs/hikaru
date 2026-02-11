@@ -4,10 +4,14 @@ Seed script for populating the database with sample data for development.
 Usage:
     poetry run python scripts/seed.py [--clear]
 
+    For production single-user seeding:
+    SEED_USERNAME=wife SEED_EMAIL=wife@email.com SEED_PASSWORD=secure-pw python scripts/seed.py --clear
+
 Options:
     --clear    Clear all existing data before seeding
 """
 import argparse
+import os
 import sys
 import uuid
 from pathlib import Path
@@ -27,59 +31,33 @@ from app.models.database import Session as SessionModel
 from app.models.database import User, utc_now
 from app.services.auth_service import hash_password
 
-# Sample data configuration
+# Sample data configuration — override with SEED_* env vars for production
 SAMPLE_USERS = [
     {
-        "username": "admin",
-        "email": "admin@example.com",
-        "password": "admin123",
+        "username": os.environ.get("SEED_USERNAME", "admin"),
+        "email": os.environ.get("SEED_EMAIL", "admin@example.com"),
+        "password": os.environ.get("SEED_PASSWORD", "admin123"),
         "is_superuser": True,
     },
-    {
-        "username": "demo",
-        "email": "demo@example.com",
-        "password": "demo123",
-        "is_superuser": False,
-    },
-    {
-        "username": "alice",
-        "email": "alice@example.com",
-        "password": "alice123",
-        "is_superuser": False,
-    },
-    {
-        "username": "bob",
-        "email": "bob@example.com",
-        "password": "bob123",
-        "is_superuser": False,
-    },
 ]
+
+_seed_user = os.environ.get("SEED_USERNAME", "admin")
 
 SAMPLE_PROJECTS = [
     {
         "name": "Sales Analysis 2024",
         "description": "Quarterly sales performance analysis with customer segmentation and revenue trends.",
-        "owner": "demo",
+        "owner": _seed_user,
     },
     {
         "name": "E-commerce Product Catalog",
         "description": "Product inventory tracking with categories, pricing, and stock levels.",
-        "owner": "demo",
+        "owner": _seed_user,
     },
     {
         "name": "HR Employee Data",
         "description": "Employee demographics, salary analysis, and department distribution.",
-        "owner": "alice",
-    },
-    {
-        "name": "Financial Metrics Dashboard",
-        "description": "Monthly revenue, expenses, and profit analysis for the fiscal year.",
-        "owner": "alice",
-    },
-    {
-        "name": "Marketing Campaign Performance",
-        "description": "Campaign ROI analysis with conversion rates and customer acquisition costs.",
-        "owner": "bob",
+        "owner": _seed_user,
     },
 ]
 
@@ -92,11 +70,6 @@ SAMPLE_DASHBOARDS = [
     {
         "name": "Product Performance",
         "project": "E-commerce Product Catalog",
-        "dashboard_type": "single_file",
-    },
-    {
-        "name": "Employee Demographics",
-        "project": "HR Employee Data",
         "dashboard_type": "single_file",
     },
 ]

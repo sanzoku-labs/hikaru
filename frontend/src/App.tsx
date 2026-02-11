@@ -10,7 +10,6 @@ import { useUIStore } from '@/stores/uiStore'
 
 // Lazy load pages for code splitting
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
-const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'))
 const QuickAnalysisPage = lazy(() => import('@/pages/QuickAnalysisPage'))
 const AssistantPage = lazy(() => import('@/pages/AssistantPage'))
 const ProjectsPage = lazy(() => import('@/pages/ProjectsPage'))
@@ -72,8 +71,6 @@ export default function App() {
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-
             {/* Protected routes with error boundaries */}
             <Route
               path="/"

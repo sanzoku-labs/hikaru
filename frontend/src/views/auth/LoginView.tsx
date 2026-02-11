@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { Sparkles, Eye, EyeOff } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -209,16 +208,6 @@ export function LoginView({
             </Button>
           </form>
 
-          {/* Register link */}
-          <p className="mt-8 text-center text-sm text-muted-foreground">
-            Don't have an account?{' '}
-            <Link
-              to="/register"
-              className="font-medium text-primary hover:text-primary/80 transition-colors"
-            >
-              Create one
-            </Link>
-          </p>
         </div>
       </div>
     </div>

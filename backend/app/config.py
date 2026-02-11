@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     # Server
     host: str = "0.0.0.0"
     port: int = 8000
-    reload: bool = True
+    reload: bool = False
 
     # CORS
     cors_origins: str | List[str] = "http://localhost:5173"

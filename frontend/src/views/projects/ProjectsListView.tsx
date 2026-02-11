@@ -60,6 +60,7 @@ export function ProjectsListView({
       <PageHeaderView
         title="Projects"
         description="Organize your data files into projects for multi-file analysis"
+        compact
         actions={
           <Button onClick={onOpenCreateForm}>
             <Plus className="h-4 w-4" />
@@ -104,7 +105,7 @@ export function ProjectsListView({
                 'group relative p-5 rounded-xl',
                 'bg-card border border-border',
                 'transition-all duration-200',
-                'hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5',
+                'hover:border-primary/30 hover:shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.12)] hover:scale-[1.01]',
                 'cursor-pointer'
               )}
               onClick={() => onProjectClick(project.id)}

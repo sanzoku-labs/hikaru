@@ -49,7 +49,7 @@ export function HeaderView({
         'bg-background/80 backdrop-blur-xl',
         'border-b border-border',
         'transition-all duration-300',
-        sidebarCollapsed ? 'left-[72px]' : 'left-[260px]'
+        sidebarCollapsed ? 'left-[72px]' : 'left-[240px]'
       )}
     >
       <div className="h-full px-6 flex items-center justify-between">

@@ -91,7 +91,7 @@ export function ChartGridView({ charts, uploadId, fileId, className }: ChartGrid
   return (
     <div
       className={cn(
-        'grid grid-cols-1 lg:grid-cols-2 gap-6',
+        'grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8',
         'stagger-children',
         className
       )}

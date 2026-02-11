@@ -63,13 +63,11 @@ export function AssistantView({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex-shrink-0 pb-4">
-        <PageHeaderView
-          title="AI Assistant"
-          description="Ask questions across multiple files"
-          compact
-        />
-      </div>
+      <PageHeaderView
+        title="AI Assistant"
+        description="Ask questions across multiple files"
+        compact
+      />
 
       {/* Main content - Split view */}
       <div className="flex-1 flex gap-4 min-h-0">

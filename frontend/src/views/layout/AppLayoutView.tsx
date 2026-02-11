@@ -52,10 +52,10 @@ export function AppLayoutView({
         className={cn(
           'min-h-screen pt-16',
           'transition-all duration-300',
-          sidebarCollapsed ? 'pl-[72px]' : 'pl-[260px]'
+          sidebarCollapsed ? 'pl-[72px]' : 'pl-[240px]'
         )}
       >
-        <div className="p-6 lg:p-8">
+        <div className="px-6 py-8 lg:px-10 lg:py-10">
           {children}
         </div>
       </main>

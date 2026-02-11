@@ -70,11 +70,12 @@ export function QuickAnalysisView({
   const showResults = stage === 'complete' && analysisData
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div>
       {/* Header */}
       <PageHeaderView
         title="Quick Analysis"
         description="Upload a CSV or Excel file to instantly generate charts and AI-powered insights"
+        compact
         actions={
           stage !== 'idle' && (
             <div className="flex items-center gap-2">
@@ -120,18 +121,16 @@ export function QuickAnalysisView({
 
       {/* Analysis form */}
       {showForm && (
-        <div className="py-8">
-          <AnalysisFormView
-            selectedFile={selectedFile}
-            userIntent={userIntent}
-            error={error}
-            canSubmit={canSubmit}
-            onFileSelect={onFileSelect}
-            onFileRemove={onFileRemove}
-            onUserIntentChange={onUserIntentChange}
-            onSubmit={onSubmit}
-          />
-        </div>
+        <AnalysisFormView
+          selectedFile={selectedFile}
+          userIntent={userIntent}
+          error={error}
+          canSubmit={canSubmit}
+          onFileSelect={onFileSelect}
+          onFileRemove={onFileRemove}
+          onUserIntentChange={onUserIntentChange}
+          onSubmit={onSubmit}
+        />
       )}
 
       {/* Progress indicator */}

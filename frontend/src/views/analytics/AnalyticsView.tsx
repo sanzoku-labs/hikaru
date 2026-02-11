@@ -46,7 +46,7 @@ function StatCard({ title, value, trend, icon, trendLabel = 'vs last period' }: 
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-3xl font-bold">{value.toLocaleString()}</div>
+        <div className="text-2xl font-bold tabular-nums">{value.toLocaleString()}</div>
         <div className="flex items-center gap-1 mt-2 text-sm">
           <TrendIcon
             className={cn(

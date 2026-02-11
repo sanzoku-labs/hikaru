@@ -64,7 +64,7 @@ function DashboardCard({
   }
 
   return (
-    <Card className="group hover:border-primary/30 transition-colors">
+    <Card className="group cursor-pointer transition-all duration-200 hover:border-primary/30 hover:shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.12)]">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -126,8 +126,8 @@ export function DashboardsListView({
 }: DashboardsListViewProps) {
   if (isLoading) {
     return (
-      <div className="py-12">
-        <LoadingSpinnerView size="md" label="Loading dashboards..." />
+      <div className="py-20">
+        <LoadingSpinnerView size="lg" label="Loading dashboards..." />
       </div>
     )
   }

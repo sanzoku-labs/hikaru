@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { EmptyStateView } from '@/views/shared'
 import type { ProjectFileResponse } from '@/types/api'
 
 interface ProjectOverviewViewProps {
@@ -42,7 +43,7 @@ function StatCard({ title, value, description, icon, trend, className }: StatCar
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className="text-2xl font-bold tabular-nums">{value}</div>
         {description && (
           <p className="text-xs text-muted-foreground mt-1">{description}</p>
         )}
@@ -130,17 +131,11 @@ export function ProjectOverviewView({
 
   if (files.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="p-4 rounded-2xl bg-muted/50 text-muted-foreground mb-4">
-          <FileSpreadsheet className="h-12 w-12" />
-        </div>
-        <h3 className="text-lg font-semibold text-foreground mb-2">
-          No files yet
-        </h3>
-        <p className="text-muted-foreground max-w-md">
-          Upload files to this project to see aggregated statistics and insights.
-        </p>
-      </div>
+      <EmptyStateView
+        icon={<FileSpreadsheet className="h-12 w-12" />}
+        title="No files yet"
+        description="Upload files to this project to see aggregated statistics and insights."
+      />
     )
   }
 

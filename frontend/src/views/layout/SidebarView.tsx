@@ -79,7 +79,7 @@ export function SidebarView({ collapsed, onToggle }: SidebarViewProps) {
         'bg-card border-r border-border',
         'transition-all duration-300 ease-out',
         'flex flex-col',
-        collapsed ? 'w-[72px]' : 'w-[260px]'
+        collapsed ? 'w-[72px]' : 'w-[240px]'
       )}
     >
       {/* Logo area */}
@@ -130,7 +130,7 @@ export function SidebarView({ collapsed, onToggle }: SidebarViewProps) {
                     'transition-all duration-200',
                     'group relative',
                     active
-                      ? 'bg-primary/10 text-primary'
+                      ? 'bg-gradient-to-r from-primary/10 to-transparent text-primary'
                       : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                   )}
                 >

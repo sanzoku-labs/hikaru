@@ -75,7 +75,7 @@ function TemplateCard({
     <Card
       className={cn(
         'cursor-pointer transition-all duration-200',
-        'hover:border-primary/30 hover:shadow-md',
+        'hover:border-primary/30 hover:shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.12)]',
         'group'
       )}
       onClick={onSelect}
@@ -89,7 +89,7 @@ function TemplateCard({
             {template.category}
           </Badge>
         </div>
-        <CardTitle className="text-lg mt-3 flex items-center gap-2 group-hover:text-primary transition-colors">
+        <CardTitle className="text-base mt-3 flex items-center gap-2 group-hover:text-primary transition-colors">
           {template.name}
           <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
         </CardTitle>
@@ -131,7 +131,7 @@ function ReportCard({
   const hoursRemaining = Math.max(0, Math.round((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60)))
 
   return (
-    <Card className="transition-shadow hover:shadow-md">
+    <Card className="transition-all duration-200 hover:border-primary/30 hover:shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.12)]">
       <CardContent className="p-4">
         <div className="flex items-start gap-4">
           {/* Icon */}
@@ -257,21 +257,29 @@ export function ReportsView({
       />
 
       <Tabs defaultValue="templates" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="templates">
-            <FileText className="h-4 w-4 mr-2" />
-            Templates
-          </TabsTrigger>
-          <TabsTrigger value="generated">
-            <FileStack className="h-4 w-4 mr-2" />
-            My Reports
-            {reports.length > 0 && (
-              <Badge variant="secondary" className="ml-2 text-xs">
-                {reports.length}
-              </Badge>
-            )}
-          </TabsTrigger>
-        </TabsList>
+        <div className="border-b border-border">
+          <TabsList className="h-10 bg-transparent p-0 gap-4">
+            <TabsTrigger
+              value="templates"
+              className="relative h-10 rounded-none border-b-2 border-transparent bg-transparent px-0 pb-3 pt-2 font-medium text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Templates
+            </TabsTrigger>
+            <TabsTrigger
+              value="generated"
+              className="relative h-10 rounded-none border-b-2 border-transparent bg-transparent px-0 pb-3 pt-2 font-medium text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+            >
+              <FileStack className="h-4 w-4 mr-2" />
+              My Reports
+              {reports.length > 0 && (
+                <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-muted">
+                  {reports.length}
+                </span>
+              )}
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Templates Tab */}
         <TabsContent value="templates" className="space-y-6">

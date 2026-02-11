@@ -1,5 +1,5 @@
-import { cn } from '@/lib/utils'
 import { Sparkles } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface GlobalSummaryViewProps {
   summary: string
@@ -7,27 +7,19 @@ interface GlobalSummaryViewProps {
 
 export function GlobalSummaryView({ summary }: GlobalSummaryViewProps) {
   return (
-    <div
-      className={cn(
-        'relative p-6 rounded-2xl overflow-hidden',
-        'bg-gradient-to-br from-primary/10 via-card to-accent/10',
-        'border border-primary/20',
-        'animate-in-up'
-      )}
-    >
+    <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-primary/5 via-card to-accent/5 animate-in-up">
       {/* Decorative glow */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
 
-      <div className="relative">
-        {/* Title with icon */}
-        <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="h-4 w-4 text-primary" />
-          <h3 className="text-sm font-medium text-primary">AI Summary</h3>
-        </div>
-
-        {/* Content */}
+      <CardHeader className="relative pb-0">
+        <CardTitle className="text-sm font-medium text-primary flex items-center gap-2">
+          <Sparkles className="h-4 w-4" />
+          AI Summary
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="relative">
         <p className="text-foreground leading-relaxed">{summary}</p>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

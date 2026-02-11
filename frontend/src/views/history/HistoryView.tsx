@@ -62,7 +62,7 @@ function HistoryItemCard({
     <Card
       className={cn(
         'cursor-pointer transition-all duration-200',
-        'hover:border-primary/30 hover:shadow-md',
+        'hover:border-primary/30 hover:shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.12)]',
         'group'
       )}
       onClick={onClick}

@@ -11,7 +11,7 @@ const config: Config = {
       center: true,
       padding: '2rem',
       screens: {
-        '2xl': '1400px'
+        '2xl': '1536px'
       }
     },
     extend: {
@@ -57,6 +57,13 @@ const config: Config = {
         },
         info: {
           DEFAULT: 'hsl(var(--info))',
+        },
+        chart: {
+          '1': 'hsl(var(--chart-1))',
+          '2': 'hsl(var(--chart-2))',
+          '3': 'hsl(var(--chart-3))',
+          '4': 'hsl(var(--chart-4))',
+          '5': 'hsl(var(--chart-5))',
         }
       },
       borderRadius: {

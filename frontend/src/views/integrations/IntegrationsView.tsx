@@ -69,7 +69,7 @@ function ProviderCard({
     <Card
       className={cn(
         'transition-all duration-200',
-        'hover:shadow-md',
+        'hover:border-primary/30 hover:shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.12)]',
         isConnected && 'border-green-500/30 bg-green-500/5'
       )}
     >
@@ -90,7 +90,7 @@ function ProviderCard({
             </Badge>
           ) : null}
         </div>
-        <CardTitle className="text-lg mt-3">{provider.name}</CardTitle>
+        <CardTitle className="text-base mt-3">{provider.name}</CardTitle>
         <CardDescription className="line-clamp-2">
           {provider.description}
         </CardDescription>
@@ -137,7 +137,7 @@ function ConnectedIntegrationCard({
   onBrowse: () => void
 }) {
   return (
-    <Card className="transition-shadow hover:shadow-md">
+    <Card className="transition-all duration-200 hover:border-primary/30 hover:shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.12)]">
       <CardContent className="p-4">
         <div className="flex items-start gap-4">
           {/* Icon */}
@@ -233,21 +233,29 @@ export function IntegrationsView({
       />
 
       <Tabs defaultValue="providers" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="providers">
-            <Link2 className="h-4 w-4 mr-2" />
-            Available Sources
-          </TabsTrigger>
-          <TabsTrigger value="connected">
-            <CheckCircle2 className="h-4 w-4 mr-2" />
-            Connected
-            {integrations.length > 0 && (
-              <Badge variant="secondary" className="ml-2 text-xs">
-                {integrations.length}
-              </Badge>
-            )}
-          </TabsTrigger>
-        </TabsList>
+        <div className="border-b border-border">
+          <TabsList className="h-10 bg-transparent p-0 gap-4">
+            <TabsTrigger
+              value="providers"
+              className="relative h-10 rounded-none border-b-2 border-transparent bg-transparent px-0 pb-3 pt-2 font-medium text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+            >
+              <Link2 className="h-4 w-4 mr-2" />
+              Available Sources
+            </TabsTrigger>
+            <TabsTrigger
+              value="connected"
+              className="relative h-10 rounded-none border-b-2 border-transparent bg-transparent px-0 pb-3 pt-2 font-medium text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+            >
+              <CheckCircle2 className="h-4 w-4 mr-2" />
+              Connected
+              {integrations.length > 0 && (
+                <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-muted">
+                  {integrations.length}
+                </span>
+              )}
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Available Providers Tab */}
         <TabsContent value="providers" className="space-y-6">

@@ -25,4 +25,17 @@ RUN mkdir -p uploads storage/reports
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]
+COPY <<'EOF' /app/start.sh
+#!/bin/sh
+echo "Waiting for database..."
+for i in 1 2 3 4 5 6 7 8 9 10; do
+  alembic upgrade head && break
+  echo "Attempt $i failed, retrying in 3s..."
+  sleep 3
+done
+echo "Starting server..."
+exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1
+EOF
+RUN chmod +x /app/start.sh
+
+CMD ["/app/start.sh"]

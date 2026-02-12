@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { EmptyStateView } from '@/views/shared'
+import { EmptyFilesSpot } from '@/components/illustrations'
 import type { ProjectFileResponse } from '@/types/api'
 
 interface ProjectOverviewViewProps {
@@ -132,6 +133,7 @@ export function ProjectOverviewView({
   if (files.length === 0) {
     return (
       <EmptyStateView
+        illustration={<EmptyFilesSpot />}
         icon={<FileSpreadsheet className="h-12 w-12" />}
         title="No files yet"
         description="Upload files to this project to see aggregated statistics and insights."

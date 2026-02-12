@@ -21,6 +21,7 @@ import { AnimatedTabContent } from '@/components/animation'
 import { PageHeaderView, LoadingSpinnerView, ErrorAlertView, EmptyStateView } from '@/views/shared'
 import { GenerateReportDialog } from './GenerateReportDialog'
 import { AnimatedList, AnimatedListItem } from '@/components/animation'
+import { EmptyReportsSpot } from '@/components/illustrations'
 import type { ReportTemplate, GeneratedReport } from '@/types/api'
 
 interface ReportsViewProps {
@@ -298,6 +299,7 @@ export function ReportsView({
                 </div>
               ) : templates.length === 0 ? (
                 <EmptyStateView
+                  illustration={<EmptyReportsSpot />}
                   icon={<FileText className="h-12 w-12" />}
                   title="No templates available"
                   description="Report templates are not configured."
@@ -329,6 +331,7 @@ export function ReportsView({
                 </div>
               ) : reports.length === 0 ? (
                 <EmptyStateView
+                  illustration={<EmptyReportsSpot />}
                   icon={<FileStack className="h-12 w-12" />}
                   title="No reports generated"
                   description="Select a template to generate your first report."

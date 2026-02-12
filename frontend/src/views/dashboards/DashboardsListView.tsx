@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { LoadingSpinnerView, EmptyStateView } from '@/views/shared'
 import { AnimatedList, AnimatedListItem } from '@/components/animation'
+import { EmptyDashboardsSpot } from '@/components/illustrations'
 import type { DashboardResponse } from '@/types/api'
 
 interface DashboardsListViewProps {
@@ -136,6 +137,7 @@ export function DashboardsListView({
   if (dashboards.length === 0) {
     return (
       <EmptyStateView
+        illustration={<EmptyDashboardsSpot />}
         icon={<LayoutDashboard className="h-10 w-10" />}
         title="No dashboards yet"
         description="Save an analysis as a dashboard to view it here."

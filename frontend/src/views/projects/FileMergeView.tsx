@@ -13,6 +13,7 @@ import {
   Save,
 } from 'lucide-react'
 import { PageHeaderView, EmptyStateView, LoadingSpinnerView, ErrorAlertView } from '@/views/shared'
+import { EmptyFilesSpot, EmptyAnalyticsSpot } from '@/components/illustrations'
 import { GlobalSummaryView } from '@/views/analysis'
 import { ChartGridView } from '@/views/charts'
 import { SaveDashboardDialog } from '@/views/dashboards'
@@ -195,6 +196,7 @@ export function FileMergeView({
     return (
       <div className="py-20">
         <EmptyStateView
+          illustration={<EmptyFilesSpot />}
           icon={<Merge className="h-12 w-12" />}
           title="Not enough files"
           description="You need at least 2 files in this project to merge them."
@@ -602,6 +604,7 @@ export function FileMergeView({
                 {/* No charts */}
                 {mergeResult.charts?.length === 0 && (
                   <EmptyStateView
+                    illustration={<EmptyAnalyticsSpot size={120} />}
                     icon={<Merge className="h-10 w-10" />}
                     title="No charts generated"
                     description="The merged data doesn't have suitable columns for visualization."

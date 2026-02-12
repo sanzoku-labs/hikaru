@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils'
 import { SidebarView } from './SidebarView'
 import { HeaderView } from './HeaderView'
+import { DotGrid } from '@/components/illustrations'
 import type { UserResponse } from '@/types/api'
 
 interface AppLayoutViewProps {
@@ -50,12 +51,13 @@ export function AppLayoutView({
       <main
         id="main-content"
         className={cn(
-          'min-h-screen pt-16',
+          'relative min-h-screen pt-16',
           'transition-all duration-300',
           sidebarCollapsed ? 'pl-[72px]' : 'pl-[240px]'
         )}
       >
-        <div className="px-6 py-8 lg:px-10 lg:py-10">
+        <DotGrid density="sparse" opacity={0.15} />
+        <div className="relative px-6 py-8 lg:px-10 lg:py-10">
           {children}
         </div>
       </main>

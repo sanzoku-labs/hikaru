@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { PageHeaderView, LoadingSpinnerView, ErrorAlertView, EmptyStateView } from '@/views/shared'
+import { EmptyAnalyticsSpot } from '@/components/illustrations'
 import type { AnalyticsResponse, RecentAnalysis, TopInsight } from '@/types/api'
 
 interface AnalyticsViewProps {
@@ -176,6 +177,7 @@ export function AnalyticsView({ data, isLoading, error, onRetry }: AnalyticsView
   if (!data) {
     return (
       <EmptyStateView
+        illustration={<EmptyAnalyticsSpot />}
         icon={<BarChart3 className="h-12 w-12" />}
         title="No analytics data"
         description="Start analyzing files to see your analytics."
@@ -195,6 +197,7 @@ export function AnalyticsView({ data, isLoading, error, onRetry }: AnalyticsView
 
       {hasNoData ? (
         <EmptyStateView
+          illustration={<EmptyAnalyticsSpot />}
           icon={<BarChart3 className="h-12 w-12" />}
           title="No data yet"
           description="Create a project and analyze some files to see your analytics."

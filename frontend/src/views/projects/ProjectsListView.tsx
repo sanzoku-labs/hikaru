@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { PageHeaderView, EmptyStateView, LoadingSpinnerView, ErrorAlertView } from '@/views/shared'
 import { AnimatedList, AnimatedListItem } from '@/components/animation'
 import { CreateProjectFormView } from './CreateProjectFormView'
+import { EmptyProjectsSpot } from '@/components/illustrations'
 import type { ProjectResponse } from '@/types/api'
 
 interface ProjectsListViewProps {
@@ -89,6 +90,7 @@ export function ProjectsListView({
       {/* Empty state */}
       {!isLoading && !fetchError && projects.length === 0 && (
         <EmptyStateView
+          illustration={<EmptyProjectsSpot />}
           icon={<FolderKanban className="h-12 w-12" />}
           title="No projects yet"
           description="Create your first project to start organizing your data files"

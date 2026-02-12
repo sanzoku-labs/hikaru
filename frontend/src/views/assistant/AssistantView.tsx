@@ -2,6 +2,7 @@ import { PageHeaderView } from '@/views/shared'
 import { FileSelectionPanel } from './FileSelectionPanel'
 import { AssistantChatView } from './AssistantChatView'
 import { ContextIndicator } from './ContextIndicator'
+import { CircuitBoard } from '@/components/illustrations'
 import type { FileContext, ProjectResponse, ConversationSummary } from '@/types/api'
 
 interface AssistantMessage {
@@ -62,12 +63,17 @@ export function AssistantView({
 }: AssistantViewProps) {
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <PageHeaderView
-        title="AI Assistant"
-        description="Ask questions across multiple files"
-        compact
-      />
+      {/* Header with circuit pattern accent */}
+      <div className="relative">
+        <CircuitBoard density="sparse" opacity={0.15} className="rounded-lg" />
+        <div className="relative">
+          <PageHeaderView
+            title="AI Assistant"
+            description="Ask questions across multiple files"
+            compact
+          />
+        </div>
+      </div>
 
       {/* Main content - Split view */}
       <div className="flex-1 flex gap-4 min-h-0">

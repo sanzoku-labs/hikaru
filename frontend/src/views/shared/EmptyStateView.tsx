@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button'
 
 interface EmptyStateViewProps {
   icon?: React.ReactNode
+  /** Large SVG illustration rendered without the icon container */
+  illustration?: React.ReactNode
   title: string
   description: string
   action?: {
@@ -14,6 +16,7 @@ interface EmptyStateViewProps {
 
 export function EmptyStateView({
   icon,
+  illustration,
   title,
   description,
   action,
@@ -26,12 +29,14 @@ export function EmptyStateView({
         className
       )}
     >
-      {/* Icon container with subtle glow */}
-      {icon && (
+      {/* Illustration (no container) or icon (with container) */}
+      {illustration ? (
+        <div className="mb-6">{illustration}</div>
+      ) : icon ? (
         <div className="mb-6 p-4 rounded-2xl bg-muted/50 text-muted-foreground">
           {icon}
         </div>
-      )}
+      ) : null}
 
       {/* Title */}
       <h3 className="text-xl font-semibold text-foreground mb-2">

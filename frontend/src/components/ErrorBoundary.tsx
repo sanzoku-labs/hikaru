@@ -1,7 +1,7 @@
 import { Component, type ReactNode } from 'react'
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { RefreshCw, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { ServerErrorIllustration } from '@/components/illustrations'
 
 interface Props {
   children: ReactNode
@@ -45,17 +45,9 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="min-h-screen bg-background flex items-center justify-center p-6">
           <div className="max-w-md w-full text-center animate-in-up">
-            {/* Error icon with glow */}
+            {/* Error illustration */}
             <div className="mb-6 inline-flex">
-              <div
-                className={cn(
-                  'p-4 rounded-2xl',
-                  'bg-destructive/10 text-destructive',
-                  'ring-1 ring-destructive/20'
-                )}
-              >
-                <AlertTriangle className="h-12 w-12" />
-              </div>
+              <ServerErrorIllustration size={180} />
             </div>
 
             {/* Title */}

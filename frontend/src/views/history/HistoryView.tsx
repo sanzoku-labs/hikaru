@@ -24,6 +24,7 @@ import {
 import { PageHeaderView, LoadingSpinnerView, ErrorAlertView, EmptyStateView } from '@/views/shared'
 import { AnimatedList, AnimatedListItem } from '@/components/animation'
 import { useProjects } from '@/services/api/queries/useProjects'
+import { EmptyHistorySpot, NoSearchResultsSpot } from '@/components/illustrations'
 import type { HistoryItem, HistoryFilters, ProjectResponse } from '@/types/api'
 
 interface HistoryViewProps {
@@ -294,6 +295,7 @@ export function HistoryView({
         </div>
       ) : items.length === 0 ? (
         <EmptyStateView
+          illustration={hasActiveFilters ? <NoSearchResultsSpot /> : <EmptyHistorySpot />}
           icon={<Clock className="h-12 w-12" />}
           title={hasActiveFilters ? 'No results found' : 'No analysis history'}
           description={

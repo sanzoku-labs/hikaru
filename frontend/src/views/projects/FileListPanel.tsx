@@ -11,6 +11,7 @@ import {
 import { EmptyStateView } from '@/views/shared'
 import { ConfirmDialog } from '@/views/shared/ConfirmDialog'
 import { AnalysisFormView } from '@/views/analysis'
+import { EmptyFilesSpot } from '@/components/illustrations'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import type { ProjectFileResponse } from '@/types/api'
@@ -109,6 +110,7 @@ export const FileListPanel = React.memo(function FileListPanel({
         {files.length === 0 && !showUpload && (
           <div className="flex-1 flex items-center justify-center">
             <EmptyStateView
+              illustration={<EmptyFilesSpot size={120} />}
               icon={<FileSpreadsheet className="h-10 w-10" />}
               title="No files yet"
               description="Add files to start analyzing"

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
+import { AuthHeroIllustration, TopographicLines } from '@/components/illustrations'
 
 interface RegisterViewProps {
   // Form data
@@ -105,12 +106,9 @@ export function RegisterView({
     <div className="min-h-screen flex">
       {/* Left side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-card relative overflow-hidden">
-        {/* Gradient background */}
+        {/* Gradient background + pattern */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-
-        {/* Decorative circles */}
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
+        <TopographicLines opacity={0.2} />
 
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-center px-12 lg:px-16">
@@ -153,6 +151,11 @@ export function RegisterView({
                   <p className="text-xs text-muted-foreground">Data Analyst, TechCorp</p>
                 </div>
               </div>
+            </div>
+
+            {/* Hero illustration */}
+            <div className="mt-10 flex justify-center">
+              <AuthHeroIllustration size={240} />
             </div>
           </div>
         </div>

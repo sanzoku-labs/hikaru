@@ -185,6 +185,11 @@
     );
   }
 
+  /* Illustration glow - drop-shadow for SVG elements */
+  .illustration-glow {
+    filter: drop-shadow(0 0 12px hsla(var(--glow-primary) / var(--glow-opacity)));
+  }
+
   /* Animation utilities */
   .animate-in-up {
     animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);

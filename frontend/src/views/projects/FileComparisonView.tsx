@@ -13,6 +13,7 @@ import {
   Save,
 } from 'lucide-react'
 import { PageHeaderView, EmptyStateView, LoadingSpinnerView, ErrorAlertView } from '@/views/shared'
+import { EmptyFilesSpot, NoSearchResultsSpot } from '@/components/illustrations'
 import { GlobalSummaryView } from '@/views/analysis'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -137,6 +138,7 @@ export function FileComparisonView({
     return (
       <div className="py-20">
         <EmptyStateView
+          illustration={<EmptyFilesSpot />}
           icon={<GitCompare className="h-12 w-12" />}
           title="Not enough files"
           description="You need at least 2 files in this project to compare them."
@@ -405,6 +407,7 @@ export function FileComparisonView({
             {/* No charts */}
             {comparisonResult.overlay_charts.length === 0 && (
               <EmptyStateView
+                illustration={<NoSearchResultsSpot size={120} />}
                 icon={<GitCompare className="h-10 w-10" />}
                 title="No comparable data found"
                 description="The selected files don't have compatible columns for comparison."

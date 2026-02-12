@@ -7,6 +7,7 @@ import { GlobalSummaryView } from './GlobalSummaryView'
 import { ChartGridView } from '@/views/charts'
 import { ChatPanelView } from '@/views/chat'
 import { PageHeaderView } from '@/views/shared'
+import { CircuitBoard } from '@/components/illustrations'
 import type { UploadStage } from '@/hooks/analysis/useQuickAnalysisFlow'
 import type { UploadResponse, AnalyzeResponse, ChatMessage } from '@/types/api'
 
@@ -71,12 +72,15 @@ export function QuickAnalysisView({
 
   return (
     <div>
-      {/* Header */}
-      <PageHeaderView
-        title="Quick Analysis"
-        description="Upload a CSV or Excel file to instantly generate charts and AI-powered insights"
-        compact
-        actions={
+      {/* Header with circuit pattern accent */}
+      <div className="relative">
+        <CircuitBoard density="sparse" opacity={0.15} className="rounded-lg" />
+        <div className="relative">
+          <PageHeaderView
+            title="Quick Analysis"
+            description="Upload a CSV or Excel file to instantly generate charts and AI-powered insights"
+            compact
+            actions={
           stage !== 'idle' && (
             <div className="flex items-center gap-2">
               {showResults && (
@@ -117,7 +121,9 @@ export function QuickAnalysisView({
             </div>
           )
         }
-      />
+          />
+        </div>
+      </div>
 
       {/* Analysis form */}
       {showForm && (

@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PageHeaderView, LoadingSpinnerView, ErrorAlertView, EmptyStateView } from '@/views/shared'
+import { EmptyIntegrationsSpot } from '@/components/illustrations'
 import type { IntegrationProvider, IntegrationResponse } from '@/types/api'
 
 interface IntegrationsViewProps {
@@ -270,6 +271,7 @@ export function IntegrationsView({
             </div>
           ) : providers.length === 0 ? (
             <EmptyStateView
+              illustration={<EmptyIntegrationsSpot />}
               icon={<Link2 className="h-12 w-12" />}
               title="No providers available"
               description="Integration providers are not configured."
@@ -302,6 +304,7 @@ export function IntegrationsView({
             </div>
           ) : integrations.length === 0 ? (
             <EmptyStateView
+              illustration={<EmptyIntegrationsSpot />}
               icon={<Link2Off className="h-12 w-12" />}
               title="No connected integrations"
               description="Connect a data source to import files."

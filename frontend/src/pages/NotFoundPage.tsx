@@ -1,15 +1,14 @@
 import { Link } from 'react-router-dom'
-import { FileQuestion, Home, ArrowLeft } from 'lucide-react'
+import { Home, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { NotFoundIllustration } from '@/components/illustrations'
 
 export default function NotFoundPage() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
       <div className="max-w-md w-full text-center animate-in-up">
         <div className="mb-6 inline-flex">
-          <div className="p-4 rounded-2xl bg-muted text-muted-foreground">
-            <FileQuestion className="h-12 w-12" />
-          </div>
+          <NotFoundIllustration size={180} />
         </div>
 
         <h1 className="text-2xl font-semibold text-foreground mb-2">

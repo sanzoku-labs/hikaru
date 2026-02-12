@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { useFileAnalysisFlow } from '@/hooks/analysis/useFileAnalysisFlow'
 import { ProjectFileAnalysisView } from '@/views/projects'
+import { AnimatedPage } from '@/components/animation'
 
 export default function ProjectFileAnalysisPage() {
   const { projectId, fileId } = useParams<{ projectId: string; fileId: string }>()
@@ -24,20 +25,22 @@ export default function ProjectFileAnalysisPage() {
   } = useFileAnalysisFlow(numericProjectId, numericFileId)
 
   return (
-    <ProjectFileAnalysisView
-      file={file}
-      projectName={projectName}
-      analysisData={analysisData}
-      isLoading={isLoading}
-      fetchError={fetchError}
-      showReanalyzeForm={showReanalyzeForm}
-      userIntent={userIntent}
-      onAnalyze={handleAnalyze}
-      onUserIntentChange={handleUserIntentChange}
-      onToggleReanalyze={handleToggleReanalyze}
-      onBackClick={navigateBack}
-      isAnalyzing={isAnalyzing}
-      analysisError={analysisError}
-    />
+    <AnimatedPage>
+      <ProjectFileAnalysisView
+        file={file}
+        projectName={projectName}
+        analysisData={analysisData}
+        isLoading={isLoading}
+        fetchError={fetchError}
+        showReanalyzeForm={showReanalyzeForm}
+        userIntent={userIntent}
+        onAnalyze={handleAnalyze}
+        onUserIntentChange={handleUserIntentChange}
+        onToggleReanalyze={handleToggleReanalyze}
+        onBackClick={navigateBack}
+        isAnalyzing={isAnalyzing}
+        analysisError={analysisError}
+      />
+    </AnimatedPage>
   )
 }

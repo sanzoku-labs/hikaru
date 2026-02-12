@@ -16,9 +16,11 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { AnimatedTabContent } from '@/components/animation'
 import { PageHeaderView, LoadingSpinnerView, ErrorAlertView, EmptyStateView } from '@/views/shared'
 import { GenerateReportDialog } from './GenerateReportDialog'
+import { AnimatedList, AnimatedListItem } from '@/components/animation'
 import type { ReportTemplate, GeneratedReport } from '@/types/api'
 
 interface ReportsViewProps {
@@ -220,6 +222,7 @@ export function ReportsView({
   onDelete,
   isDeleting,
 }: ReportsViewProps) {
+  const [activeTab, setActiveTab] = useState('templates')
   const [selectedTemplate, setSelectedTemplate] = useState<ReportTemplate | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
 
@@ -256,7 +259,7 @@ export function ReportsView({
         compact
       />
 
-      <Tabs defaultValue="templates" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="border-b border-border">
           <TabsList className="h-10 bg-transparent p-0 gap-4">
             <TabsTrigger
@@ -281,76 +284,80 @@ export function ReportsView({
           </TabsList>
         </div>
 
-        {/* Templates Tab */}
-        <TabsContent value="templates" className="space-y-6">
-          {templatesError ? (
-            <ErrorAlertView
-              title="Failed to load templates"
-              message={templatesError}
-            />
-          ) : templatesLoading ? (
-            <div className="py-20">
-              <LoadingSpinnerView size="lg" label="Loading templates..." />
-            </div>
-          ) : templates.length === 0 ? (
-            <EmptyStateView
-              icon={<FileText className="h-12 w-12" />}
-              title="No templates available"
-              description="Report templates are not configured."
-            />
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {templates.map((template) => (
-                <TemplateCard
-                  key={template.id}
-                  template={template}
-                  onSelect={() => handleTemplateSelect(template)}
+        <AnimatedTabContent activeTab={activeTab} className="mt-6">
+          {activeTab === 'templates' && (
+            <div className="space-y-6">
+              {templatesError ? (
+                <ErrorAlertView
+                  title="Failed to load templates"
+                  message={templatesError}
                 />
-              ))}
+              ) : templatesLoading ? (
+                <div className="py-20">
+                  <LoadingSpinnerView size="lg" label="Loading templates..." />
+                </div>
+              ) : templates.length === 0 ? (
+                <EmptyStateView
+                  icon={<FileText className="h-12 w-12" />}
+                  title="No templates available"
+                  description="Report templates are not configured."
+                />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {templates.map((template) => (
+                    <TemplateCard
+                      key={template.id}
+                      template={template}
+                      onSelect={() => handleTemplateSelect(template)}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
-        </TabsContent>
 
-        {/* Generated Reports Tab */}
-        <TabsContent value="generated" className="space-y-4">
-          {reportsError ? (
-            <ErrorAlertView
-              title="Failed to load reports"
-              message={reportsError}
-            />
-          ) : reportsLoading ? (
-            <div className="py-20">
-              <LoadingSpinnerView size="lg" label="Loading reports..." />
-            </div>
-          ) : reports.length === 0 ? (
-            <EmptyStateView
-              icon={<FileStack className="h-12 w-12" />}
-              title="No reports generated"
-              description="Select a template to generate your first report."
-              action={{
-                label: 'Browse Templates',
-                onClick: () => {
-                  const tabButton = document.querySelector('[value="templates"]')
-                  if (tabButton instanceof HTMLButtonElement) {
-                    tabButton.click()
-                  }
-                },
-              }}
-            />
-          ) : (
-            <div className="space-y-3">
-              {reports.map((report) => (
-                <ReportCard
-                  key={report.report_id}
-                  report={report}
-                  onDownload={() => onDownload(report)}
-                  onDelete={() => onDelete(report.report_id)}
-                  isDeleting={isDeleting === report.report_id}
+          {activeTab === 'generated' && (
+            <div className="space-y-4">
+              {reportsError ? (
+                <ErrorAlertView
+                  title="Failed to load reports"
+                  message={reportsError}
                 />
-              ))}
+              ) : reportsLoading ? (
+                <div className="py-20">
+                  <LoadingSpinnerView size="lg" label="Loading reports..." />
+                </div>
+              ) : reports.length === 0 ? (
+                <EmptyStateView
+                  icon={<FileStack className="h-12 w-12" />}
+                  title="No reports generated"
+                  description="Select a template to generate your first report."
+                  action={{
+                    label: 'Browse Templates',
+                    onClick: () => setActiveTab('templates'),
+                  }}
+                />
+              ) : (
+                <AnimatedList className="space-y-3">
+                  {reports.map((report, index) => (
+                    <AnimatedListItem
+                      key={report.report_id}
+                      layoutId={`report-${report.report_id}`}
+                      index={index}
+                    >
+                      <ReportCard
+                        report={report}
+                        onDownload={() => onDownload(report)}
+                        onDelete={() => onDelete(report.report_id)}
+                        isDeleting={isDeleting === report.report_id}
+                      />
+                    </AnimatedListItem>
+                  ))}
+                </AnimatedList>
+              )}
             </div>
           )}
-        </TabsContent>
+        </AnimatedTabContent>
       </Tabs>
 
       {/* Generate Dialog */}

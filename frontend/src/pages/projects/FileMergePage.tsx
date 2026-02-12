@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { useFileMergeFlow } from '@/hooks/projects'
 import { useCreateDashboard } from '@/services/api/mutations/useCreateDashboard'
 import { FileMergeView } from '@/views/projects'
+import { AnimatedPage } from '@/components/animation'
 
 export default function FileMergePage() {
   const { projectId } = useParams<{ projectId: string }>()
@@ -72,42 +73,43 @@ export default function FileMergePage() {
   }
 
   return (
-    <FileMergeView
-      projectName={projectName}
-      files={files}
-      isLoading={isLoading}
-      fetchError={fetchError}
-      currentStep={currentStep}
-      canGoNext={canGoNext}
-      canGoBack={canGoBack}
-      selectedFileA={selectedFileA}
-      selectedFileB={selectedFileB}
-      joinType={joinType}
-      leftKey={leftKey}
-      rightKey={rightKey}
-      fileAColumns={fileAColumns}
-      fileBColumns={fileBColumns}
-      relationship={relationship}
-      mergeResult={mergeResult}
-      isCreatingRelationship={isCreatingRelationship}
-      isAnalyzing={isAnalyzing}
-      error={error}
-      onSelectFileA={selectFileA}
-      onSelectFileB={selectFileB}
-      onJoinTypeChange={setJoinType}
-      onLeftKeyChange={setLeftKey}
-      onRightKeyChange={setRightKey}
-      onNextStep={nextStep}
-      onPrevStep={prevStep}
-      onExecuteMerge={executeMerge}
-      onReset={reset}
-      onBackClick={navigateBack}
-      // Save as Dashboard
-      showSaveDialog={showSaveDialog}
-      isSavingDashboard={createDashboardMutation.isPending}
-      onOpenSaveDialog={() => setShowSaveDialog(true)}
-      onCloseSaveDialog={() => setShowSaveDialog(false)}
-      onSaveDashboard={handleSaveDashboard}
-    />
+    <AnimatedPage>
+      <FileMergeView
+        projectName={projectName}
+        files={files}
+        isLoading={isLoading}
+        fetchError={fetchError}
+        currentStep={currentStep}
+        canGoNext={canGoNext}
+        canGoBack={canGoBack}
+        selectedFileA={selectedFileA}
+        selectedFileB={selectedFileB}
+        joinType={joinType}
+        leftKey={leftKey}
+        rightKey={rightKey}
+        fileAColumns={fileAColumns}
+        fileBColumns={fileBColumns}
+        relationship={relationship}
+        mergeResult={mergeResult}
+        isCreatingRelationship={isCreatingRelationship}
+        isAnalyzing={isAnalyzing}
+        error={error}
+        onSelectFileA={selectFileA}
+        onSelectFileB={selectFileB}
+        onJoinTypeChange={setJoinType}
+        onLeftKeyChange={setLeftKey}
+        onRightKeyChange={setRightKey}
+        onNextStep={nextStep}
+        onPrevStep={prevStep}
+        onExecuteMerge={executeMerge}
+        onReset={reset}
+        onBackClick={navigateBack}
+        showSaveDialog={showSaveDialog}
+        isSavingDashboard={createDashboardMutation.isPending}
+        onOpenSaveDialog={() => setShowSaveDialog(true)}
+        onCloseSaveDialog={() => setShowSaveDialog(false)}
+        onSaveDashboard={handleSaveDashboard}
+      />
+    </AnimatedPage>
   )
 }

@@ -5,6 +5,7 @@ import { useIntegrations } from '@/services/api/queries/useIntegrations'
 import { useInitiateOAuth } from '@/services/api/mutations/useConnectIntegration'
 import { useDisconnectIntegration } from '@/services/api/mutations/useDisconnectIntegration'
 import type { IntegrationProvider, IntegrationResponse } from '@/types/api'
+import { AnimatedPage } from '@/components/animation'
 
 export function IntegrationsPage() {
   const [connectingProvider, setConnectingProvider] = useState<string | null>(null)
@@ -69,7 +70,7 @@ export function IntegrationsPage() {
   }, [])
 
   return (
-    <>
+    <AnimatedPage>
       <IntegrationsView
         // Providers
         providers={providersData?.providers || []}
@@ -93,6 +94,6 @@ export function IntegrationsPage() {
           if (!open) setBrowsingIntegration(null)
         }}
       />
-    </>
+    </AnimatedPage>
   )
 }

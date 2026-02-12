@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { m } from 'motion/react'
 import { FEATURES } from '@/config/features'
 import { Link, useLocation } from 'react-router-dom'
 import {
@@ -134,9 +135,13 @@ export function SidebarView({ collapsed, onToggle }: SidebarViewProps) {
                       : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                   )}
                 >
-                  {/* Active indicator */}
+                  {/* Active indicator — slides between nav items via layoutId */}
                   {active && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
+                    <m.div
+                      layoutId="sidebar-active-indicator"
+                      className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"
+                      transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                    />
                   )}
 
                   {/* Icon */}

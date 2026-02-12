@@ -8,6 +8,7 @@ import { ScatterChartView } from './ScatterChartView'
 import { useQuickChartInsight } from '@/services/api/mutations/useQuickChartInsight'
 import { useChartInsight } from '@/services/api/mutations/useChartInsight'
 import type { ChartData } from '@/types/api'
+import { AnimatedList, AnimatedListItem } from '@/components/animation'
 
 interface ChartGridViewProps {
   charts: ChartData[]
@@ -89,32 +90,35 @@ export function ChartGridView({ charts, uploadId, fileId, className }: ChartGrid
   }
 
   return (
-    <div
+    <AnimatedList
       className={cn(
         'grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8',
-        'stagger-children',
         className
       )}
     >
       {charts.map((chart, index) => {
-        // Use local state insight if available, otherwise fall back to chart.insight
         const insight = chartInsights[index] ?? chart.insight
         const isLoading = loadingInsights[index] ?? false
 
         return (
-          <ChartCardView
+          <AnimatedListItem
             key={index}
-            title={chart.title}
-            insight={insight}
-            isLoadingInsight={isLoading}
-            onGenerateInsight={
-              uploadId || fileId ? () => handleGenerateInsight(chart, index) : undefined
-            }
+            layoutId={`chart-${index}`}
+            index={index}
           >
-            {renderChart(chart)}
-          </ChartCardView>
+            <ChartCardView
+              title={chart.title}
+              insight={insight}
+              isLoadingInsight={isLoading}
+              onGenerateInsight={
+                uploadId || fileId ? () => handleGenerateInsight(chart, index) : undefined
+              }
+            >
+              {renderChart(chart)}
+            </ChartCardView>
+          </AnimatedListItem>
         )
       })}
-    </div>
+    </AnimatedList>
   )
 }

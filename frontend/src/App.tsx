@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { AnimatePresence } from 'motion/react'
 import { FEATURES } from '@/config/features'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary'
@@ -61,6 +62,144 @@ function ProtectedRouteWithErrorBoundary({ children }: { children: React.ReactNo
   )
 }
 
+// Animated routes wrapper — AnimatePresence needs location to detect route changes
+function AnimatedRoutes() {
+  const location = useLocation()
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        {/* Public routes */}
+        <Route path="/login" element={<LoginPage />} />
+        {/* Protected routes with error boundaries */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRouteWithErrorBoundary>
+              <QuickAnalysisPage />
+            </ProtectedRouteWithErrorBoundary>
+          }
+        />
+
+        <Route
+          path="/assistant"
+          element={
+            <ProtectedRouteWithErrorBoundary>
+              <AssistantPage />
+            </ProtectedRouteWithErrorBoundary>
+          }
+        />
+
+        <Route
+          path="/projects"
+          element={
+            <ProtectedRouteWithErrorBoundary>
+              <ProjectsPage />
+            </ProtectedRouteWithErrorBoundary>
+          }
+        />
+
+        <Route
+          path="/projects/:projectId"
+          element={
+            <ProtectedRouteWithErrorBoundary>
+              <ProjectDetailPage />
+            </ProtectedRouteWithErrorBoundary>
+          }
+        />
+
+        <Route
+          path="/projects/:projectId/files/:fileId/analyze"
+          element={
+            <ProtectedRouteWithErrorBoundary>
+              <ProjectFileAnalysisPage />
+            </ProtectedRouteWithErrorBoundary>
+          }
+        />
+
+        <Route
+          path="/projects/:projectId/compare"
+          element={
+            <ProtectedRouteWithErrorBoundary>
+              <FileComparisonPage />
+            </ProtectedRouteWithErrorBoundary>
+          }
+        />
+
+        <Route
+          path="/projects/:projectId/merge"
+          element={
+            <ProtectedRouteWithErrorBoundary>
+              <FileMergePage />
+            </ProtectedRouteWithErrorBoundary>
+          }
+        />
+
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRouteWithErrorBoundary>
+              <AnalyticsPage />
+            </ProtectedRouteWithErrorBoundary>
+          }
+        />
+
+        <Route
+          path="/history"
+          element={
+            <ProtectedRouteWithErrorBoundary>
+              <HistoryPage />
+            </ProtectedRouteWithErrorBoundary>
+          }
+        />
+
+        <Route
+          path="/projects/:projectId/dashboards/:dashboardId"
+          element={
+            <ProtectedRouteWithErrorBoundary>
+              <DashboardPage />
+            </ProtectedRouteWithErrorBoundary>
+          }
+        />
+
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRouteWithErrorBoundary>
+              <ReportsPage />
+            </ProtectedRouteWithErrorBoundary>
+          }
+        />
+
+        {FEATURES.integrations && (
+          <>
+            <Route
+              path="/integrations"
+              element={
+                <ProtectedRouteWithErrorBoundary>
+                  <IntegrationsPage />
+                </ProtectedRouteWithErrorBoundary>
+              }
+            />
+
+            <Route
+              path="/integrations/callback"
+              element={
+                <ProtectedRouteWithErrorBoundary>
+                  <OAuthCallbackPage />
+                </ProtectedRouteWithErrorBoundary>
+              }
+            />
+          </>
+        )}
+
+        {/* Catch all - 404 page */}
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </AnimatePresence>
+  )
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
@@ -68,134 +207,7 @@ export default function App() {
         <ThemeInitializer />
         <Toaster />
         <Suspense fallback={<PageLoader />}>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={<LoginPage />} />
-            {/* Protected routes with error boundaries */}
-            <Route
-              path="/"
-              element={
-                <ProtectedRouteWithErrorBoundary>
-                  <QuickAnalysisPage />
-                </ProtectedRouteWithErrorBoundary>
-              }
-            />
-
-            <Route
-              path="/assistant"
-              element={
-                <ProtectedRouteWithErrorBoundary>
-                  <AssistantPage />
-                </ProtectedRouteWithErrorBoundary>
-              }
-            />
-
-            <Route
-              path="/projects"
-              element={
-                <ProtectedRouteWithErrorBoundary>
-                  <ProjectsPage />
-                </ProtectedRouteWithErrorBoundary>
-              }
-            />
-
-            <Route
-              path="/projects/:projectId"
-              element={
-                <ProtectedRouteWithErrorBoundary>
-                  <ProjectDetailPage />
-                </ProtectedRouteWithErrorBoundary>
-              }
-            />
-
-            <Route
-              path="/projects/:projectId/files/:fileId/analyze"
-              element={
-                <ProtectedRouteWithErrorBoundary>
-                  <ProjectFileAnalysisPage />
-                </ProtectedRouteWithErrorBoundary>
-              }
-            />
-
-            <Route
-              path="/projects/:projectId/compare"
-              element={
-                <ProtectedRouteWithErrorBoundary>
-                  <FileComparisonPage />
-                </ProtectedRouteWithErrorBoundary>
-              }
-            />
-
-            <Route
-              path="/projects/:projectId/merge"
-              element={
-                <ProtectedRouteWithErrorBoundary>
-                  <FileMergePage />
-                </ProtectedRouteWithErrorBoundary>
-              }
-            />
-
-            <Route
-              path="/analytics"
-              element={
-                <ProtectedRouteWithErrorBoundary>
-                  <AnalyticsPage />
-                </ProtectedRouteWithErrorBoundary>
-              }
-            />
-
-            <Route
-              path="/history"
-              element={
-                <ProtectedRouteWithErrorBoundary>
-                  <HistoryPage />
-                </ProtectedRouteWithErrorBoundary>
-              }
-            />
-
-            <Route
-              path="/projects/:projectId/dashboards/:dashboardId"
-              element={
-                <ProtectedRouteWithErrorBoundary>
-                  <DashboardPage />
-                </ProtectedRouteWithErrorBoundary>
-              }
-            />
-
-            <Route
-              path="/reports"
-              element={
-                <ProtectedRouteWithErrorBoundary>
-                  <ReportsPage />
-                </ProtectedRouteWithErrorBoundary>
-              }
-            />
-
-            {FEATURES.integrations && (
-              <>
-                <Route
-                  path="/integrations"
-                  element={
-                    <ProtectedRouteWithErrorBoundary>
-                      <IntegrationsPage />
-                    </ProtectedRouteWithErrorBoundary>
-                  }
-                />
-
-                <Route
-                  path="/integrations/callback"
-                  element={
-                    <ProtectedRouteWithErrorBoundary>
-                      <OAuthCallbackPage />
-                    </ProtectedRouteWithErrorBoundary>
-                  }
-                />
-              </>
-            )}
-
-            {/* Catch all - 404 page */}
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
+          <AnimatedRoutes />
         </Suspense>
       </BrowserRouter>
     </ErrorBoundary>

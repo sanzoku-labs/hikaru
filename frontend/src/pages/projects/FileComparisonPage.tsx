@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { useFileComparisonFlow } from '@/hooks/projects'
 import { useCreateDashboard } from '@/services/api/mutations/useCreateDashboard'
 import { FileComparisonView } from '@/views/projects'
+import { AnimatedPage } from '@/components/animation'
 
 export default function FileComparisonPage() {
   const { projectId } = useParams<{ projectId: string }>()
@@ -57,30 +58,31 @@ export default function FileComparisonPage() {
   }
 
   return (
-    <FileComparisonView
-      projectName={projectName}
-      files={files}
-      isLoading={isLoading}
-      fetchError={fetchError}
-      selectedFileA={selectedFileA}
-      selectedFileB={selectedFileB}
-      comparisonType={comparisonType}
-      comparisonResult={comparisonResult}
-      isComparing={isComparing}
-      comparisonError={comparisonError}
-      onSelectFileA={selectFileA}
-      onSelectFileB={selectFileB}
-      onComparisonTypeChange={setComparisonType}
-      onCompare={runComparison}
-      onReset={resetComparison}
-      onBackClick={navigateBack}
-      canCompare={canCompare}
-      // Save as Dashboard
-      showSaveDialog={showSaveDialog}
-      isSavingDashboard={createDashboardMutation.isPending}
-      onOpenSaveDialog={() => setShowSaveDialog(true)}
-      onCloseSaveDialog={() => setShowSaveDialog(false)}
-      onSaveDashboard={handleSaveDashboard}
-    />
+    <AnimatedPage>
+      <FileComparisonView
+        projectName={projectName}
+        files={files}
+        isLoading={isLoading}
+        fetchError={fetchError}
+        selectedFileA={selectedFileA}
+        selectedFileB={selectedFileB}
+        comparisonType={comparisonType}
+        comparisonResult={comparisonResult}
+        isComparing={isComparing}
+        comparisonError={comparisonError}
+        onSelectFileA={selectFileA}
+        onSelectFileB={selectFileB}
+        onComparisonTypeChange={setComparisonType}
+        onCompare={runComparison}
+        onReset={resetComparison}
+        onBackClick={navigateBack}
+        canCompare={canCompare}
+        showSaveDialog={showSaveDialog}
+        isSavingDashboard={createDashboardMutation.isPending}
+        onOpenSaveDialog={() => setShowSaveDialog(true)}
+        onCloseSaveDialog={() => setShowSaveDialog(false)}
+        onSaveDashboard={handleSaveDashboard}
+      />
+    </AnimatedPage>
   )
 }

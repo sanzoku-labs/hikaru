@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import { ENDPOINTS } from '@/services/endpoints'
 import { ReportsView } from '@/views/reports'
+import { AnimatedPage } from '@/components/animation'
 import { useReportTemplates } from '@/services/api/queries/useReportTemplates'
 import { useReports } from '@/services/api/queries/useReports'
 import { useGenerateReport } from '@/services/api/mutations/useGenerateReport'
@@ -75,22 +76,20 @@ export function ReportsPage() {
   )
 
   return (
-    <ReportsView
-      // Templates
-      templates={templatesData?.templates || []}
-      templatesLoading={templatesLoading}
-      templatesError={templatesError?.message || null}
-      // Reports
-      reports={reportsData?.reports || []}
-      reportsLoading={reportsLoading}
-      reportsError={reportsError?.message || null}
-      // Generation
-      onGenerate={handleGenerate}
-      isGenerating={generateReport.isPending}
-      // Actions
-      onDownload={handleDownload}
-      onDelete={handleDelete}
-      isDeleting={deleteReport.isPending ? deleteReport.variables || null : null}
-    />
+    <AnimatedPage>
+      <ReportsView
+        templates={templatesData?.templates || []}
+        templatesLoading={templatesLoading}
+        templatesError={templatesError?.message || null}
+        reports={reportsData?.reports || []}
+        reportsLoading={reportsLoading}
+        reportsError={reportsError?.message || null}
+        onGenerate={handleGenerate}
+        isGenerating={generateReport.isPending}
+        onDownload={handleDownload}
+        onDelete={handleDelete}
+        isDeleting={deleteReport.isPending ? deleteReport.variables || null : null}
+      />
+    </AnimatedPage>
   )
 }

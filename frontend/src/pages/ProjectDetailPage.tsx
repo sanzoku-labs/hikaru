@@ -7,6 +7,7 @@ import { useDeleteDashboard } from '@/services/api/mutations/useDeleteDashboard'
 import { useDeleteProjectFile } from '@/services/api/mutations/useDeleteProjectFile'
 import { useUpdateProject } from '@/services/api/mutations/useUpdateProject'
 import { ProjectDetailView } from '@/views/projects'
+import { AnimatedPage } from '@/components/animation'
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>()
@@ -97,59 +98,57 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <ProjectDetailView
-      project={project}
-      isLoading={isLoading}
-      fetchError={fetchError}
-      selectedFileId={selectedFileId}
-      selectedFile={selectedFile}
-      analysisData={analysisData}
-      isLoadingAnalysis={isLoadingAnalysis}
-      analysisError={analysisError}
-      showReanalyzeForm={showReanalyzeForm}
-      reanalyzeIntent={reanalyzeIntent}
-      showUpload={showUpload}
-      uploadFile={uploadFile}
-      uploadIntent={uploadIntent}
-      isUploading={isUploading}
-      uploadError={uploadError}
-      canSubmit={canSubmit}
-      onSelectFile={handleSelectFile}
-      onAnalyze={handleAnalyze}
-      onReanalyzeIntentChange={handleReanalyzeIntentChange}
-      onToggleReanalyzeForm={toggleReanalyzeForm}
-      onToggleUpload={toggleUpload}
-      onUploadFileSelect={handleUploadFileSelect}
-      onUploadFileRemove={handleUploadFileRemove}
-      onUploadIntentChange={handleUploadIntentChange}
-      onUploadSubmit={handleUploadSubmit}
-      onCompareClick={navigateToCompare}
-      onMergeClick={navigateToMerge}
-      onBackClick={navigateBack}
-      isAnalyzing={isAnalyzing}
-      // Chat props
-      chatOpen={chat.isOpen}
-      chatMessages={chat.messages}
-      chatLoading={chat.isLoading}
-      canChat={chat.canChat && !!analysisData}
-      onChatToggle={chat.toggleChat}
-      onChatClose={chat.closeChat}
-      onChatSend={chat.sendMessage}
-      // Dashboard props
-      dashboards={dashboardsData?.dashboards || []}
-      isLoadingDashboards={isLoadingDashboards}
-      onViewDashboard={handleViewDashboard}
-      onDeleteDashboard={handleDeleteDashboard}
-      isDeletingDashboard={deleteDashboardMutation.isPending ? deleteDashboardMutation.variables : null}
-      // File deletion props
-      onDeleteFile={handleDeleteFile}
-      isDeletingFile={deleteFileMutation.isPending ? deleteFileMutation.variables : null}
-      // Project editing props
-      showEditProject={showEditProject}
-      isUpdatingProject={updateProjectMutation.isPending}
-      onOpenEditProject={() => setShowEditProject(true)}
-      onCloseEditProject={() => setShowEditProject(false)}
-      onUpdateProject={handleUpdateProject}
-    />
+    <AnimatedPage>
+      <ProjectDetailView
+        project={project}
+        isLoading={isLoading}
+        fetchError={fetchError}
+        selectedFileId={selectedFileId}
+        selectedFile={selectedFile}
+        analysisData={analysisData}
+        isLoadingAnalysis={isLoadingAnalysis}
+        analysisError={analysisError}
+        showReanalyzeForm={showReanalyzeForm}
+        reanalyzeIntent={reanalyzeIntent}
+        showUpload={showUpload}
+        uploadFile={uploadFile}
+        uploadIntent={uploadIntent}
+        isUploading={isUploading}
+        uploadError={uploadError}
+        canSubmit={canSubmit}
+        onSelectFile={handleSelectFile}
+        onAnalyze={handleAnalyze}
+        onReanalyzeIntentChange={handleReanalyzeIntentChange}
+        onToggleReanalyzeForm={toggleReanalyzeForm}
+        onToggleUpload={toggleUpload}
+        onUploadFileSelect={handleUploadFileSelect}
+        onUploadFileRemove={handleUploadFileRemove}
+        onUploadIntentChange={handleUploadIntentChange}
+        onUploadSubmit={handleUploadSubmit}
+        onCompareClick={navigateToCompare}
+        onMergeClick={navigateToMerge}
+        onBackClick={navigateBack}
+        isAnalyzing={isAnalyzing}
+        chatOpen={chat.isOpen}
+        chatMessages={chat.messages}
+        chatLoading={chat.isLoading}
+        canChat={chat.canChat && !!analysisData}
+        onChatToggle={chat.toggleChat}
+        onChatClose={chat.closeChat}
+        onChatSend={chat.sendMessage}
+        dashboards={dashboardsData?.dashboards || []}
+        isLoadingDashboards={isLoadingDashboards}
+        onViewDashboard={handleViewDashboard}
+        onDeleteDashboard={handleDeleteDashboard}
+        isDeletingDashboard={deleteDashboardMutation.isPending ? deleteDashboardMutation.variables : null}
+        onDeleteFile={handleDeleteFile}
+        isDeletingFile={deleteFileMutation.isPending ? deleteFileMutation.variables : null}
+        showEditProject={showEditProject}
+        isUpdatingProject={updateProjectMutation.isPending}
+        onOpenEditProject={() => setShowEditProject(true)}
+        onCloseEditProject={() => setShowEditProject(false)}
+        onUpdateProject={handleUpdateProject}
+      />
+    </AnimatedPage>
   )
 }

@@ -28,6 +28,7 @@ export default defineConfig({
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'tanstack': ['@tanstack/react-query', '@tanstack/react-table', '@tanstack/react-virtual'],
           'charts': ['echarts', 'echarts-for-react'],
+          'motion': ['motion'],
           'ui': [
             '@radix-ui/react-dialog',
             '@radix-ui/react-dropdown-menu',

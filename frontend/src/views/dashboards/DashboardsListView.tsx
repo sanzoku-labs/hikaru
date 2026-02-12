@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { LoadingSpinnerView, EmptyStateView } from '@/views/shared'
+import { AnimatedList, AnimatedListItem } from '@/components/animation'
 import type { DashboardResponse } from '@/types/api'
 
 interface DashboardsListViewProps {
@@ -143,16 +144,21 @@ export function DashboardsListView({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {dashboards.map((dashboard) => (
-        <DashboardCard
+    <AnimatedList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {dashboards.map((dashboard, index) => (
+        <AnimatedListItem
           key={dashboard.id}
-          dashboard={dashboard}
-          onView={() => onView(dashboard.id)}
-          onDelete={() => onDelete(dashboard.id)}
-          isDeleting={isDeleting === dashboard.id}
-        />
+          layoutId={`dashboard-${dashboard.id}`}
+          index={index}
+        >
+          <DashboardCard
+            dashboard={dashboard}
+            onView={() => onView(dashboard.id)}
+            onDelete={() => onDelete(dashboard.id)}
+            isDeleting={isDeleting === dashboard.id}
+          />
+        </AnimatedListItem>
       ))}
-    </div>
+    </AnimatedList>
   )
 }

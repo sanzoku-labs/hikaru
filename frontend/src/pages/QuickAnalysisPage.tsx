@@ -1,6 +1,7 @@
 import { useQuickAnalysisFlow } from '@/hooks/analysis'
 import { useChatFlow } from '@/hooks/chat'
 import { QuickAnalysisView } from '@/views/analysis'
+import { AnimatedPage } from '@/components/animation'
 
 export default function QuickAnalysisPage() {
   const {
@@ -31,29 +32,31 @@ export default function QuickAnalysisPage() {
   }
 
   return (
-    <QuickAnalysisView
-      stage={stage}
-      selectedFile={selectedFile}
-      userIntent={userIntent}
-      uploadData={uploadData}
-      analysisData={analysisData}
-      error={error}
-      onFileSelect={handleFileSelect}
-      onFileRemove={handleFileRemove}
-      onUserIntentChange={handleUserIntentChange}
-      onSubmit={handleSubmit}
-      onReset={handleResetWithChat}
-      onExport={handleExport}
-      isExporting={isExporting}
-      canSubmit={canSubmit}
-      // Chat props
-      chatOpen={chat.isOpen}
-      chatMessages={chat.messages}
-      chatLoading={chat.isLoading}
-      canChat={chat.canChat}
-      onChatToggle={chat.toggleChat}
-      onChatClose={chat.closeChat}
-      onChatSend={chat.sendMessage}
-    />
+    <AnimatedPage>
+      <QuickAnalysisView
+        stage={stage}
+        selectedFile={selectedFile}
+        userIntent={userIntent}
+        uploadData={uploadData}
+        analysisData={analysisData}
+        error={error}
+        onFileSelect={handleFileSelect}
+        onFileRemove={handleFileRemove}
+        onUserIntentChange={handleUserIntentChange}
+        onSubmit={handleSubmit}
+        onReset={handleResetWithChat}
+        onExport={handleExport}
+        isExporting={isExporting}
+        canSubmit={canSubmit}
+        // Chat props
+        chatOpen={chat.isOpen}
+        chatMessages={chat.messages}
+        chatLoading={chat.isLoading}
+        canChat={chat.canChat}
+        onChatToggle={chat.toggleChat}
+        onChatClose={chat.closeChat}
+        onChatSend={chat.sendMessage}
+      />
+    </AnimatedPage>
   )
 }

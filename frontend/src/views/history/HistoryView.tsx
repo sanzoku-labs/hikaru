@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { PageHeaderView, LoadingSpinnerView, ErrorAlertView, EmptyStateView } from '@/views/shared'
+import { AnimatedList, AnimatedListItem } from '@/components/animation'
 import { useProjects } from '@/services/api/queries/useProjects'
 import type { HistoryItem, HistoryFilters, ProjectResponse } from '@/types/api'
 
@@ -316,15 +317,20 @@ export function HistoryView({
           </div>
 
           {/* History items */}
-          <div className="space-y-3">
-            {items.map((item) => (
-              <HistoryItemCard
+          <AnimatedList className="space-y-3">
+            {items.map((item, index) => (
+              <AnimatedListItem
                 key={item.analysis_id}
-                item={item}
-                onClick={() => onItemClick(item)}
-              />
+                layoutId={`history-${item.analysis_id}`}
+                index={index}
+              >
+                <HistoryItemCard
+                  item={item}
+                  onClick={() => onItemClick(item)}
+                />
+              </AnimatedListItem>
             ))}
-          </div>
+          </AnimatedList>
 
           {/* Load more / Pagination */}
           {hasMore && (

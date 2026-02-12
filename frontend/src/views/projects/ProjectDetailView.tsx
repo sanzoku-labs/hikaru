@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   GitCompare,
   Merge,
@@ -22,7 +23,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { AnimatedTabContent } from '@/components/animation'
 import type { ProjectDetailResponse, ProjectFileResponse, FileAnalysisResponse, ChatMessage, DashboardResponse } from '@/types/api'
 
 interface ProjectDetailViewProps {
@@ -145,6 +147,7 @@ export function ProjectDetailView({
   onCloseEditProject,
   onUpdateProject,
 }: ProjectDetailViewProps) {
+  const [activeTab, setActiveTab] = useState('overview')
   const files = project?.files || []
   const hasMultipleFiles = files.length >= 2
   const hasAnalysis = !!analysisData
@@ -211,7 +214,7 @@ export function ProjectDetailView({
       />
 
       {/* Tabs */}
-      <Tabs defaultValue="overview" className="flex-1 flex flex-col min-h-0">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
         <div className="border-b border-border px-0">
           <TabsList className="h-10 bg-transparent p-0 gap-4">
             <TabsTrigger
@@ -248,70 +251,68 @@ export function ProjectDetailView({
           </TabsList>
         </div>
 
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="flex-1 overflow-y-auto mt-6">
-          <ProjectOverviewView
-            files={files}
-            projectName={project.name}
-            projectDescription={project.description || undefined}
-            createdAt={project.created_at}
-          />
-        </TabsContent>
-
-        {/* Files Tab */}
-        <TabsContent value="files" className="flex-1 flex min-h-0 mt-6">
-          <div className="flex-1 flex min-h-0">
-            <FileListPanel
+        <AnimatedTabContent activeTab={activeTab} className="flex-1 mt-6 min-h-0">
+          {activeTab === 'overview' && (
+            <ProjectOverviewView
               files={files}
-              selectedFileId={selectedFileId}
-              showUpload={showUpload}
-              uploadFile={uploadFile}
-              uploadIntent={uploadIntent}
-              isUploading={isUploading}
-              uploadError={uploadError}
-              canSubmit={canSubmit}
-              isDeletingFile={isDeletingFile}
-              onSelectFile={onSelectFile}
-              onToggleUpload={onToggleUpload}
-              onUploadFileSelect={onUploadFileSelect}
-              onUploadFileRemove={onUploadFileRemove}
-              onUploadIntentChange={onUploadIntentChange}
-              onUploadSubmit={onUploadSubmit}
-              onDeleteFile={onDeleteFile}
+              projectName={project.name}
+              projectDescription={project.description || undefined}
+              createdAt={project.created_at}
             />
+          )}
 
-            {/* Vertical Separator */}
-            <div className="w-px bg-border flex-shrink-0" />
+          {activeTab === 'files' && (
+            <div className="flex-1 flex min-h-0">
+              <FileListPanel
+                files={files}
+                selectedFileId={selectedFileId}
+                showUpload={showUpload}
+                uploadFile={uploadFile}
+                uploadIntent={uploadIntent}
+                isUploading={isUploading}
+                uploadError={uploadError}
+                canSubmit={canSubmit}
+                isDeletingFile={isDeletingFile}
+                onSelectFile={onSelectFile}
+                onToggleUpload={onToggleUpload}
+                onUploadFileSelect={onUploadFileSelect}
+                onUploadFileRemove={onUploadFileRemove}
+                onUploadIntentChange={onUploadIntentChange}
+                onUploadSubmit={onUploadSubmit}
+                onDeleteFile={onDeleteFile}
+              />
 
-            <FileAnalysisPanel
-              selectedFile={selectedFile}
-              analysisData={analysisData}
-              isLoadingAnalysis={isLoadingAnalysis}
-              analysisError={analysisError}
-              showReanalyzeForm={showReanalyzeForm}
-              reanalyzeIntent={reanalyzeIntent}
-              isAnalyzing={isAnalyzing}
-              hasAnalysis={hasAnalysis}
-              canChat={canChat}
-              filesExist={files.length > 0}
-              onAnalyze={onAnalyze}
-              onReanalyzeIntentChange={onReanalyzeIntentChange}
-              onToggleReanalyzeForm={onToggleReanalyzeForm}
-              onChatToggle={onChatToggle}
+              <div className="w-px bg-border flex-shrink-0" />
+
+              <FileAnalysisPanel
+                selectedFile={selectedFile}
+                analysisData={analysisData}
+                isLoadingAnalysis={isLoadingAnalysis}
+                analysisError={analysisError}
+                showReanalyzeForm={showReanalyzeForm}
+                reanalyzeIntent={reanalyzeIntent}
+                isAnalyzing={isAnalyzing}
+                hasAnalysis={hasAnalysis}
+                canChat={canChat}
+                filesExist={files.length > 0}
+                onAnalyze={onAnalyze}
+                onReanalyzeIntentChange={onReanalyzeIntentChange}
+                onToggleReanalyzeForm={onToggleReanalyzeForm}
+                onChatToggle={onChatToggle}
+              />
+            </div>
+          )}
+
+          {activeTab === 'dashboards' && (
+            <DashboardsListView
+              dashboards={dashboards}
+              isLoading={isLoadingDashboards}
+              onView={onViewDashboard}
+              onDelete={onDeleteDashboard}
+              isDeleting={isDeletingDashboard}
             />
-          </div>
-        </TabsContent>
-
-        {/* Dashboards Tab */}
-        <TabsContent value="dashboards" className="flex-1 overflow-y-auto mt-6">
-          <DashboardsListView
-            dashboards={dashboards}
-            isLoading={isLoadingDashboards}
-            onView={onViewDashboard}
-            onDelete={onDeleteDashboard}
-            isDeleting={isDeletingDashboard}
-          />
-        </TabsContent>
+          )}
+        </AnimatedTabContent>
       </Tabs>
 
       {/* Chat Panel */}

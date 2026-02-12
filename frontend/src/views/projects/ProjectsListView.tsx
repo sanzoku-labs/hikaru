@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PageHeaderView, EmptyStateView, LoadingSpinnerView, ErrorAlertView } from '@/views/shared'
+import { AnimatedList, AnimatedListItem } from '@/components/animation'
 import { CreateProjectFormView } from './CreateProjectFormView'
 import type { ProjectResponse } from '@/types/api'
 
@@ -97,11 +98,15 @@ export function ProjectsListView({
 
       {/* Projects grid */}
       {!isLoading && projects.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children">
-          {projects.map((project) => (
-            <div
+        <AnimatedList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {projects.map((project, index) => (
+            <AnimatedListItem
               key={project.id}
-              className={cn(
+              layoutId={`project-${project.id}`}
+              index={index}
+            >
+              <div
+                className={cn(
                 'group relative p-5 rounded-xl',
                 'bg-card border border-border',
                 'transition-all duration-200',
@@ -163,8 +168,9 @@ export function ProjectsListView({
                 </div>
               </div>
             </div>
+            </AnimatedListItem>
           ))}
-        </div>
+        </AnimatedList>
       )}
 
       {/* Create project modal */}
